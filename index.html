@@ -2255,6 +2255,9 @@
 
     <!-- CHART PAGE -->
     <div class="page" id="page-chart">
+      <!-- Quick Stats Row -->
+      <div class="cards-row" id="chart-quick-stats" style="margin-bottom: 15px;"></div>
+      
       <div class="ch-full">
         <div class="ch-ttl">Monthly Closing Balance Trend</div>
         <canvas id="c-trend" height="70"></canvas>
@@ -2265,34 +2268,40 @@
           <canvas id="c-di" height="110"></canvas>
         </div>
         <div class="ch-card">
-          <div class="ch-ttl">Location Closing Balance</div>
-          <canvas id="c-loc" height="110"></canvas>
-        </div>
-      </div>
-      <div class="ch2">
-        <div class="ch-card">
           <div class="ch-ttl">Daily Closing Balance — Current Month</div>
           <canvas id="c-daily" height="110"></canvas>
         </div>
+      </div>
+      <div class="ch2">
         <div class="ch-card">
           <div class="ch-ttl">Delivery/Receive Ratio by Location</div>
           <canvas id="c-ratio" height="110"></canvas>
         </div>
-      </div>
-      <div class="ch2">
         <div class="ch-card">
           <div class="ch-ttl">Monthly Net Stock Change</div>
           <canvas id="c-net" height="110"></canvas>
         </div>
+      </div>
+      <div class="ch2">
         <div class="ch-card">
           <div class="ch-ttl">Cumulative Delivery vs Receive</div>
           <canvas id="c-cum" height="110"></canvas>
+        </div>
+        <div class="ch-card">
+          <div class="ch-ttl">Location Performance Summary</div>
+          <div id="location-performance" style="padding: 10px; font-size: 11px;"></div>
         </div>
       </div>
     </div>
 
     <!-- REPORT PAGE -->
-    <div class="page" id="page-report"><div id="rpt-area"></div></div>
+    <div class="page" id="page-report">
+      <div style="max-width: 1200px; margin: 0 auto;">
+        <div class="rpt-sec" id="rpt-summary"></div>
+        <div class="rpt-sec" id="rpt-monthly"></div>
+        <div class="rpt-sec" id="rpt-location"></div>
+      </div>
+    </div>
 
     <!-- SETTINGS PAGE -->
     <div class="page" id="page-settings">
@@ -7988,8 +7997,76 @@
             },
           });
 
+          // Render Quick Stats
+          renderChartQuickStats(ms, cs);
+          
+          // Render Location Performance
+          renderLocationPerformance();
+
           hideLoading();
         }, 500);
+      }
+
+      function renderChartQuickStats(ms, cs) {
+        const prevMs = ms.slice(-2)[0];
+        const ps = prevMs ? summ(prevMs) : null;
+        const ratio = cs.imp ? Math.round((cs.del / cs.imp) * 100) : 0;
+        
+        const card = (label, value, color, change) => `
+          <div class="card" style="text-align: center; padding: 10px;">
+            <div class="c-lbl" style="font-size: 9px; text-transform: uppercase; color: #666;">${label}</div>
+            <div class="c-val" style="font-size: 20px; color: ${color};">${fmt(value)}</div>
+            <div class="c-sub" style="font-size: 9px;">${change}</div>
+          </div>
+        `;
+        
+        let h = "";
+        h += card("Total Balance", cs.bal, "#166534", ps ? pBadge(cs.bal, ps.bal) + " vs prev" : "—");
+        h += card("Delivery", cs.del, "#1d4ed8", ps ? pBadge(cs.del, ps.del, false) + " vs prev" : "—");
+        h += card("Receive", cs.imp, "#92400e", ps ? pBadge(cs.imp, ps.imp, true) + " vs prev" : "—");
+        h += card("D/R Ratio", ratio + "%", ratio <= 75 ? "#16a34a" : "#dc2626", ratio <= 75 ? "Good" : "High");
+        h += card("Net Change", cs.imp - cs.del, (cs.imp - cs.del) >= 0 ? "#16a34a" : "#dc2626", (cs.imp - cs.del) >= 0 ? "+" : "");
+        
+        document.getElementById("chart-quick-stats").innerHTML = h;
+      }
+      
+      function renderLocationPerformance() {
+        const rows = DB[cur] || [];
+        if (!rows.length) {
+          document.getElementById("location-performance").innerHTML = "<div style='color:#888;text-align:center;padding:20px;'>No data available</div>";
+          return;
+        }
+        
+        let h = `<table style="width:100%;font-size:11px;border-collapse:collapse;">
+          <thead style="background:#f3f4f6;">
+            <tr>
+              <th style="padding:6px;text-align:left;">Location</th>
+              <th style="padding:6px;text-align:right;">Del</th>
+              <th style="padding:6px;text-align:right;">Rec</th>
+              <th style="padding:6px;text-align:right;">D/R</th>
+              <th style="padding:6px;text-align:right;">Status</th>
+            </tr>
+          </thead>
+          <tbody>`;
+        
+        LOCS.forEach((loc, li) => {
+          const del = rows.reduce((s, r) => s + r.del[li], 0);
+          const imp = rows.reduce((s, r) => s + r.imp[li], 0);
+          const ratio = imp ? Math.round((del / imp) * 100) : 0;
+          const status = ratio <= 75 ? "🟢 Good" : ratio <= 100 ? "🟡 Watch" : "🔴 Critical";
+          const color = ratio <= 75 ? "#16a34a" : ratio <= 100 ? "#d97706" : "#dc2626";
+          
+          h += `<tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:6px;font-weight:600;">${loc}</td>
+            <td style="padding:6px;text-align:right;">${fmt(del)}</td>
+            <td style="padding:6px;text-align:right;">${fmt(imp)}</td>
+            <td style="padding:6px;text-align:right;color:${color};font-weight:700;">${ratio}%</td>
+            <td style="padding:6px;text-align:right;font-size:10px;">${status}</td>
+          </tr>`;
+        });
+        
+        h += "</tbody></table>";
+        document.getElementById("location-performance").innerHTML = h;
       }
 
       // ════════════════════════════════════════════════════
@@ -8000,60 +8077,107 @@
 
         setTimeout(() => {
           const ms = months();
-          let h = "";
-
-          // Simple Executive Summary
-          h += `<div class="rpt-sec">
-            <div class="rpt-hdr">📊 Executive Summary</div>
-            <div class="summary-grid">
-              ${generateSimpleSummaryCards(ms)}
+          
+          // Summary Section
+          const cs = summ(cur);
+          const ps = ms.length > 1 ? summ(ms.slice(-2)[0]) : null;
+          const ratio = cs.imp ? Math.round((cs.del / cs.imp) * 100) : 0;
+          const net = cs.imp - cs.del;
+          
+          let summaryH = `<div class="summary-grid">
+            <div class="simple-card">
+              <div class="card-icon" style="background:#dcfce7;">📦</div>
+              <div class="card-content">
+                <div class="card-title">Closing Balance</div>
+                <div class="card-value" style="color:#166534;">${fmt(cs.bal)}</div>
+                <div class="card-subtitle">${ps ? pBadge(cs.bal, ps.bal) + " vs prev" : "First month"}</div>
+              </div>
+            </div>
+            <div class="simple-card">
+              <div class="card-icon" style="background:#dbeafe;">🚚</div>
+              <div class="card-content">
+                <div class="card-title">Total Delivery</div>
+                <div class="card-value" style="color:#1d4ed8;">${fmt(cs.del)}</div>
+                <div class="card-subtitle">${ps ? pBadge(cs.del, ps.del, false) + " vs prev" : "—"}</div>
+              </div>
+            </div>
+            <div class="simple-card">
+              <div class="card-icon" style="background:#fef3c7;">📥</div>
+              <div class="card-content">
+                <div class="card-title">Total Receive</div>
+                <div class="card-value" style="color:#92400e;">${fmt(cs.imp)}</div>
+                <div class="card-subtitle">${ps ? pBadge(cs.imp, ps.imp, true) + " vs prev" : "—"}</div>
+              </div>
+            </div>
+            <div class="simple-card">
+              <div class="card-icon" style="background:${ratio <= 75 ? '#dcfce7' : '#fee2e2'};">📊</div>
+              <div class="card-content">
+                <div class="card-title">D/R Ratio</div>
+                <div class="card-value" style="color:${ratio <= 75 ? '#16a34a' : '#dc2626'};">${ratio}%</div>
+                <div class="card-subtitle">Target: <75%</div>
+              </div>
             </div>
           </div>`;
+          document.getElementById("rpt-summary").innerHTML = summaryH;
 
-          // Clean Monthly Overview
-          h += `<div class="rpt-sec">
-            <div class="rpt-hdr">📈 Monthly Performance</div>
-            <div class="simple-table-container">
-              <table class="simple-table">
-                <thead>
-                  <tr>
-                    <th>Month</th>
-                    <th>Receive</th>
-                    <th>Delivery</th>
-                    <th>Efficiency</th>
-                    <th>Balance</th>
-                  </tr>
-                </thead>
-                <tbody>`;
-          ms.forEach((k) => {
+          // Monthly Table
+          let monthlyH = `<div class="simple-table-container">
+            <table class="simple-table">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Receive</th>
+                  <th>Delivery</th>
+                  <th>Balance</th>
+                  <th>Efficiency</th>
+                </tr>
+              </thead>
+              <tbody>`;
+          ms.slice().reverse().forEach((k) => {
             const s = summ(k);
             const [y, m] = k.split("-").map(Number);
             const efficiency = s.imp ? Math.round((s.del / s.imp) * 100) : 0;
-            const efficiencyClass =
-              efficiency >= 100
-                ? "excellent"
-                : efficiency >= 75
-                  ? "good"
-                  : "poor";
-            h += `<tr class="${k === cur ? "current" : ""}">
+            const effClass = efficiency >= 100 ? "excellent" : efficiency >= 75 ? "good" : "poor";
+            monthlyH += `<tr class="${k === cur ? "current" : ""}">
               <td class="month">${MO[m - 1]} ${y}</td>
               <td class="receive">${fmt(s.imp)}</td>
               <td class="delivery">${fmt(s.del)}</td>
-              <td class="efficiency ${efficiencyClass}">${efficiency}%</td>
               <td class="balance">${fmt(s.bal)}</td>
+              <td><span class="efficiency ${effClass}">${efficiency}%</span></td>
             </tr>`;
           });
-          h += `</tbody></table></div></div>`;
+          monthlyH += `</tbody></table></div>`;
+          document.getElementById("rpt-monthly").innerHTML = monthlyH;
 
           // Location Summary
-          h += `<div class="rpt-sec">
-            <div class="rpt-hdr">🏭 Location Summary</div>
-            <div class="location-grid">
-              ${generateLocationSummary(ms)}
-            </div>
-          </div>`;
+          let locationH = `<div class="location-grid">`;
+          LOCS.forEach((loc, li) => {
+            const s = summ(cur);
+            const locDel = s.dl[li];
+            const locImp = s.il[li];
+            const locRatio = locImp ? Math.round((locDel / locImp) * 100) : 0;
+            const cfg = LOC_CFG[loc];
+            locationH += `<div class="location-card">
+              <div class="location-header" style="background:${cfg.bg}">${loc}</div>
+              <div class="location-metrics">
+                <div class="metric">
+                  <span class="metric-label">Delivery</span>
+                  <span class="metric-value" style="color:#1d4ed8;">${fmt(locDel)}</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Receive</span>
+                  <span class="metric-value" style="color:#92400e;">${fmt(locImp)}</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">D/R Ratio</span>
+                  <span class="metric-value ${locRatio <= 75 ? 'excellent' : 'poor'}">${locRatio}%</span>
+                </div>
+              </div>
+            </div>`;
+          });
+          locationH += `</div>`;
+          document.getElementById("rpt-location").innerHTML = locationH;
 
-          document.getElementById("rpt-area").innerHTML = h;
           hideLoading();
         }, 300);
       }
