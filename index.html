@@ -8037,14 +8037,14 @@
           return;
         }
         
-        let h = `<table style="width:100%;font-size:11px;border-collapse:collapse;">
-          <thead style="background:#f3f4f6;">
+        let h = `<table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <thead style="background:#1a3a5c;color:#fff;">
             <tr>
-              <th style="padding:6px;text-align:left;">Location</th>
-              <th style="padding:6px;text-align:right;">Del</th>
-              <th style="padding:6px;text-align:right;">Rec</th>
-              <th style="padding:6px;text-align:right;">D/R</th>
-              <th style="padding:6px;text-align:right;">Status</th>
+              <th style="padding:8px;text-align:left;">Location</th>
+              <th style="padding:8px;text-align:right;">Del</th>
+              <th style="padding:8px;text-align:right;">Rec</th>
+              <th style="padding:8px;text-align:right;">D/R</th>
+              <th style="padding:8px;text-align:right;">Status</th>
             </tr>
           </thead>
           <tbody>`;
@@ -8056,12 +8056,12 @@
           const status = ratio <= 75 ? "🟢 Good" : ratio <= 100 ? "🟡 Watch" : "🔴 Critical";
           const color = ratio <= 75 ? "#16a34a" : ratio <= 100 ? "#d97706" : "#dc2626";
           
-          h += `<tr style="border-bottom:1px solid #f3f4f6;">
-            <td style="padding:6px;font-weight:600;">${loc}</td>
-            <td style="padding:6px;text-align:right;">${fmt(del)}</td>
-            <td style="padding:6px;text-align:right;">${fmt(imp)}</td>
-            <td style="padding:6px;text-align:right;color:${color};font-weight:700;">${ratio}%</td>
-            <td style="padding:6px;text-align:right;font-size:10px;">${status}</td>
+          h += `<tr style="border-bottom:1px solid #e5e7eb;background:${li%2==0?'#fff':'#f9fafb'};">
+            <td style="padding:8px;font-weight:700;color:#1a3a5c;">${loc}</td>
+            <td style="padding:8px;text-align:right;font-weight:600;color:#1d4ed8;">${fmt(del)}</td>
+            <td style="padding:8px;text-align:right;font-weight:600;color:#92400e;">${fmt(imp)}</td>
+            <td style="padding:8px;text-align:right;font-weight:700;color:${color};">${ratio}%</td>
+            <td style="padding:8px;text-align:right;font-weight:600;color:${color};">${status}</td>
           </tr>`;
         });
         
