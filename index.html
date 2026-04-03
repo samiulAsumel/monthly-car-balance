@@ -7549,6 +7549,15 @@
               999999,
             );
             DB[key][ri][f] = validatedValue.toString();
+          } else if (f === "ad" && val) {
+            // Validate auction delivery (should be a reasonable number)
+            const validatedValue = validateAndShowError(
+              { value: val },
+              "Auction Delivery",
+              0,
+              999999,
+            );
+            DB[key][ri][f] = validatedValue.toString();
           } else {
             DB[key][ri][f] = val;
           }
@@ -7737,6 +7746,7 @@
         const [y, m] = cur.split("-").map(Number);
         const rows = DB[cur] || [];
         const wDays = rows.filter((r) => !isRed(r.date)).length;
+        const aucDelTotal = rows.reduce((sum, row) => sum + (row.ad || 0), 0);
         const net = s.imp - s.del;
         const ratio = s.imp ? Math.round((s.del / s.imp) * 100) : 0;
         const avgDel = wDays ? Math.round(s.del / wDays) : 0;
@@ -8581,13 +8591,17 @@
           const ps = ms.length > 1 ? summ(ms.slice(-2)[0]) : null;
           const ratio = cs.imp ? Math.round((cs.del / cs.imp) * 100) : 0;
           const net = cs.imp - cs.del;
+          const aucDelTotal = Object.values(DB[cur] || []).reduce(
+            (sum, row) => sum + (row.ad || 0),
+            0,
+          );
 
           let summaryH = `<div class="summary-grid">
             <div class="simple-card">
               <div class="card-icon" style="background:#dcfce7;">📦</div>
               <div class="card-content">
                 <div class="card-title">Closing Balance</div>
-                <div class="card-value" style="color:#166534;">${fmt(cs.bal)}</div>
+                <div class="card-value">${fmt(cs.bal)}</div>
                 <div class="card-subtitle">${ps ? pBadge(cs.bal, ps.bal) + " vs prev" : "First month"}</div>
               </div>
             </div>
@@ -8608,11 +8622,19 @@
               </div>
             </div>
             <div class="simple-card">
+              <div class="card-icon" style="background:#e9d5ff;">🏛️</div>
+              <div class="card-content">
+                <div class="card-title">Auction Delivery</div>
+                <div class="card-value" style="color:#8b5cf6;">${fmt(aucDelTotal)}</div>
+                <div class="card-subtitle">Monthly total</div>
+              </div>
+            </div>
+            <div class="simple-card">
               <div class="card-icon" style="background:${ratio <= 75 ? "#dcfce7" : "#fee2e2"};">📊</div>
               <div class="card-content">
                 <div class="card-title">D/R Ratio</div>
                 <div class="card-value" style="color:${ratio <= 75 ? "#16a34a" : "#dc2626"};">${ratio}%</div>
-                <div class="card-subtitle">Target: <75%</div>
+                <div class="card-subtitle">${ps ? `${ratio > ps.ratio ? "↑" : ratio < ps.ratio ? "↓" : "→"} ${Math.abs(ratio - ps.ratio)}%` : "—"}</div>
               </div>
             </div>
           </div>`;
