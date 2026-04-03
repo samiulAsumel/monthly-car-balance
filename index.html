@@ -965,7 +965,7 @@
         }
 
         .card-value {
-font-size: 20px;
+          font-size: 20px;
         }
 
         .simple-table {
@@ -2047,7 +2047,7 @@ font-size: 20px;
           #334155 50%,
           #475569 100%
         ) !important;
-font-weight: 800 !important;
+        font-weight: 800 !important;
         border-top: 3px solid #64748b !important;
         font-size: 14px;
         color: #ffffff !important;
@@ -6743,7 +6743,7 @@ font-weight: 800 !important;
       }
 
       function saveToFirebase() {
-        if (!firebaseDb) return false;
+        if (!firebaseDb || !loggedIn) return false;
 
         const dataToSave = {
           db: DB,
