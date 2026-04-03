@@ -793,10 +793,13 @@
         overflow-x: auto;
         border-radius: 6px;
         border: 1px solid #e5e7eb;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
       }
 
       .simple-table {
         width: 100%;
+        min-width: 500px;
         border-collapse: collapse;
         font-size: 12px;
       }
@@ -967,15 +970,16 @@
 
         .simple-table {
           font-size: 11px;
+          min-width: 450px;
         }
 
         .simple-table th {
-          padding: 8px 6px;
+          padding: 6px 4px;
           font-size: 10px;
         }
 
         .simple-table td {
-          padding: 8px 6px;
+          padding: 6px 4px;
           font-size: 11px;
         }
       }
@@ -985,12 +989,29 @@
           grid-template-columns: 1fr;
         }
 
-        .card-value {
+        .card-title {
           font-size: 16px;
         }
 
         .simple-table {
           font-size: 10px;
+          min-width: 400px;
+        }
+
+        .simple-table th {
+          padding: 4px 2px;
+          font-size: 9px;
+        }
+
+        .simple-table td {
+          padding: 4px 2px;
+          font-size: 10px;
+        }
+
+        .card-icon {
+          width: 32px;
+          height: 32px;
+          font-size: 16px;
         }
       }
 
@@ -1458,47 +1479,47 @@
       /* Date=76, Day=26, per loc: Bal=43, Del=43, Imp=43 (×8=1024), Total Del=52, Auc Val=48, ClosBal=57, Total Imp=52 */
       /* Total estimated: 76+26+1024+52+48+57+52 = 1335px — use % */
       col.cd {
-        width: 76px;
+        width: 65px;
       }
       col.cdy {
-        width: 26px;
+        width: 20px;
       }
       col.cb {
-        width: 43px;
+        width: 45px;
       }
       col.cdel {
-        width: 43px;
+        width: 45px;
       }
       col.ci {
-        width: 43px;
+        width: 50px;
       }
       col.ctd {
-        width: 52px;
+        width: 55px;
       }
       col.cal {
-        width: 48px;
+        width: 40px;
       }
       col.cav {
-        width: 48px;
+        width: 40px;
       }
       col.ccb {
-        width: 57px;
+        width: 55px;
       }
       col.cti {
-        width: 52px;
+        width: 55px;
       }
 
       /* ── HEADER STYLES ── */
       th {
         white-space: nowrap;
-        padding: 10px 8px;
+        padding: 6px 4px;
         text-align: center;
-        font-size: 14px;
+        font-size: 11px;
         font-weight: 700;
         color: #fff;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        overflow: hidden;
-        letter-spacing: 0.3px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        line-height: 1.1;
       }
       th.hdate {
         background: #0a2540;
@@ -1780,9 +1801,9 @@
 
       /* ── DATA CELLS ── */
       td {
-        padding: 6px 6px;
+        padding: 4px 3px;
         text-align: center;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
@@ -1790,7 +1811,7 @@
         border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         transition: all 0.2s ease;
         position: relative;
-        line-height: 1.2;
+        line-height: 1.1;
       }
       td:hover {
         background: linear-gradient(
@@ -1954,7 +1975,7 @@
         font-weight: 800 !important;
         border-top: 3px solid #64748b !important;
         font-size: 14px;
-        color: #ffffff;
+        color: #ffffff !important;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
       }
@@ -1962,7 +1983,7 @@
       /* Premium editable inputs with modern styling */
       input.ci {
         width: 100%;
-        padding: 3px 4px;
+        padding: 3px 6px;
         border: 2px solid transparent;
         border-radius: 4px;
         font-size: 11px;
@@ -1972,6 +1993,7 @@
         transition: all 0.3s ease;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
         line-height: 1.1;
+        min-width: 50px;
       }
       input.ci:hover {
         background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
