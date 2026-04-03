@@ -18,7 +18,7 @@
       body {
         height: 100%;
         font-family: Arial, sans-serif;
-        font-size: 14.25px;
+        font-size: 15px;
         background: rgba(228, 233, 240, 1);
         color: #111;
         overflow-x: hidden;
@@ -699,6 +699,7 @@
         .ci {
           min-height: 40px;
           font-size: 16px; /* Prevent zoom on iOS */
+          color: #000000 !important; /* Black color for all numbers, dates, and digits */
         }
         .card:hover,
         .tbtn:hover,
@@ -820,10 +821,6 @@
         padding: 10px 8px;
         text-align: center;
         border-bottom: 1px solid #f3f4f6;
-      }
-
-      .simple-table tr:hover {
-        background: #f9fafb;
       }
 
       .simple-table tr.current {
@@ -1747,17 +1744,6 @@
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         transition: all 0.3s ease;
       }
-      table.dt tbody tr:hover {
-        background: linear-gradient(
-          135deg,
-          #e0e7ff 0%,
-          #c7d2fe 50%,
-          #a5b4fc 100%
-        ) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-      }
-
       /* Premium header gradient colors with depth */
       th.hdate,
       th.hday {
@@ -2049,7 +2035,7 @@
         ) !important;
         font-weight: 800 !important;
         border-top: 3px solid #64748b !important;
-        font-size: 14px;
+        font-size: 13.5px !important;
         color: #ffffff !important;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -2060,15 +2046,15 @@
         width: 100%;
         padding: 3px 6px;
         border: 2px solid transparent;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 700;
-        text-align: center !important;
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        transition: all 0.3s ease;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        border-radius: 6px;
+        text-align: center;
+        font-weight: 600;
+        font-family: "Courier New", monospace;
+        transition: all 0.2s ease;
         line-height: 1.1;
         min-width: 50px;
+        color: #000000 !important; /* Black color for all input text */
       }
       input.ci:hover {
         background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -2210,9 +2196,6 @@
         padding: 5px 8px;
         border-bottom: 1px solid #f0f3f7;
         vertical-align: middle;
-      }
-      .rt tr:hover td {
-        background: #f8fafd;
       }
       .rt tr.cur td {
         background: #eff6ff !important;
@@ -2741,6 +2724,87 @@
                   margin-bottom: 8px;
                 "
               >
+                Timezone
+              </div>
+              <select
+                id="tz-select"
+                onchange="sett.tz=this.value;setDirty(true);saveSett();renderTable();"
+                style="padding: 8px 12px; font-size: 12px; border-radius: 6px; border: 1px solid #d1d5db; width: 100%; max-width: 350px"
+              >
+                <!-- Asia -->
+                <optgroup label="🌏 Asia">
+                  <option value="Asia/Dhaka" ${sett.tz === 'Asia/Dhaka' ? 'selected' : ''}>🇧🇩 Bangladesh (GMT+6)</option>
+                  <option value="Asia/Kolkata" ${sett.tz === 'Asia/Kolkata' ? 'selected' : ''}>🇮🇳 India (GMT+5:30)</option>
+                  <option value="Asia/Karachi" ${sett.tz === 'Asia/Karachi' ? 'selected' : ''}>🇵🇰 Pakistan (GMT+5)</option>
+                  <option value="Asia/Kabul" ${sett.tz === 'Asia/Kabul' ? 'selected' : ''}>🇦🇫 Afghanistan (GMT+4:30)</option>
+                  <option value="Asia/Kuala_Lumpur" ${sett.tz === 'Asia/Kuala_Lumpur' ? 'selected' : ''}>🇲🇾 Malaysia (GMT+8)</option>
+                  <option value="Asia/Singapore" ${sett.tz === 'Asia/Singapore' ? 'selected' : ''}>🇸🇬 Singapore (GMT+8)</option>
+                  <option value="Asia/Bangkok" ${sett.tz === 'Asia/Bangkok' ? 'selected' : ''}>🇹🇭 Thailand (GMT+7)</option>
+                  <option value="Asia/Jakarta" ${sett.tz === 'Asia/Jakarta' ? 'selected' : ''}>🇮🇩 Indonesia (GMT+7)</option>
+                  <option value="Asia/Manila" ${sett.tz === 'Asia/Manila' ? 'selected' : ''}>🇵🇭 Philippines (GMT+8)</option>
+                  <option value="Asia/Tokyo" ${sett.tz === 'Asia/Tokyo' ? 'selected' : ''}>🇯🇵 Japan (GMT+9)</option>
+                  <option value="Asia/Seoul" ${sett.tz === 'Asia/Seoul' ? 'selected' : ''}>🇰🇷 South Korea (GMT+9)</option>
+                  <option value="Asia/Shanghai" ${sett.tz === 'Asia/Shanghai' ? 'selected' : ''}>🇨🇳 China (GMT+8)</option>
+                  <option value="Asia/Hong_Kong" ${sett.tz === 'Asia/Hong_Kong' ? 'selected' : ''}>🇭🇰 Hong Kong (GMT+8)</option>
+                  <option value="Asia/Dubai" ${sett.tz === 'Asia/Dubai' ? 'selected' : ''}>🇦🇪 UAE (GMT+4)</option>
+                  <option value="Asia/Riyadh" ${sett.tz === 'Asia/Riyadh' ? 'selected' : ''}>🇸🇦 Saudi Arabia (GMT+3)</option>
+                </optgroup>
+                
+                <!-- Europe -->
+                <optgroup label="🌍 Europe">
+                  <option value="Europe/London" ${sett.tz === 'Europe/London' ? 'selected' : ''}>🇬🇧 UK (GMT+0)</option>
+                  <option value="Europe/Paris" ${sett.tz === 'Europe/Paris' ? 'selected' : ''}>🇫🇷 France (GMT+1)</option>
+                  <option value="Europe/Berlin" ${sett.tz === 'Europe/Berlin' ? 'selected' : ''}>🇩🇪 Germany (GMT+1)</option>
+                  <option value="Europe/Rome" ${sett.tz === 'Europe/Rome' ? 'selected' : ''}>🇮🇹 Italy (GMT+1)</option>
+                  <option value="Europe/Madrid" ${sett.tz === 'Europe/Madrid' ? 'selected' : ''}>🇪🇸 Spain (GMT+1)</option>
+                  <option value="Europe/Amsterdam" ${sett.tz === 'Europe/Amsterdam' ? 'selected' : ''}>🇳🇱 Netherlands (GMT+1)</option>
+                  <option value="Europe/Moscow" ${sett.tz === 'Europe/Moscow' ? 'selected' : ''}>🇷🇺 Russia (GMT+3)</option>
+                </optgroup>
+                
+                <!-- Americas -->
+                <optgroup label="🌎 Americas">
+                  <option value="America/New_York" ${sett.tz === 'America/New_York' ? 'selected' : ''}>🇺🇸 USA Eastern (GMT-5)</option>
+                  <option value="America/Chicago" ${sett.tz === 'America/Chicago' ? 'selected' : ''}>🇺🇸 USA Central (GMT-6)</option>
+                  <option value="America/Denver" ${sett.tz === 'America/Denver' ? 'selected' : ''}>🇺🇸 USA Mountain (GMT-7)</option>
+                  <option value="America/Los_Angeles" ${sett.tz === 'America/Los_Angeles' ? 'selected' : ''}>🇺🇸 USA Pacific (GMT-8)</option>
+                  <option value="America/Toronto" ${sett.tz === 'America/Toronto' ? 'selected' : ''}>🇨🇦 Canada Eastern (GMT-5)</option>
+                  <option value="America/Vancouver" ${sett.tz === 'America/Vancouver' ? 'selected' : ''}>🇨🇦 Canada Pacific (GMT-8)</option>
+                  <option value="America/Mexico_City" ${sett.tz === 'America/Mexico_City' ? 'selected' : ''}>🇲🇽 Mexico (GMT-6)</option>
+                  <option value="America/Sao_Paulo" ${sett.tz === 'America/Sao_Paulo' ? 'selected' : ''}>🇧🇷 Brazil (GMT-3)</option>
+                  <option value="America/Buenos_Aires" ${sett.tz === 'America/Buenos_Aires' ? 'selected' : ''}>🇦🇷 Argentina (GMT-3)</option>
+                </optgroup>
+                
+                <!-- Africa -->
+                <optgroup label="🌍 Africa">
+                  <option value="Africa/Cairo" ${sett.tz === 'Africa/Cairo' ? 'selected' : ''}>🇪🇬 Egypt (GMT+2)</option>
+                  <option value="Africa/Lagos" ${sett.tz === 'Africa/Lagos' ? 'selected' : ''}>🇳🇬 Nigeria (GMT+1)</option>
+                  <option value="Africa/Johannesburg" ${sett.tz === 'Africa/Johannesburg' ? 'selected' : ''}>🇿🇦 South Africa (GMT+2)</option>
+                  <option value="Africa/Nairobi" ${sett.tz === 'Africa/Nairobi' ? 'selected' : ''}>🇰🇪 Kenya (GMT+3)</option>
+                </optgroup>
+                
+                <!-- Oceania -->
+                <optgroup label="🌏 Oceania">
+                  <option value="Australia/Sydney" ${sett.tz === 'Australia/Sydney' ? 'selected' : ''}>🇦🇺 Australia Eastern (GMT+10)</option>
+                  <option value="Australia/Melbourne" ${sett.tz === 'Australia/Melbourne' ? 'selected' : ''}>🇦🇺 Australia Melbourne (GMT+10)</option>
+                  <option value="Australia/Perth" ${sett.tz === 'Australia/Perth' ? 'selected' : ''}>🇦🇺 Australia Western (GMT+8)</option>
+                  <option value="Pacific/Auckland" ${sett.tz === 'Pacific/Auckland' ? 'selected' : ''}>🇳🇿 New Zealand (GMT+12)</option>
+                </optgroup>
+                
+                <!-- Universal -->
+                <optgroup label="🌍 Universal">
+                  <option value="UTC" ${sett.tz === 'UTC' ? 'selected' : ''}>🌍 UTC</option>
+                </optgroup>
+              </select>
+            </div>
+            <div style="margin-bottom: 12px">
+              <div
+                style="
+                  font-size: 12px;
+                  font-weight: 600;
+                  color: #1a3a5c;
+                  margin-bottom: 8px;
+                "
+              >
                 Default Red Days
               </div>
               <div style="display: flex; gap: 16px; flex-wrap: wrap">
@@ -2899,21 +2963,18 @@
               type="password"
               class="mf"
               id="current-password"
-              placeholder="Current password"
               style="margin-bottom: 8px"
             />
             <input
               type="password"
               class="mf"
               id="new-password"
-              placeholder="New password"
               style="margin-bottom: 8px"
             />
             <input
               type="password"
               class="mf"
               id="confirm-password"
-              placeholder="Confirm password"
               style="margin-bottom: 12px"
             />
             <button
@@ -2979,15 +3040,13 @@
           type="text"
           class="mf"
           id="s-user"
-          placeholder="Username (max 3 users)"
-        />
-        <input type="password" class="mf" id="s-pass" placeholder="Password" />
+          />
+        <input type="password" class="mf" id="s-pass" />
         <input
           type="password"
           class="mf"
           id="s-pass2"
-          placeholder="Confirm Password"
-        />
+          />
         <div class="merr" id="s-err">Error</div>
         <div class="mbtns">
           <button
@@ -6482,7 +6541,14 @@
         "Dec",
       ];
       const LS = "carbal_v7";
-      const TODAY = new Date().toISOString().slice(0, 10);
+      function getToday() {
+        try {
+          return new Date().toLocaleDateString("en-CA", { timeZone: sett.tz });
+        } catch {
+          return new Date().toLocaleDateString("en-CA");
+        }
+      }
+      const TODAY = getToday();
 
       const LOC_CFG = {
         "Warehouse-A": { bg: "#1e4d7b", lt: "#e8f1fb", cls: "wha" },
@@ -6523,7 +6589,7 @@
       // bal[i] = per-location balance (calculated)
       // closing_balance = sum(bal) - total_delivery + total_import
       let DB = {};
-      let sett = { fri: true, sat: true, sun: false, hols: [], excs: [] };
+      let sett = { fri: true, sat: true, sun: false, hols: [], excs: [], tz: "Asia/Dhaka" };
       let users = {}; // username -> passHash  (max 3 + admin)
       let loggedIn = null; // current username or null
       let cur = "";
@@ -7578,6 +7644,15 @@
         sett.sat = document.getElementById("cb-sat").checked;
         sett.sun = document.getElementById("cb-sun").checked;
         setDirty(true);
+        
+        // Update current date display when timezone changes
+        updateCurrentDate();
+        
+        // Update today label
+        const n = new Date();
+        const todayInTz = n.toLocaleDateString("en-CA", { timeZone: sett.tz });
+        document.getElementById("today-lbl").textContent = "Today: " + todayInTz;
+        
         renderTable();
         renderSumCards();
       }
@@ -7740,8 +7815,9 @@
         const [y, m] = cur.split("-").map(Number);
         const rows = DB[cur] || [];
         const wDays = rows.filter((r) => !isRed(r.date)).length;
-        const aucDelTotal = rows.reduce((sum, row) => sum + (row.ad || 0), 0);
-        const net = s.imp - s.del;
+        const aucDelTotal = rows.reduce((sum, row) => sum + (parseInt(row.av) || 0), 0);
+        
+                const net = s.imp - s.del;
         const ratio = s.imp ? Math.round((s.del / s.imp) * 100) : 0;
         const avgDel = wDays ? Math.round(s.del / wDays) : 0;
         const avgImp = wDays ? Math.round(s.imp / wDays) : 0;
@@ -7790,6 +7866,12 @@
           fmt(avgDel),
           "#1d4ed8",
           `Avg Receive: ${fmt(avgImp)}/day`,
+        );
+        h += card(
+          "Auction Delivery",
+          aucDelTotal,
+          "#8b5cf6",
+          "Monthly total",
         );
 
         document.getElementById("sum-cards").innerHTML = h;
@@ -7909,7 +7991,7 @@
           });
 
           tr += `<td class="tdel gsp">${tDel || "—"}</td>`;
-          tr += `<td class="col-sep"><input class="ci auc" type="number" min="0" value="${row.av || ""}" onchange="onAuc('${cur}',${ri},'av',this.value)" placeholder="Val" style="width:100%"></td>`;
+          tr += `<td class="col-sep"><input class="ci auc" type="number" min="0" value="${row.av || 0}" onchange="onAuc('${cur}',${ri},'av',this.value)" style="width:100%"></td>`;
           tr += `<td class="tcb gsp">${closing}</td>`;
           tr += `<td class="timp gsp">${tImp || "—"}</td>`;
           tr += "</tr>";
@@ -8585,11 +8667,13 @@
           const ps = ms.length > 1 ? summ(ms.slice(-2)[0]) : null;
           const ratio = cs.imp ? Math.round((cs.del / cs.imp) * 100) : 0;
           const net = cs.imp - cs.del;
-          const aucDelTotal = Object.values(DB[cur] || []).reduce(
-            (sum, row) => sum + (row.ad || 0),
+          const aucDelTotal = (DB[cur] || []).reduce(
+            (sum, row) => sum + (parseInt(row.av) || 0),
             0,
           );
-
+          
+                    
+          
           let summaryH = `<div class="summary-grid">
             <div class="simple-card">
               <div class="card-icon" style="background:#dcfce7;">📦</div>
@@ -8619,7 +8703,7 @@
               <div class="card-icon" style="background:#e9d5ff;">🏛️</div>
               <div class="card-content">
                 <div class="card-title">Auction Delivery</div>
-                <div class="card-value" style="color:#8b5cf6;">${fmt(aucDelTotal)}</div>
+                <div class="card-value" style="color:#8b5cf6;">${aucDelTotal}</div>
                 <div class="card-subtitle">Monthly total</div>
               </div>
             </div>
@@ -9223,7 +9307,9 @@
           month: "long",
           day: "numeric",
         };
-        const formattedDate = currentDate.toLocaleDateString("en-US", options);
+        const formattedDate = currentDate.toLocaleDateString("en-US", options, {
+          timeZone: sett.tz
+        });
         const tsubElement = document.getElementById("tsub");
         if (tsubElement) {
           tsubElement.textContent = formattedDate;
@@ -9270,8 +9356,9 @@
             }
           });
           const n = new Date();
+          const todayInTz = n.toLocaleDateString("en-CA", { timeZone: sett.tz });
           document.getElementById("today-lbl").textContent =
-            "Today: " + n.toISOString().slice(0, 10);
+            "Today: " + todayInTz;
 
           // Initialize visual feedback
           initializeVisualFeedback();
@@ -9474,7 +9561,7 @@
                 imp: LOCS.map(() => 0),
                 bal: newBals,
                 al: "",
-                av: "",
+                av: 0,
               });
 
               lastRow = DB[monthKey][DB[monthKey].length - 1];
