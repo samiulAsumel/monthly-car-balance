@@ -9292,7 +9292,7 @@
 
         setTimeout(() => {
           // Performance: Check login status first
-          checkLoginStatus();
+          const wasLoggedIn = checkLoginStatus();
 
           // Load saved admin hash if exists
           const savedHash = localStorage.getItem("adminHash");
@@ -9338,6 +9338,10 @@
           if (!isLoggedIn) {
             document.getElementById("login-overlay").classList.add("on");
             document.getElementById("login-userid").focus();
+          } else {
+            // Update UI to show logged in status
+            updateLoginUI();
+            showSuccess("Welcome back! You are logged in.");
           }
 
           // Show welcome message for first-time users
