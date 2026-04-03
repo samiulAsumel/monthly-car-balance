@@ -7243,18 +7243,29 @@
         const savedUser = localStorage.getItem("currentUser");
         const loginTime = localStorage.getItem("loginTime");
 
+        console.log("Checking login status:", {
+          savedLogin,
+          savedUser,
+          loginTime,
+        });
+
         if (savedLogin === "true" && savedUser && loginTime) {
           const timeDiff = Date.now() - parseInt(loginTime);
           const maxSessionTime = 60 * 60 * 1000; // 1 hour
 
+          console.log("Time diff:", timeDiff, "Max time:", maxSessionTime);
+
           if (timeDiff < maxSessionTime && savedUser === ADMIN_USER) {
             isLoggedIn = true;
             currentUser = savedUser;
+            console.log("Login restored successfully");
             return true;
           } else {
+            console.log("Session expired or invalid user");
             logout();
           }
         }
+        console.log("No valid login found");
         return false;
       }
 
@@ -9340,11 +9351,14 @@
 
           // Small delay to ensure login state is properly checked
           setTimeout(() => {
+            console.log("Final login check - isLoggedIn:", isLoggedIn);
             // Show login modal if not logged in
             if (!isLoggedIn) {
+              console.log("Showing login overlay");
               document.getElementById("login-overlay").classList.add("on");
               document.getElementById("login-userid").focus();
             } else {
+              console.log("User is logged in, updating UI");
               // Update UI to show logged in status
               updateLoginUI();
               showSuccess("Welcome back! You are logged in.");
