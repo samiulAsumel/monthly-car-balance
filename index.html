@@ -6743,7 +6743,7 @@
       }
 
       function saveToFirebase() {
-        if (!firebaseDb || !loggedIn) return false;
+        if (!firebaseDb || !isLoggedIn) return false;
 
         const dataToSave = {
           db: DB,
@@ -6767,21 +6767,29 @@
       }
 
       function saveLS() {
+        if (!isLoggedIn) return false;
+
         const db = {};
         Object.keys(DB).forEach((k) => {
           db[k] = DB[k];
         });
         localStorage.setItem(LS, JSON.stringify({ db, sett, users, loggedIn }));
         setDirty(false);
+        return true;
       }
 
       function doSave() {
-        if (!loggedIn) {
+        if (!isLoggedIn) {
           showLogin("save");
           return;
         }
         const restoreButton = showButtonLoading("save-button");
-        saveLS();
+        const lsSuccess = saveLS();
+        if (!lsSuccess) {
+          restoreButton();
+          showError("Login required to save data");
+          return;
+        }
 
         // Save to Firebase
         if (firebaseDb) {
@@ -6949,7 +6957,7 @@
       const AUTO_SAVE_DELAY = 3000; // 3 seconds
 
       function startAutoSave() {
-        if (!autoSaveEnabled || !loggedIn) return;
+        if (!autoSaveEnabled || !isLoggedIn) return;
 
         clearTimeout(autoSaveTimer);
         autoSaveTimer = setTimeout(() => {
@@ -6960,13 +6968,17 @@
       }
 
       function performAutoSave() {
-        if (!loggedIn || !dirty) return;
+        if (!isLoggedIn || !dirty) return;
 
         // Show subtle auto-save indicator
         showAutoSaveIndicator();
 
         // Save data
-        saveLS();
+        const lsSuccess = saveLS();
+        if (!lsSuccess) {
+          hideAutoSaveIndicator();
+          return;
+        }
         setDirty(false);
 
         // Hide indicator after a short delay
