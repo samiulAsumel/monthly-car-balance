@@ -9338,15 +9338,18 @@
 
           hideLoading();
 
-          // Show login modal if not logged in
-          if (!isLoggedIn) {
-            document.getElementById("login-overlay").classList.add("on");
-            document.getElementById("login-userid").focus();
-          } else {
-            // Update UI to show logged in status
-            updateLoginUI();
-            showSuccess("Welcome back! You are logged in.");
-          }
+          // Small delay to ensure login state is properly checked
+          setTimeout(() => {
+            // Show login modal if not logged in
+            if (!isLoggedIn) {
+              document.getElementById("login-overlay").classList.add("on");
+              document.getElementById("login-userid").focus();
+            } else {
+              // Update UI to show logged in status
+              updateLoginUI();
+              showSuccess("Welcome back! You are logged in.");
+            }
+          }, 100);
 
           // Show welcome message for first-time users
           if (!localStorage.getItem("car-balance-visited")) {
