@@ -2518,6 +2518,14 @@
           ➕ Next Month
         </button>
         <button
+          class="tbtn green"
+          id="login-btn"
+          onclick="showLoginForm()"
+          title="Login"
+        >
+          🔐 Login
+        </button>
+        <button
           class="tbtn red"
           id="logout-btn"
           onclick="logout()"
@@ -2957,71 +2965,6 @@
           </div>
           <div style="font-size: 10px; color: #666; margin-top: 6px">
             Daily Car Balance Tracker | Powered by Firebase
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LOCK OVERLAY -->
-    <div class="ov" id="ov-lock">
-      <div class="mbox">
-        <h2>&#128273; Login Required</h2>
-        <p id="lock-msg">Please log in to edit or save.</p>
-        <input
-          type="text"
-          class="mf"
-          id="l-user"
-          placeholder="Username"
-          autocomplete="off"
-        />
-        <input
-          type="password"
-          class="mf"
-          id="l-pass"
-          placeholder="Password"
-          onkeydown="if (event.key === 'Enter') tryLogin();"
-        />
-        <div class="merr" id="l-err">&#10007; Wrong username or password</div>
-        <div class="mbtns">
-          <button
-            class="btn"
-            onclick="document.getElementById('ov-lock').classList.remove('on')"
-          >
-            Cancel
-          </button>
-          <button class="btn pri" onclick="tryLogin()">Login</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- LOGIN OVERLAY -->
-    <div id="login-overlay" class="overlay on">
-      <div class="modal">
-        <div class="modal-header">
-          <h3>🔐 Admin Login</h3>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>User ID</label>
-            <input
-              type="text"
-              id="login-userid"
-              placeholder="Enter admin ID"
-              autocomplete="username"
-            />
-          </div>
-          <div class="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              id="login-password"
-              placeholder="Enter password"
-              autocomplete="current-password"
-            />
-          </div>
-          <div class="form-actions">
-            <button class="btn primary" onclick="doLogin()">Login</button>
-            <button class="btn secondary" onclick="closeLogin()">Cancel</button>
           </div>
         </div>
       </div>
@@ -7174,58 +7117,39 @@
           .replace(/[;&]/g, "");
       }
 
-      // Login system functions
-      function doLogin() {
-        const userid = sanitizeInput(
-          document.getElementById("login-userid").value,
-        );
-        const password = document.getElementById("login-password").value;
+      function showLoginForm() {
+        const userid = prompt("Enter username:");
+        if (!userid) return;
 
-        if (!validateInput(userid, "username")) {
-          showError("Invalid user ID format");
-          return;
-        }
+        const password = prompt("Enter password:");
+        if (!password) return;
 
-        if (userid === ADMIN_USER && hash(password) === ADMIN_HASH) {
+        doLoginSimple(userid, password);
+      }
+
+      function doLoginSimple(userid, password) {
+        console.log("Attempting login with:", userid);
+        if (checkCred(userid, password)) {
+          console.log("Login successful, setting state");
           isLoggedIn = true;
           currentUser = userid;
           localStorage.setItem("isLoggedIn", "true");
           localStorage.setItem("currentUser", userid);
           localStorage.setItem("loginTime", Date.now().toString());
 
-          closeLogin();
           showSuccess("Login successful! Refreshing...");
+          updateLoginUI();
 
+          console.log("Setting up auto-refresh");
           // Auto-refresh after successful login
           setTimeout(() => {
+            console.log("Refreshing now...");
             window.location.reload();
-          }, 1500);
-
-          if (loginCallback) {
-            loginCallback();
-            loginCallback = null;
-          }
-          renderAll();
+          }, 500);
         } else {
+          console.log("Login failed");
           showError("Invalid credentials");
         }
-      }
-
-      function closeLogin() {
-        document.getElementById("login-overlay").classList.remove("on");
-        document.getElementById("login-userid").value = "";
-        document.getElementById("login-password").value = "";
-      }
-
-      function showLogin(action = "edit") {
-        if (isLoggedIn) return;
-
-        document.getElementById("lock-msg").textContent =
-          action === "edit"
-            ? "Please log in to edit or save."
-            : "Please log in to access this feature.";
-        document.getElementById("login-overlay").classList.add("on");
-        document.getElementById("login-userid").focus();
       }
 
       function logout() {
@@ -7236,6 +7160,23 @@
         localStorage.removeItem("loginTime");
         showSuccess("Logged out successfully");
         renderAll();
+      }
+
+      function updateLoginUI() {
+        document.getElementById("lock-info").textContent = isLoggedIn
+          ? `Logged in: ${currentUser}`
+          : "Not logged in — login to edit/save";
+
+        const loginBtn = document.getElementById("login-btn");
+        const logoutBtn = document.getElementById("logout-btn");
+
+        if (loginBtn) {
+          loginBtn.style.display = isLoggedIn ? "none" : "inline-block";
+        }
+
+        if (logoutBtn) {
+          logoutBtn.style.display = isLoggedIn ? "inline-block" : "none";
+        }
       }
 
       function checkLoginStatus() {
@@ -7269,12 +7210,12 @@
         return false;
       }
 
-      function requireLogin(callback) {
+      function requireLogin(cb) {
         if (isLoggedIn) {
-          callback();
+          cb();
         } else {
-          loginCallback = callback;
-          showLogin();
+          loginCallback = cb;
+          showLoginForm();
         }
       }
 
@@ -7338,29 +7279,13 @@
         document.getElementById("ov-lock").classList.add("on");
       }
 
-      function tryLogin() {
-        const u = document.getElementById("l-user").value.trim();
-        const p = document.getElementById("l-pass").value;
-        if (checkCred(u, p)) {
-          loggedIn = u;
-          document.getElementById("ov-lock").classList.remove("on");
-          if (loginCallback) {
-            loginCallback();
-            loginCallback = null;
-          }
-          renderAll();
-        } else {
-          document.getElementById("l-err").style.display = "block";
-        }
-      }
-
       function requireLogin(cb) {
-        if (loggedIn) {
+        if (isLoggedIn) {
           cb();
           return;
         }
         loginCallback = cb;
-        showLogin("edit");
+        showLoginForm();
       }
 
       // ════════════════════════════════════════════════════
@@ -7791,8 +7716,14 @@
           ? `Logged in: ${currentUser}`
           : "Not logged in — login to edit/save";
 
-        // Show/hide logout button
+        // Show/hide login and logout buttons
+        const loginBtn = document.getElementById("login-btn");
         const logoutBtn = document.getElementById("logout-btn");
+
+        if (loginBtn) {
+          loginBtn.style.display = isLoggedIn ? "none" : "inline-block";
+        }
+
         if (logoutBtn) {
           logoutBtn.style.display = isLoggedIn ? "inline-block" : "none";
         }
@@ -9350,18 +9281,11 @@
 
           hideLoading();
 
-          // Small delay to ensure login state is properly checked
-          setTimeout(() => {
-            // Show login modal if not logged in
-            if (!isLoggedIn) {
-              document.getElementById("login-overlay").classList.add("on");
-              document.getElementById("login-userid").focus();
-            } else {
-              // Update UI to show logged in status
-              updateLoginUI();
-              showSuccess("Welcome back! You are logged in.");
-            }
-          }, 100);
+          // Update login UI based on current state
+          updateLoginUI();
+          if (isLoggedIn) {
+            showSuccess("Welcome back! You are logged in.");
+          }
 
           // Show welcome message for first-time users
           if (!localStorage.getItem("car-balance-visited")) {
@@ -9382,15 +9306,6 @@
             if (isLoggedIn) {
               logout();
             }
-          }
-
-          // Enter key in login form
-          if (
-            e.key === "Enter" &&
-            document.getElementById("login-overlay").classList.contains("on")
-          ) {
-            e.preventDefault();
-            doLogin();
           }
         });
       }
