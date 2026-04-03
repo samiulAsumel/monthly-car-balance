@@ -9338,6 +9338,7 @@
                 '<span style="color:#059669">✅ Connected to cloud</span>';
             }
           });
+          const n = new Date();
           document.getElementById("today-lbl").textContent =
             "Today: " + n.toISOString().slice(0, 10);
 
@@ -9351,14 +9352,11 @@
 
           // Small delay to ensure login state is properly checked
           setTimeout(() => {
-            console.log("Final login check - isLoggedIn:", isLoggedIn);
             // Show login modal if not logged in
             if (!isLoggedIn) {
-              console.log("Showing login overlay");
               document.getElementById("login-overlay").classList.add("on");
               document.getElementById("login-userid").focus();
             } else {
-              console.log("User is logged in, updating UI");
               // Update UI to show logged in status
               updateLoginUI();
               showSuccess("Welcome back! You are logged in.");
