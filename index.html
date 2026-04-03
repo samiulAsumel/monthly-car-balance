@@ -276,7 +276,11 @@
         justify-content: space-between;
         align-items: center;
         padding: 8px 16px;
-        background: linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(51, 65, 85, 1) 100%);
+        background: linear-gradient(
+          135deg,
+          rgba(15, 23, 42, 1) 0%,
+          rgba(51, 65, 85, 1) 100%
+        );
         border-bottom: 1px solid rgba(100, 116, 139, 1);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         position: sticky;
@@ -1398,22 +1402,46 @@
         border: none;
         border-radius: 16px;
         overflow: hidden;
-        margin-bottom: 4px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
-        background: #fff;
+        margin-bottom: 24px;
+        box-shadow:
+          0 20px 60px rgba(0, 0, 0, 0.15),
+          0 8px 24px rgba(0, 0, 0, 0.1),
+          0 0 0 1px rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        position: relative;
+      }
+      .tbl-wrap::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          #3b82f6 0%,
+          #8b5cf6 25%,
+          #10b981 50%,
+          #f59e0b 75%,
+          #ef4444 100%
+        );
+        z-index: 10;
       }
       .tbl-scroll {
         overflow-y: visible;
         overflow-x: auto;
         max-height: none;
+        border-radius: 16px;
       }
 
       /* ── TABLE STRUCTURE ── */
       table.dt {
         width: 100%;
         table-layout: auto;
-        border: 3px solid rgba(15, 23, 42, 0.1);
-        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+        border: none;
+        box-shadow: none;
+        border-radius: 16px;
+        overflow: hidden;
       }
       table.dt thead th {
         position: relative;
@@ -1584,156 +1612,385 @@
         border-right: 2px solid rgba(26, 26, 26, 1) !important;
       }
 
-      /* Advanced color grading for professional table */
-      table.dt thead th.hdate, 
+      /* Advanced professional color grading with linear gradients */
+      table.dt thead th.hdate,
       table.dt thead th.hday,
       table.dt thead th.no-gap {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(30, 41, 59, 1) 100%) !important;
+        background: linear-gradient(
+          135deg,
+          #0f172a 0%,
+          #1e293b 50%,
+          #334155 100%
+        ) !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        border-bottom: 2px solid #475569 !important;
+        position: relative;
+        overflow: hidden;
       }
+      table.dt thead th.hdate::before,
+      table.dt thead th.hday::before,
+      table.dt thead th.no-gap::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+      table.dt thead th:hover::before {
+        left: 100%;
+      }
+
+      /* Premium zebra striping with subtle gradients */
       table.dt tbody tr:nth-child(even) {
-        background: rgba(241, 245, 249, 1);
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        transition: all 0.3s ease;
       }
       table.dt tbody tr:nth-child(odd) {
-        background: rgba(255, 255, 255, 1);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        transition: all 0.3s ease;
       }
       table.dt tbody tr:hover {
-        background: rgba(224, 231, 255, 1) !important;
+        background: linear-gradient(
+          135deg,
+          #e0e7ff 0%,
+          #c7d2fe 50%,
+          #a5b4fc 100%
+        ) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
       }
-      /* Header gradient colors - elegant */
-      th.hdate, th.hday {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(51, 65, 85, 1) 100%);
+
+      /* Premium header gradient colors with depth */
+      th.hdate,
+      th.hday {
+        background: linear-gradient(
+          135deg,
+          #0f172a 0%,
+          #1e293b 50%,
+          #334155 100%
+        );
+        color: #ffffff;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
       }
       th.thd {
-        background: linear-gradient(135deg, rgba(30, 58, 95, 1) 0%, rgba(59, 130, 246, 1) 100%);
+        background: linear-gradient(
+          135deg,
+          #1e3a8a 0%,
+          #2563eb 50%,
+          #3b82f6 100%
+        );
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
       th.tha {
-        background: linear-gradient(135deg, rgba(88, 28, 135, 1) 0%, rgba(139, 92, 246, 1) 100%);
+        background: linear-gradient(
+          135deg,
+          #581c87 0%,
+          #7c3aed 50%,
+          #8b5cf6 100%
+        );
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
       th.thcb {
-        background: linear-gradient(135deg, rgba(6, 78, 59, 1) 0%, rgba(16, 185, 129, 1) 100%);
+        background: linear-gradient(
+          135deg,
+          #064e3b 0%,
+          #059669 50%,
+          #10b981 100%
+        );
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
       th.thi {
-        background: linear-gradient(135deg, rgba(180, 83, 9, 1) 0%, rgba(249, 115, 22, 1) 100%);
+        background: linear-gradient(
+          135deg,
+          #92400e 0%,
+          #ea580c 50%,
+          #f97316 100%
+        );
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Location-specific header gradients */
+      th.wh-a {
+        background: linear-gradient(
+          135deg,
+          #1e40af 0%,
+          #3b82f6 50%,
+          #60a5fa 100%
+        ) !important;
+        color: #ffffff !important;
+      }
+      th.yard-1 {
+        background: linear-gradient(
+          135deg,
+          #166534 0%,
+          #16a34a 50%,
+          #22c55e 100%
+        ) !important;
+        color: #ffffff !important;
+      }
+      th.shed-5 {
+        background: linear-gradient(
+          135deg,
+          #9333ea 0%,
+          #a855f7 50%,
+          #c084fc 100%
+        ) !important;
+        color: #ffffff !important;
+      }
+      th.shed-3 {
+        background: linear-gradient(
+          135deg,
+          #dc2626 0%,
+          #ef4444 50%,
+          #f87171 100%
+        ) !important;
+        color: #ffffff !important;
+      }
+      th.shed-2 {
+        background: linear-gradient(
+          135deg,
+          #ea580c 0%,
+          #f97316 50%,
+          #fb923c 100%
+        ) !important;
+        color: #ffffff !important;
+      }
+      th.shed-1 {
+        background: linear-gradient(
+          135deg,
+          #0891b2 0%,
+          #06b6d4 50%,
+          #22d3ee 100%
+        ) !important;
+        color: #ffffff !important;
       }
 
       /* ── DATA CELLS ── */
       td {
-        padding: 8px 6px;
+        padding: 6px 6px;
         text-align: center;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        background: rgba(255, 255, 255, 1);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.2s ease;
+        position: relative;
+        line-height: 1.2;
       }
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        background: rgba(248, 250, 252, 1);
+      td:hover {
+        background: linear-gradient(
+          135deg,
+          #f1f5f9 0%,
+          #e2e8f0 100%
+        ) !important;
+        z-index: 1;
       }
+
+      /* Date and Day cells with premium styling */
       td.ddate {
         text-align: center;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 700;
-        color: #000000;
+        color: #1e293b;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-right: 1px solid rgba(226, 232, 240, 0.6);
+        line-height: 1.1;
       }
       td.dday {
-        color: #000000;
-        font-size: 13px;
+        color: #475569;
+        font-size: 11px;
         font-weight: 700;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        border-right: 2px solid rgba(100, 116, 139, 0.3);
+        line-height: 1.1;
       }
+
+      /* Balance cells with subtle gradient */
       td.dbal {
         font-weight: 700;
-        color: #000000;
-        font-size: 13px;
+        color: #0f172a;
+        font-size: 11px;
         text-align: center !important;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-right: 1px solid rgba(226, 232, 240, 0.4);
+        line-height: 1.1;
       }
+
+      /* Delivery cells with blue accent */
       td.ddel {
-        color: #000000;
-        font-size: 13px;
+        color: #1e40af;
+        font-size: 11px;
         font-weight: 700;
         text-align: center !important;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-right: 1px solid rgba(59, 130, 246, 0.2);
+        line-height: 1.1;
       }
+
+      /* Import cells with orange accent */
       td.dimp {
-        color: #000000;
-        font-size: 13px;
+        color: #c2410c;
+        font-size: 11px;
         font-weight: 700;
         text-align: center !important;
+        background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+        line-height: 1.1;
       }
+
+      /* Total cells with premium gradients */
       td.tdel {
         font-weight: 700;
-        color: #000000;
-        background: rgba(238, 244, 255, 1);
-        font-size: 13px;
+        color: #1e40af;
+        background: linear-gradient(
+          135deg,
+          #dbeafe 0%,
+          #bfdbfe 50%,
+          #93c5fd 100%
+        );
+        font-size: 11px;
         text-align: center !important;
+        border-right: 1px solid rgba(59, 130, 246, 0.3);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        line-height: 1.1;
       }
       td.tcb {
         font-weight: 700;
-        color: #000000;
-        background: rgba(240, 253, 244, 1);
-        font-size: 13px;
+        color: #059669;
+        background: linear-gradient(
+          135deg,
+          #d1fae5 0%,
+          #a7f3d0 50%,
+          #6ee7b7 100%
+        );
+        font-size: 11px;
         text-align: center !important;
+        border-right: 1px solid rgba(16, 185, 129, 0.3);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        line-height: 1.1;
       }
       td.timp {
         font-weight: 700;
-        color: #000000;
-        background: rgba(255, 247, 237, 1);
-        font-size: 13px;
+        color: #c2410c;
+        background: linear-gradient(
+          135deg,
+          #fed7aa 0%,
+          #fdba74 50%,
+          #fb923c 100%
+        );
+        font-size: 11px;
         text-align: center !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        line-height: 1.1;
       }
       td.dauc {
         color: #000000;
-        font-size: 12px;
+        font-size: 10px;
         font-style: italic;
         font-weight: 700;
       }
 
+      /* Enhanced row highlighting with gradients */
       tr.red td {
-        background: rgba(166, 29, 29, 1) !important;
+        background: linear-gradient(
+          135deg,
+          #dc2626 0%,
+          #ef4444 50%,
+          #f87171 100%
+        ) !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
       }
       tr.red td.ddate,
       tr.red td.dday {
-        color: #000000 !important;
+        color: #ffffff !important;
         font-weight: 700 !important;
       }
       tr.red td.tdel,
       tr.red td.tcb,
       tr.red td.timp {
-        background: rgba(166, 29, 29, 1) !important;
+        background: linear-gradient(
+          135deg,
+          #b91c1c 0%,
+          #dc2626 50%,
+          #ef4444 100%
+        ) !important;
       }
       tr.tod td {
-        background: rgba(255, 215, 0, 1) !important;
+        background: linear-gradient(
+          135deg,
+          #fbbf24 0%,
+          #f59e0b 50%,
+          #d97706 100%
+        ) !important;
+        color: #78350f !important;
+        font-weight: 700 !important;
       }
       tr.tod td.ddate {
-        color: #92400e !important;
+        color: #78350f !important;
+        font-weight: 800 !important;
       }
       tr.foot td {
-        background: rgba(220, 228, 240, 1) !important;
-        font-weight: 700 !important;
-        border-top: 2px solid rgba(143, 168, 196, 1) !important;
-        font-size: 30px;
-        color: #000000;
+        background: linear-gradient(
+          135deg,
+          #1e293b 0%,
+          #334155 50%,
+          #475569 100%
+        ) !important;
+        font-weight: 800 !important;
+        border-top: 3px solid #64748b !important;
+        font-size: 14px;
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
-      /* Editable inputs — tight fit */
+      /* Premium editable inputs with modern styling */
       input.ci {
         width: 100%;
         padding: 3px 4px;
-        border: 1px solid #d1d5db;
-        border-radius: 2px;
-        font-size: 13px;
+        border: 2px solid transparent;
+        border-radius: 4px;
+        font-size: 11px;
         font-weight: 700;
         text-align: center !important;
-        background: #fff;
-        color: #1a1a1a;
-        font-family: Arial;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        line-height: 1.1;
+      }
+      input.ci:hover {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-color: #cbd5e1;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       }
       input.ci:focus {
         outline: none;
-        border-color: rgba(30, 58, 92, 1);
-        background: rgba(240, 246, 255, 1);
+        border-color: #3b82f6;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        box-shadow:
+          0 0 0 3px rgba(59, 130, 246, 0.1),
+          0 2px 8px rgba(0, 0, 0, 0.2);
+        transform: translateY(-1px);
+      }
+      input.ci:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
       input.ci.del {
         color: rgba(29, 78, 216, 1);
@@ -2205,9 +2462,17 @@
 
     <!-- MONTH BAR -->
     <div class="mbar">
-      <div id="mbar" style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center"></div>
+      <div
+        id="mbar"
+        style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center"
+      ></div>
       <span
-        style="margin-left: auto; font-size: 10px; color: #666; font-weight: 600"
+        style="
+          margin-left: auto;
+          font-size: 10px;
+          color: #666;
+          font-weight: 600;
+        "
         id="today-lbl"
       ></span>
     </div>
@@ -2301,8 +2566,12 @@
     <!-- CHART PAGE -->
     <div class="page" id="page-chart">
       <!-- Quick Stats Row -->
-      <div class="cards-row" id="chart-quick-stats" style="margin-bottom: 15px;"></div>
-      
+      <div
+        class="cards-row"
+        id="chart-quick-stats"
+        style="margin-bottom: 15px"
+      ></div>
+
       <div class="ch-full">
         <div class="ch-ttl">Monthly Closing Balance Trend</div>
         <canvas id="c-trend" height="70"></canvas>
@@ -2334,14 +2603,17 @@
         </div>
         <div class="ch-card">
           <div class="ch-ttl">Location Performance Summary</div>
-          <div id="location-performance" style="padding: 10px; font-size: 11px;"></div>
+          <div
+            id="location-performance"
+            style="padding: 10px; font-size: 11px"
+          ></div>
         </div>
       </div>
     </div>
 
     <!-- REPORT PAGE -->
     <div class="page" id="page-report">
-      <div style="max-width: 1200px; margin: 0 auto;">
+      <div style="max-width: 1200px; margin: 0 auto">
         <div class="rpt-sec" id="rpt-summary"></div>
         <div class="rpt-sec" id="rpt-monthly"></div>
         <div class="rpt-sec" id="rpt-location"></div>
@@ -2350,96 +2622,243 @@
 
     <!-- SETTINGS PAGE -->
     <div class="page" id="page-settings">
-      <div style="max-width: 700px; margin: 0 auto;">
-        
+      <div style="max-width: 700px; margin: 0 auto">
         <!-- Calendar Settings -->
         <div class="rpt-sec">
           <div class="rpt-hdr">📅 Calendar Settings</div>
-          <div style="padding: 15px;">
-            <div style="margin-bottom: 12px;">
-              <div style="font-size: 12px; font-weight: 600; color: #1a3a5c; margin-bottom: 8px;">Default Red Days</div>
+          <div style="padding: 15px">
+            <div style="margin-bottom: 12px">
+              <div
+                style="
+                  font-size: 12px;
+                  font-weight: 600;
+                  color: #1a3a5c;
+                  margin-bottom: 8px;
+                "
+              >
+                Default Red Days
+              </div>
               <div style="display: flex; gap: 16px; flex-wrap: wrap">
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; padding: 6px 12px; background: #f3f4f6; border-radius: 6px;">
-                  <input type="checkbox" id="cb-fri" onchange="saveSett()" style="width:16px;height:16px;" />
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    padding: 6px 12px;
+                    background: #f3f4f6;
+                    border-radius: 6px;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="cb-fri"
+                    onchange="saveSett()"
+                    style="width: 16px; height: 16px"
+                  />
                   Friday
                 </label>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; padding: 6px 12px; background: #f3f4f6; border-radius: 6px;">
-                  <input type="checkbox" id="cb-sat" onchange="saveSett()" style="width:16px;height:16px;" />
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    padding: 6px 12px;
+                    background: #f3f4f6;
+                    border-radius: 6px;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="cb-sat"
+                    onchange="saveSett()"
+                    style="width: 16px; height: 16px"
+                  />
                   Saturday
                 </label>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; padding: 6px 12px; background: #f3f4f6; border-radius: 6px;">
-                  <input type="checkbox" id="cb-sun" onchange="saveSett()" style="width:16px;height:16px;" />
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    padding: 6px 12px;
+                    background: #f3f4f6;
+                    border-radius: 6px;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="cb-sun"
+                    onchange="saveSett()"
+                    style="width: 16px; height: 16px"
+                  />
                   Sunday
                 </label>
               </div>
             </div>
           </div>
         </div>
-        
+
         <!-- Custom Red Dates -->
         <div class="rpt-sec">
           <div class="rpt-hdr">🎯 Add Custom Red Date</div>
-          <div style="padding: 15px;">
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
-              <input type="date" id="hol-date" class="mf" style="flex:1; max-width: 200px;" />
+          <div style="padding: 15px">
+            <div
+              style="
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                margin-bottom: 12px;
+              "
+            >
+              <input
+                type="date"
+                id="hol-date"
+                class="mf"
+                style="flex: 1; max-width: 200px"
+              />
               <button class="btn pri" onclick="addHol()">+ Add</button>
             </div>
-            <div style="font-size: 11px; font-weight: 600; color: #666; margin-bottom: 6px;">Custom red dates:</div>
+            <div
+              style="
+                font-size: 11px;
+                font-weight: 600;
+                color: #666;
+                margin-bottom: 6px;
+              "
+            >
+              Custom red dates:
+            </div>
             <div id="hol-list"></div>
           </div>
         </div>
-        
+
         <!-- Remove Red Dates -->
         <div class="rpt-sec">
           <div class="rpt-hdr">❌ Remove Red from Date</div>
-          <div style="padding: 15px;">
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
-              <input type="date" id="exc-date" class="mf" style="flex:1; max-width: 200px;" />
-              <button class="btn" style="border-color: #dc2626; color: #dc2626;" onclick="addExc()">Remove</button>
+          <div style="padding: 15px">
+            <div
+              style="
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                margin-bottom: 12px;
+              "
+            >
+              <input
+                type="date"
+                id="exc-date"
+                class="mf"
+                style="flex: 1; max-width: 200px"
+              />
+              <button
+                class="btn"
+                style="border-color: #dc2626; color: #dc2626"
+                onclick="addExc()"
+              >
+                Remove
+              </button>
             </div>
-            <div style="font-size: 11px; font-weight: 600; color: #666; margin-bottom: 6px;">Exceptions (not red):</div>
+            <div
+              style="
+                font-size: 11px;
+                font-weight: 600;
+                color: #666;
+                margin-bottom: 6px;
+              "
+            >
+              Exceptions (not red):
+            </div>
             <div id="exc-list"></div>
           </div>
         </div>
-        
+
         <!-- Users -->
         <div class="rpt-sec">
           <div class="rpt-hdr">👥 Registered Users</div>
-          <div style="padding: 15px;">
-            <div id="user-list" style="font-size: 12px; color: #555;"></div>
+          <div style="padding: 15px">
+            <div id="user-list" style="font-size: 12px; color: #555"></div>
           </div>
         </div>
-        
+
         <!-- Admin Password -->
         <div class="rpt-sec">
           <div class="rpt-hdr">🔐 Admin Password</div>
-          <div style="padding: 15px;">
-            <input type="password" class="mf" id="current-password" placeholder="Current password" style="margin-bottom: 8px;" />
-            <input type="password" class="mf" id="new-password" placeholder="New password" style="margin-bottom: 8px;" />
-            <input type="password" class="mf" id="confirm-password" placeholder="Confirm password" style="margin-bottom: 12px;" />
-            <button class="btn pri" onclick="changeAdminPassword()" style="width: 100%;">Change Password</button>
+          <div style="padding: 15px">
+            <input
+              type="password"
+              class="mf"
+              id="current-password"
+              placeholder="Current password"
+              style="margin-bottom: 8px"
+            />
+            <input
+              type="password"
+              class="mf"
+              id="new-password"
+              placeholder="New password"
+              style="margin-bottom: 8px"
+            />
+            <input
+              type="password"
+              class="mf"
+              id="confirm-password"
+              placeholder="Confirm password"
+              style="margin-bottom: 12px"
+            />
+            <button
+              class="btn pri"
+              onclick="changeAdminPassword()"
+              style="width: 100%"
+            >
+              Change Password
+            </button>
           </div>
         </div>
-        
+
         <!-- Cloud Sync -->
         <div class="rpt-sec">
           <div class="rpt-hdr">☁️ Cloud Sync (Firebase)</div>
-          <div style="padding: 15px;">
-            <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
-              Data syncs automatically to cloud. All devices will see the same data.
+          <div style="padding: 15px">
+            <div style="font-size: 12px; color: #666; margin-bottom: 10px">
+              Data syncs automatically to cloud. All devices will see the same
+              data.
             </div>
-            <div id="gs-status" style="font-size: 13px; color: #059669; font-weight: 600; padding: 10px; background: #dcfce7; border-radius: 6px; text-align: center;">
+            <div
+              id="gs-status"
+              style="
+                font-size: 13px;
+                color: #059669;
+                font-weight: 600;
+                padding: 10px;
+                background: #dcfce7;
+                border-radius: 6px;
+                text-align: center;
+              "
+            >
               ☁️ Connected
             </div>
           </div>
         </div>
-        
+
         <!-- Footer -->
-        <div style="text-align: center; padding: 30px 20px; margin-top: 20px; border-top: 1px solid #e2e8f0;">
-          <div style="font-size: 18px; color: #444;">
+        <div
+          style="
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 20px;
+            border-top: 1px solid #e2e8f0;
+          "
+        >
+          <div style="font-size: 18px; color: #444">
             © 2026 samiulAsumel. All rights reserved.
           </div>
-          <div style="font-size: 16px; color: #666; margin-top: 6px;">
+          <div style="font-size: 16px; color: #666; margin-top: 6px">
             Daily Car Balance Tracker | Powered by Firebase
           </div>
         </div>
@@ -7177,15 +7596,15 @@
       //  MONTH BAR
       // ═══════════════════════════════════════════════════════════════════════
       let showAllMonths = false;
-      
+
       function renderMbar() {
         const ms = months();
         const el = document.getElementById("mbar");
         el.innerHTML = "";
-        
+
         // Show last 12 months or all if user expanded
         const displayMonths = showAllMonths ? ms : ms.slice(-12);
-        
+
         displayMonths.forEach((k) => {
           const [y, m] = k.split("-").map(Number);
           const t = document.createElement("div");
@@ -7198,7 +7617,7 @@
           };
           el.appendChild(t);
         });
-        
+
         // Add "Previous" button on the far left if there are more than 12 months
         if (ms.length > 12 && !showAllMonths) {
           const btn = document.createElement("button");
@@ -7216,7 +7635,7 @@
           // Insert at beginning
           el.insertBefore(btn, el.firstChild);
         }
-        
+
         // Add "Collapse" button on the far right if showing all
         if (showAllMonths) {
           const btn = document.createElement("button");
@@ -7375,7 +7794,7 @@
           const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
           h1 += `<th class="${cfg.cls} ${gsp} no-gap" colspan="3" style="border-bottom:none">${loc}</th>`;
         });
-h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
+        h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
               <th class="tha"     rowspan="2">Auction<br>Delivery</th>
               <th class="thcb gsp" rowspan="2">Closing<br>Balance</th>
               <th class="thi gsp" rowspan="2">Total<br>Import</th></tr>`;
@@ -7425,7 +7844,7 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
           });
 
           tr += `<td class="tdel gsp">${tDel || "—"}</td>`;
-          tr += `<td class="col-sep"><input class="ci auc" type="number" min="0" value="${row.av || ''}" onchange="onAuc('${cur}',${ri},'av',this.value)" placeholder="Val" style="width:100%"></td>`;
+          tr += `<td class="col-sep"><input class="ci auc" type="number" min="0" value="${row.av || ""}" onchange="onAuc('${cur}',${ri},'av',this.value)" placeholder="Val" style="width:100%"></td>`;
           tr += `<td class="tcb gsp">${closing}</td>`;
           tr += `<td class="timp gsp">${tImp || "—"}</td>`;
           tr += "</tr>";
@@ -7989,7 +8408,7 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
 
           // Render Quick Stats
           renderChartQuickStats(ms, cs);
-          
+
           // Render Location Performance
           renderLocationPerformance();
 
@@ -8001,7 +8420,7 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
         const prevMs = ms.slice(-2)[0];
         const ps = prevMs ? summ(prevMs) : null;
         const ratio = cs.imp ? Math.round((cs.del / cs.imp) * 100) : 0;
-        
+
         const card = (label, value, color, change) => `
           <div class="card" style="text-align: center; padding: 10px;">
             <div class="c-lbl" style="font-size: 9px; text-transform: uppercase; color: #666;">${label}</div>
@@ -8009,24 +8428,50 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
             <div class="c-sub" style="font-size: 9px;">${change}</div>
           </div>
         `;
-        
+
         let h = "";
-        h += card("Total Balance", cs.bal, "#166534", ps ? pBadge(cs.bal, ps.bal) + " vs prev" : "—");
-        h += card("Delivery", cs.del, "#1d4ed8", ps ? pBadge(cs.del, ps.del, false) + " vs prev" : "—");
-        h += card("Receive", cs.imp, "#92400e", ps ? pBadge(cs.imp, ps.imp, true) + " vs prev" : "—");
-        h += card("D/R Ratio", ratio + "%", ratio <= 75 ? "#16a34a" : "#dc2626", ratio <= 75 ? "Good" : "High");
-        h += card("Net Change", cs.imp - cs.del, (cs.imp - cs.del) >= 0 ? "#16a34a" : "#dc2626", (cs.imp - cs.del) >= 0 ? "+" : "");
-        
+        h += card(
+          "Total Balance",
+          cs.bal,
+          "#166534",
+          ps ? pBadge(cs.bal, ps.bal) + " vs prev" : "—",
+        );
+        h += card(
+          "Delivery",
+          cs.del,
+          "#1d4ed8",
+          ps ? pBadge(cs.del, ps.del, false) + " vs prev" : "—",
+        );
+        h += card(
+          "Receive",
+          cs.imp,
+          "#92400e",
+          ps ? pBadge(cs.imp, ps.imp, true) + " vs prev" : "—",
+        );
+        h += card(
+          "D/R Ratio",
+          ratio + "%",
+          ratio <= 75 ? "#16a34a" : "#dc2626",
+          ratio <= 75 ? "Good" : "High",
+        );
+        h += card(
+          "Net Change",
+          cs.imp - cs.del,
+          cs.imp - cs.del >= 0 ? "#16a34a" : "#dc2626",
+          cs.imp - cs.del >= 0 ? "+" : "",
+        );
+
         document.getElementById("chart-quick-stats").innerHTML = h;
       }
-      
+
       function renderLocationPerformance() {
         const rows = DB[cur] || [];
         if (!rows.length) {
-          document.getElementById("location-performance").innerHTML = "<div style='color:#888;text-align:center;padding:20px;'>No data available</div>";
+          document.getElementById("location-performance").innerHTML =
+            "<div style='color:#888;text-align:center;padding:20px;'>No data available</div>";
           return;
         }
-        
+
         let h = `<table style="width:100%;font-size:12px;border-collapse:collapse;">
           <thead style="background:#1a3a5c;color:#fff;">
             <tr>
@@ -8038,15 +8483,17 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
             </tr>
           </thead>
           <tbody>`;
-        
+
         LOCS.forEach((loc, li) => {
           const del = rows.reduce((s, r) => s + r.del[li], 0);
           const imp = rows.reduce((s, r) => s + r.imp[li], 0);
           const ratio = imp ? Math.round((del / imp) * 100) : 0;
-          const status = ratio <= 75 ? "🟢 Good" : ratio <= 100 ? "🟡 Watch" : "🔴 Critical";
-          const color = ratio <= 75 ? "#16a34a" : ratio <= 100 ? "#d97706" : "#dc2626";
-          
-          h += `<tr style="border-bottom:1px solid #e5e7eb;background:${li%2==0?'#fff':'#f9fafb'};">
+          const status =
+            ratio <= 75 ? "🟢 Good" : ratio <= 100 ? "🟡 Watch" : "🔴 Critical";
+          const color =
+            ratio <= 75 ? "#16a34a" : ratio <= 100 ? "#d97706" : "#dc2626";
+
+          h += `<tr style="border-bottom:1px solid #e5e7eb;background:${li % 2 == 0 ? "#fff" : "#f9fafb"};">
             <td style="padding:8px;font-weight:700;color:#1a3a5c;">${loc}</td>
             <td style="padding:8px;text-align:right;font-weight:600;color:#1d4ed8;">${fmt(del)}</td>
             <td style="padding:8px;text-align:right;font-weight:600;color:#92400e;">${fmt(imp)}</td>
@@ -8054,7 +8501,7 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
             <td style="padding:8px;text-align:right;font-weight:600;color:${color};">${status}</td>
           </tr>`;
         });
-        
+
         h += "</tbody></table>";
         document.getElementById("location-performance").innerHTML = h;
       }
@@ -8067,13 +8514,13 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
 
         setTimeout(() => {
           const ms = months();
-          
+
           // Summary Section
           const cs = summ(cur);
           const ps = ms.length > 1 ? summ(ms.slice(-2)[0]) : null;
           const ratio = cs.imp ? Math.round((cs.del / cs.imp) * 100) : 0;
           const net = cs.imp - cs.del;
-          
+
           let summaryH = `<div class="summary-grid">
             <div class="simple-card">
               <div class="card-icon" style="background:#dcfce7;">📦</div>
@@ -8100,10 +8547,10 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
               </div>
             </div>
             <div class="simple-card">
-              <div class="card-icon" style="background:${ratio <= 75 ? '#dcfce7' : '#fee2e2'};">📊</div>
+              <div class="card-icon" style="background:${ratio <= 75 ? "#dcfce7" : "#fee2e2"};">📊</div>
               <div class="card-content">
                 <div class="card-title">D/R Ratio</div>
-                <div class="card-value" style="color:${ratio <= 75 ? '#16a34a' : '#dc2626'};">${ratio}%</div>
+                <div class="card-value" style="color:${ratio <= 75 ? "#16a34a" : "#dc2626"};">${ratio}%</div>
                 <div class="card-subtitle">Target: <75%</div>
               </div>
             </div>
@@ -8123,19 +8570,26 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
                 </tr>
               </thead>
               <tbody>`;
-          ms.slice().reverse().forEach((k) => {
-            const s = summ(k);
-            const [y, m] = k.split("-").map(Number);
-            const efficiency = s.imp ? Math.round((s.del / s.imp) * 100) : 0;
-            const effClass = efficiency >= 100 ? "excellent" : efficiency >= 75 ? "good" : "poor";
-            monthlyH += `<tr class="${k === cur ? "current" : ""}">
+          ms.slice()
+            .reverse()
+            .forEach((k) => {
+              const s = summ(k);
+              const [y, m] = k.split("-").map(Number);
+              const efficiency = s.imp ? Math.round((s.del / s.imp) * 100) : 0;
+              const effClass =
+                efficiency >= 100
+                  ? "excellent"
+                  : efficiency >= 75
+                    ? "good"
+                    : "poor";
+              monthlyH += `<tr class="${k === cur ? "current" : ""}">
               <td class="month">${MO[m - 1]} ${y}</td>
               <td class="receive">${fmt(s.imp)}</td>
               <td class="delivery">${fmt(s.del)}</td>
               <td class="balance">${fmt(s.bal)}</td>
               <td><span class="efficiency ${effClass}">${efficiency}%</span></td>
             </tr>`;
-          });
+            });
           monthlyH += `</tbody></table></div>`;
           document.getElementById("rpt-monthly").innerHTML = monthlyH;
 
@@ -8160,7 +8614,7 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
                 </div>
                 <div class="metric">
                   <span class="metric-label">D/R Ratio</span>
-                  <span class="metric-value ${locRatio <= 75 ? 'excellent' : 'poor'}">${locRatio}%</span>
+                  <span class="metric-value ${locRatio <= 75 ? "excellent" : "poor"}">${locRatio}%</span>
                 </div>
               </div>
             </div>`;
@@ -8875,7 +9329,7 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
         const today = new Date();
         const currentY = today.getFullYear();
         const currentM = today.getMonth() + 1;
-        
+
         // Generate last 12 months (including current)
         for (let i = 0; i < 12; i++) {
           let month = currentM - i;
@@ -8886,7 +9340,7 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
           }
           ensureMonth(year, month);
         }
-        
+
         // Also ensure the December before that exists for proper data flow
         ensureMonth(currentY - 1, 12);
 
