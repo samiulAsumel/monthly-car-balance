@@ -2165,10 +2165,9 @@
 
     <!-- MONTH BAR -->
     <div class="mbar">
-      <span class="mbar-lbl">Month:</span>
-      <div id="mbar" style="display: flex; gap: 4px; flex-wrap: wrap"></div>
+      <div id="mbar" style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center"></div>
       <span
-        style="margin-left: auto; font-size: 9px; color: #888"
+        style="margin-left: auto; font-size: 10px; color: #666; font-weight: 600"
         id="today-lbl"
       ></span>
     </div>
@@ -7197,24 +7196,11 @@
         // Show last 12 months or all if user expanded
         const displayMonths = showAllMonths ? ms : ms.slice(-12);
         
-        // Add "Previous" button FIRST if there are more than 12 months
-        if (ms.length > 12 && !showAllMonths) {
-          const btn = document.createElement("button");
-          btn.className = "mtab";
-          btn.style.background = "#1a3a5c";
-          btn.style.color = "#fff";
-          btn.textContent = "⬅ Previous";
-          btn.onclick = () => {
-            showAllMonths = true;
-            renderMbar();
-          };
-          el.appendChild(btn);
-        }
-        
         displayMonths.forEach((k) => {
           const [y, m] = k.split("-").map(Number);
           const t = document.createElement("div");
           t.className = "mtab" + (k === cur ? " on" : "");
+          t.style.fontWeight = k === cur ? "700" : "600";
           t.textContent = MO[m - 1] + " " + y;
           t.onclick = () => {
             cur = k;
@@ -7223,13 +7209,34 @@
           el.appendChild(t);
         });
         
-        // Add "Show Less" button on the right if showing all
+        // Add "Previous" button on the far left if there are more than 12 months
+        if (ms.length > 12 && !showAllMonths) {
+          const btn = document.createElement("button");
+          btn.className = "mtab";
+          btn.style.background = "#1a3a5c";
+          btn.style.color = "#fff";
+          btn.style.marginRight = "8px";
+          btn.style.border = "none";
+          btn.textContent = "←";
+          btn.title = "Show Previous Months";
+          btn.onclick = () => {
+            showAllMonths = true;
+            renderMbar();
+          };
+          // Insert at beginning
+          el.insertBefore(btn, el.firstChild);
+        }
+        
+        // Add "Less" button on the far right if showing all
         if (showAllMonths) {
           const btn = document.createElement("button");
           btn.className = "mtab";
           btn.style.background = "#1a3a5c";
           btn.style.color = "#fff";
-          btn.textContent = "Show Less";
+          btn.style.marginLeft = "8px";
+          btn.style.border = "none";
+          btn.textContent = "−";
+          btn.title = "Show Less";
           btn.onclick = () => {
             showAllMonths = false;
             renderMbar();
