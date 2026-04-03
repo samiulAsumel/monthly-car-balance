@@ -1396,10 +1396,10 @@
       /* ── TABLE (no horizontal scroll — fit page) ── */
       .tbl-wrap {
         border: none;
-        border-radius: 8px;
+        border-radius: 12px;
         overflow: hidden;
         margin-bottom: 4px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
         background: #fff;
       }
       .tbl-scroll {
@@ -1413,8 +1413,8 @@
         /* border-collapse: collapse; */
         width: 100%;
         table-layout: auto;
-        border: 3px solid rgb(0, 234, 255);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 4px solid #1a3a5c;
+        box-shadow: 0 4px 16px rgba(26, 58, 92, 0.2);
       }
       table.dt thead th {
         position: relative;
@@ -1428,45 +1428,45 @@
       }
 
       /* ── COLUMN WIDTHS (fit in page) ── */
-      /* Date=70, Day=22, per loc: Bal=36, Del=38, Imp=38 (×8=848), Total Del=46, Auc Val=44, ClosBal=50, Total Imp=46 */
-      /* Total estimated: 70+22+848+46+44+44+50+46 = 1170px — use % */
+      /* Date=76, Day=26, per loc: Bal=43, Del=43, Imp=43 (×8=1024), Total Del=52, Auc Val=48, ClosBal=57, Total Imp=52 */
+      /* Total estimated: 76+26+1024+52+48+57+52 = 1335px — use % */
       col.cd {
-        width: 72px;
+        width: 76px;
       }
       col.cdy {
-        width: 22px;
+        width: 26px;
       }
       col.cb {
-        width: 36px;
+        width: 43px;
       }
       col.cdel {
-        width: 38px;
+        width: 43px;
       }
       col.ci {
-        width: 38px;
+        width: 43px;
       }
       col.ctd {
-        width: 45px;
+        width: 52px;
       }
       col.cal {
-        width: 42px;
+        width: 48px;
       }
       col.cav {
-        width: 42px;
+        width: 48px;
       }
       col.ccb {
-        width: 50px;
+        width: 57px;
       }
       col.cti {
-        width: 45px;
+        width: 52px;
       }
 
       /* ── HEADER STYLES ── */
       th {
         white-space: nowrap;
-        padding: 4px 2px;
+        padding: 6px 4px;
         text-align: center;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 700;
         color: #fff;
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
@@ -1480,10 +1480,10 @@
         background: #0a2540;
       }
       th.hsub {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
         opacity: 0.88;
-        padding: 3px 2px;
+        padding: 4px 3px;
       }
 
       /* Location group colors — distinct per location */
@@ -1618,9 +1618,9 @@
 
       /* ── DATA CELLS ── */
       td {
-        padding: 4px 5px;
+        padding: 6px 5px;
         text-align: center;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
         white-space: nowrap;
         overflow: hidden;
@@ -1629,30 +1629,30 @@
       }
       td.ddate {
         text-align: center;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
         color: #000000;
       }
       td.dday {
         color: #000000;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
       }
       td.dbal {
         font-weight: 700;
         color: #000000;
-        font-size: 12px;
+        font-size: 13px;
         text-align: center !important;
       }
       td.ddel {
         color: #000000;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
         text-align: center !important;
       }
       td.dimp {
         color: #000000;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
         text-align: center !important;
       }
@@ -1660,26 +1660,26 @@
         font-weight: 700;
         color: #000000;
         background: #eef4ff;
-        font-size: 12px;
+        font-size: 13px;
         text-align: center !important;
       }
       td.tcb {
         font-weight: 700;
         color: #000000;
         background: #f0fdf4;
-        font-size: 12px;
+        font-size: 13px;
         text-align: center !important;
       }
       td.timp {
         font-weight: 700;
         color: #000000;
         background: #fff7ed;
-        font-size: 12px;
+        font-size: 13px;
         text-align: center !important;
       }
       td.dauc {
         color: #000000;
-        font-size: 11px;
+        font-size: 12px;
         font-style: italic;
         font-weight: 700;
       }
@@ -1707,17 +1707,17 @@
         background: #dce4f0 !important;
         font-weight: 700 !important;
         border-top: 2px solid #8fa8c4 !important;
-        font-size: 28px;
+        font-size: 30px;
         color: #000000;
       }
 
       /* Editable inputs — tight fit */
       input.ci {
         width: 100%;
-        padding: 2px 3px;
+        padding: 3px 4px;
         border: 1px solid #d1d5db;
         border-radius: 2px;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
         text-align: center !important;
         background: #fff;
@@ -2430,10 +2430,10 @@
         
         <!-- Footer -->
         <div style="text-align: center; padding: 30px 20px; margin-top: 20px; border-top: 1px solid #e2e8f0;">
-          <div style="font-size: 12px; color: #666;">
+          <div style="font-size: 18px; color: #444;">
             © 2026 samiulAsumel. All rights reserved.
           </div>
-          <div style="font-size: 11px; color: #999; margin-top: 4px;">
+          <div style="font-size: 16px; color: #666; margin-top: 6px;">
             Daily Car Balance Tracker | Powered by Firebase
           </div>
         </div>
@@ -7444,10 +7444,10 @@ h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
         const td2 = fd.reduce((a, b) => a + b, 0),
           ti2 = fi.reduce((a, b) => a + b, 0);
         const aucTotal = fa;
-        foot += `<td class="gsp" style="color:#1d4ed8;font-size:10px">${td2 > 0 ? td2.toLocaleString() : "—"}</td>
-               <td style="color:#7c3aed;font-size:10px;font-weight:700">${aucTotal > 0 ? aucTotal.toLocaleString() : "—"}</td>
-               <td class="gsp" style="color:#166534;font-size:12px;font-weight:700">${lastClosing}</td>
-               <td class="gsp" style="color:#92400e;font-size:10px">${ti2 > 0 ? ti2.toLocaleString() : "—"}</td></tr>`;
+        foot += `<td class="gsp" style="color:#1d4ed8;font-size:12px">${td2 > 0 ? td2.toLocaleString() : "—"}</td>
+               <td style="color:#7c3aed;font-size:14px;font-weight:700">${aucTotal > 0 ? aucTotal.toLocaleString() : "—"}</td>
+               <td class="gsp" style="color:#166534;font-size:14px;font-weight:700">${lastClosing}</td>
+               <td class="gsp" style="color:#92400e;font-size:12px">${ti2 > 0 ? ti2.toLocaleString() : "—"}</td></tr>`;
         body += foot + "</tbody>";
 
         // Keep existing colgroup, just update thead/tbody
