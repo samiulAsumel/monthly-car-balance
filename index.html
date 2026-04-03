@@ -19,7 +19,7 @@
         height: 100%;
         font-family: Arial, sans-serif;
         font-size: 14.25px;
-        background: #e4e9f0;
+        background: rgba(228, 233, 240, 1);
         color: #111;
         overflow-x: hidden;
       }
@@ -276,8 +276,8 @@
         justify-content: space-between;
         align-items: center;
         padding: 8px 16px;
-        background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-        border-bottom: 1px solid #4a5568;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(51, 65, 85, 1) 100%);
+        border-bottom: 1px solid rgba(100, 116, 139, 1);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         position: sticky;
         top: 0;
@@ -1396,10 +1396,10 @@
       /* ── TABLE (no horizontal scroll — fit page) ── */
       .tbl-wrap {
         border: none;
-        border-radius: 12px;
+        border-radius: 16px;
         overflow: hidden;
         margin-bottom: 4px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
         background: #fff;
       }
       .tbl-scroll {
@@ -1410,11 +1410,10 @@
 
       /* ── TABLE STRUCTURE ── */
       table.dt {
-        /* border-collapse: collapse; */
         width: 100%;
         table-layout: auto;
-        border: 4px solid #1a3a5c;
-        box-shadow: 0 4px 16px rgba(26, 58, 92, 0.2);
+        border: 3px solid rgba(15, 23, 42, 0.1);
+        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
       }
       table.dt thead th {
         position: relative;
@@ -1464,13 +1463,14 @@
       /* ── HEADER STYLES ── */
       th {
         white-space: nowrap;
-        padding: 6px 4px;
+        padding: 10px 8px;
         text-align: center;
         font-size: 14px;
         font-weight: 700;
         color: #fff;
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         overflow: hidden;
+        letter-spacing: 0.3px;
       }
       th.hdate {
         background: #0a2540;
@@ -1486,77 +1486,77 @@
         padding: 4px 3px;
       }
 
-      /* Location group colors — distinct per location */
+      /* Location group colors — elegant unified palette */
       .wha {
-        background: #1e4d7b;
+        background: rgba(30, 64, 175, 1);
       }
       .whb {
-        background: #1a5f9e;
+        background: rgba(37, 99, 235, 1);
       }
       .y1 {
-        background: #1a5c3a;
+        background: rgba(20, 184, 166, 1);
       }
       .y7 {
-        background: #1f7a4a;
+        background: rgba(13, 148, 136, 1);
       }
       .s5 {
-        background: #7c3c1a;
+        background: rgba(124, 45, 48, 1);
       }
       .s6 {
-        background: #923f15;
+        background: rgba(190, 24, 93, 1);
       }
       .s7 {
-        background: #a84810;
+        background: rgba(219, 39, 119, 1);
       }
       .s8 {
-        background: #bf500a;
+        background: rgba(236, 72, 153, 1);
       }
 
-      /* Location column vertical colors - dark */
+      /* Location column vertical colors - subtle elegant */
       td.wha {
-        background: #1e4d7b !important;
-        color: #fff !important;
+        background: rgba(30, 64, 175, 0.08) !important;
+        color: rgba(30, 64, 175, 1) !important;
       }
       td.whb {
-        background: #1a5f9e !important;
-        color: #fff !important;
+        background: rgba(37, 99, 235, 0.08) !important;
+        color: rgba(37, 99, 235, 1) !important;
       }
       td.y1 {
-        background: #1a5c3a !important;
-        color: #fff !important;
+        background: rgba(20, 184, 166, 0.08) !important;
+        color: rgba(20, 184, 166, 1) !important;
       }
       td.y7 {
-        background: #1f7a4a !important;
-        color: #fff !important;
+        background: rgba(13, 148, 136, 0.08) !important;
+        color: rgba(13, 148, 136, 1) !important;
       }
       td.s5 {
-        background: #7c3c1a !important;
-        color: #fff !important;
+        background: rgba(124, 45, 48, 0.08) !important;
+        color: rgba(124, 45, 48, 1) !important;
       }
       td.s6 {
-        background: #923f15 !important;
-        color: #fff !important;
+        background: rgba(190, 24, 93, 0.08) !important;
+        color: rgba(190, 24, 93, 1) !important;
       }
       td.s7 {
-        background: #a84810 !important;
-        color: #fff !important;
+        background: rgba(219, 39, 119, 0.08) !important;
+        color: rgba(219, 39, 119, 1) !important;
       }
       td.s8 {
-        background: #bf500a !important;
-        color: #fff !important;
+        background: rgba(236, 72, 153, 0.08) !important;
+        color: rgba(236, 72, 153, 1) !important;
       }
 
       .thd {
-        background: #0d3b6e;
+        background: rgba(29, 78, 216, 1);
       }
       .tha {
-        background: #3b1870;
+        background: rgba(139, 92, 246, 1);
       }
       .thcb {
-        background: #083020;
+        background: rgba(16, 185, 129, 1);
       }
       .thi {
-        background: #4a1e00;
+        background: rgba(249, 115, 22, 1);
       }
 
       /* NO GAP between location header and Balance/Del/Imp — no border */
@@ -1573,59 +1573,65 @@
         border-left: 2px solid rgba(255, 255, 255, 0.5) !important;
       }
       td.gsp {
-        border-left: 2px solid #a0b4c8 !important;
+        border-left: 2px solid rgba(160, 180, 200, 1) !important;
       }
 
       /* Column separators - dark vertical lines after Bal, Del, Imp */
       th.col-sep {
-        border-right: 2px solid #1a1a1a !important;
+        border-right: 2px solid rgba(26, 26, 26, 1) !important;
       }
       td.col-sep {
-        border-right: 2px solid #1a1a1a !important;
+        border-right: 2px solid rgba(26, 26, 26, 1) !important;
       }
 
       /* Advanced color grading for professional table */
       table.dt thead th.hdate, 
       table.dt thead th.hday,
       table.dt thead th.no-gap {
-        background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%) !important;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(30, 41, 59, 1) 100%) !important;
       }
       table.dt tbody tr:nth-child(even) {
-        background: #f1f5f9;
+        background: rgba(241, 245, 249, 1);
       }
       table.dt tbody tr:nth-child(odd) {
-        background: #ffffff;
+        background: rgba(255, 255, 255, 1);
       }
       table.dt tbody tr:hover {
-        background: #e0e7ff !important;
+        background: rgba(224, 231, 255, 1) !important;
       }
-      /* Header gradient colors */
+      /* Header gradient colors - elegant */
       th.hdate, th.hday {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(51, 65, 85, 1) 100%);
       }
       th.thd {
-        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+        background: linear-gradient(135deg, rgba(30, 58, 95, 1) 0%, rgba(59, 130, 246, 1) 100%);
       }
       th.tha {
-        background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+        background: linear-gradient(135deg, rgba(88, 28, 135, 1) 0%, rgba(139, 92, 246, 1) 100%);
       }
       th.thcb {
-        background: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
+        background: linear-gradient(135deg, rgba(6, 78, 59, 1) 0%, rgba(16, 185, 129, 1) 100%);
       }
       th.thi {
-        background: linear-gradient(135deg, #7c2d12 0%, #ea580c 100%);
+        background: linear-gradient(135deg, rgba(180, 83, 9, 1) 0%, rgba(249, 115, 22, 1) 100%);
       }
 
       /* ── DATA CELLS ── */
       td {
-        padding: 6px 5px;
+        padding: 8px 6px;
         text-align: center;
         font-size: 13px;
-        font-weight: 700;
+        font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        background: #f8f9fa;
+        background: rgba(255, 255, 255, 1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      }
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background: rgba(248, 250, 252, 1);
       }
       td.ddate {
         text-align: center;
@@ -1659,21 +1665,21 @@
       td.tdel {
         font-weight: 700;
         color: #000000;
-        background: #eef4ff;
+        background: rgba(238, 244, 255, 1);
         font-size: 13px;
         text-align: center !important;
       }
       td.tcb {
         font-weight: 700;
         color: #000000;
-        background: #f0fdf4;
+        background: rgba(240, 253, 244, 1);
         font-size: 13px;
         text-align: center !important;
       }
       td.timp {
         font-weight: 700;
         color: #000000;
-        background: #fff7ed;
+        background: rgba(255, 247, 237, 1);
         font-size: 13px;
         text-align: center !important;
       }
@@ -1685,7 +1691,7 @@
       }
 
       tr.red td {
-        background: #a61d1d !important;
+        background: rgba(166, 29, 29, 1) !important;
       }
       tr.red td.ddate,
       tr.red td.dday {
@@ -1695,18 +1701,18 @@
       tr.red td.tdel,
       tr.red td.tcb,
       tr.red td.timp {
-        background: #a61d1d !important;
+        background: rgba(166, 29, 29, 1) !important;
       }
       tr.tod td {
-        background: #ffd700 !important;
+        background: rgba(255, 215, 0, 1) !important;
       }
       tr.tod td.ddate {
         color: #92400e !important;
       }
       tr.foot td {
-        background: #dce4f0 !important;
+        background: rgba(220, 228, 240, 1) !important;
         font-weight: 700 !important;
-        border-top: 2px solid #8fa8c4 !important;
+        border-top: 2px solid rgba(143, 168, 196, 1) !important;
         font-size: 30px;
         color: #000000;
       }
@@ -1726,17 +1732,17 @@
       }
       input.ci:focus {
         outline: none;
-        border-color: #1a3a5c;
-        background: #f0f6ff;
+        border-color: rgba(30, 58, 92, 1);
+        background: rgba(240, 246, 255, 1);
       }
       input.ci.del {
-        color: #1d4ed8;
+        color: rgba(29, 78, 216, 1);
       }
       input.ci.imp {
-        color: #92400e;
+        color: rgba(146, 64, 14, 1);
       }
       input.ci.auc {
-        color: #6b21a8;
+        color: rgba(107, 33, 168, 1);
         font-style: italic;
       }
 
