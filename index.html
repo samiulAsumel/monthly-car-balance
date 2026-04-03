@@ -1428,7 +1428,7 @@
       }
 
       /* ── COLUMN WIDTHS (fit in page) ── */
-      /* Date=70, Day=22, per loc: Bal=36, Del=38, Imp=38 (×8=848), TotDel=46, AucL=44, AucV=44, ClosBal=50, TotImp=46 */
+      /* Date=70, Day=22, per loc: Bal=36, Del=38, Imp=38 (×8=848), Total Del=46, Auc Val=44, ClosBal=50, Total Imp=46 */
       /* Total estimated: 70+22+848+46+44+44+50+46 = 1170px — use % */
       col.cd {
         width: 72px;
@@ -1574,6 +1574,46 @@
       }
       td.gsp {
         border-left: 2px solid #a0b4c8 !important;
+      }
+
+      /* Column separators - dark vertical lines after Bal, Del, Imp */
+      th.col-sep {
+        border-right: 2px solid #1a1a1a !important;
+      }
+      td.col-sep {
+        border-right: 2px solid #1a1a1a !important;
+      }
+
+      /* Advanced color grading for professional table */
+      table.dt thead th.hdate, 
+      table.dt thead th.hday,
+      table.dt thead th.no-gap {
+        background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%) !important;
+      }
+      table.dt tbody tr:nth-child(even) {
+        background: #f1f5f9;
+      }
+      table.dt tbody tr:nth-child(odd) {
+        background: #ffffff;
+      }
+      table.dt tbody tr:hover {
+        background: #e0e7ff !important;
+      }
+      /* Header gradient colors */
+      th.hdate, th.hday {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      }
+      th.thd {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      }
+      th.tha {
+        background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+      }
+      th.thcb {
+        background: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
+      }
+      th.thi {
+        background: linear-gradient(135deg, #7c2d12 0%, #ea580c 100%);
       }
 
       /* ── DATA CELLS ── */
@@ -2243,7 +2283,6 @@
               <col class="cdel" />
               <col class="ci" />
               <col class="ctd" />
-              <col class="cal" />
               <col class="cav" />
               <col class="ccb" />
               <col class="cti" />
@@ -6668,7 +6707,7 @@
 
         if (savedLogin === "true" && savedUser && loginTime) {
           const timeDiff = Date.now() - parseInt(loginTime);
-          const maxSessionTime = 8 * 60 * 60 * 1000; // 8 hours
+          const maxSessionTime = 60 * 60 * 1000; // 1 hour
 
           if (timeDiff < maxSessionTime && savedUser === ADMIN_USER) {
             isLoggedIn = true;
@@ -7319,22 +7358,21 @@
         const rows = DB[cur] || [];
 
         // ── Header ──────────────────────────────────────
-        // Row 1: Date | Day | [loc colspan 3] × 8 | Total Del | Auc Loc | Auc Val | Closing Bal | Total Imp
+        // Row 1: Date | Day | [loc colspan 3] × 8 | Total Delivery | Auc Val | Closing Balance | Total Import
         // Row 2:              [Bal | Del | Imp] × 8
         // NO gap between loc header and sub-headers — same background, borderless join
 
-        let h1 = `<tr><th class="hdate" rowspan="2">Date</th><th class="hday" rowspan="2">Day</th>`;
+        let h1 = `<tr><th class="hdate" rowspan="2">Date</th><th class="hday col-sep" rowspan="2">Day</th>`;
         LOCS.forEach((loc, li) => {
           const cfg = LOC_CFG[loc];
           // Left border only at group start (WH-A, Yard-1, Shed-5)
           const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
           h1 += `<th class="${cfg.cls} ${gsp} no-gap" colspan="3" style="border-bottom:none">${loc}</th>`;
         });
-        h1 += `<th class="thd gsp" rowspan="2">Tot<br>Del</th>
-             <th class="tha gsp" rowspan="2">Auc<br>Loc</th>
-             <th class="tha"     rowspan="2">Auc<br>Val</th>
-             <th class="thcb gsp" rowspan="2">Closing<br>Balance</th>
-             <th class="thi gsp" rowspan="2">Tot<br>Imp</th></tr>`;
+h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
+              <th class="tha"     rowspan="2">Auction<br>Delivery</th>
+              <th class="thcb gsp" rowspan="2">Closing<br>Balance</th>
+              <th class="thi gsp" rowspan="2">Total<br>Import</th></tr>`;
 
         // Row 2 sub-headers — SAME color as parent, NO top border gap
         let h2 = "<tr>";
@@ -7342,16 +7380,17 @@
           const cfg = LOC_CFG[loc];
           const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
           // Balance col: same bg, no-gap (connects seamlessly to row 1)
-          h2 += `<th class="hsub ${cfg.cls} ${gsp} no-gap" style="border-top:1px solid transparent">Bal</th>`;
-          h2 += `<th class="hsub ${cfg.cls}" style="border-top:1px solid transparent">Del</th>`;
-          h2 += `<th class="hsub ${cfg.cls}" style="border-top:1px solid transparent">Imp</th>`;
+          h2 += `<th class="hsub ${cfg.cls} ${gsp} no-gap" style="border-top:1px solid transparent">Balance</th>`;
+          h2 += `<th class="hsub ${cfg.cls}" style="border-top:1px solid transparent">Delivery</th>`;
+          h2 += `<th class="hsub ${cfg.cls} col-sep" style="border-top:1px solid transparent">Import</th>`;
         });
         h2 += "</tr>";
 
         // ── Body ─────────────────────────────────────────
         let body = "<tbody>";
         let fd = LOCS.map(() => 0),
-          fi = LOCS.map(() => 0);
+          fi = LOCS.map(() => 0),
+          fa = 0;
 
         rows.forEach((row, ri) => {
           const red = isRed(row.date);
@@ -7361,12 +7400,14 @@
           const tDel = row.del.reduce((a, b) => a + b, 0);
           const tImp = row.imp.reduce((a, b) => a + b, 0);
           const closing = getClosing(row);
+          const aucVal = row.av ? parseInt(row.av) : 0;
+          fa += aucVal;
           row.del.forEach((v, i) => (fd[i] += v));
           row.imp.forEach((v, i) => (fi[i] += v));
 
           let tr = `<tr class="${cls}">
             <td class="ddate">${row.date.slice(8, 10)}-${row.date.slice(5, 7)}-${row.date.slice(0, 4)}</td>
-            <td class="dday">${dw.slice(0, 2)}</td>`;
+            <td class="dday col-sep">${dw.slice(0, 3)}</td>`;
 
           LOCS.forEach((loc, li) => {
             const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
@@ -7374,12 +7415,11 @@
             tr += `<td class="dbal ${gsp}">${row.bal[li]}</td>`;
             // Delivery and Import: always editable (require login on change)
             tr += `<td><input class="ci del" type="number" min="0" value="${row.del[li]}" onchange="onDel('${cur}',${ri},${li},this.value)"></td>`;
-            tr += `<td><input class="ci imp" type="number" min="0" value="${row.imp[li]}" onchange="onImp('${cur}',${ri},${li},this.value)"></td>`;
+            tr += `<td class="col-sep"><input class="ci imp" type="number" min="0" value="${row.imp[li]}" onchange="onImp('${cur}',${ri},${li},this.value)"></td>`;
           });
 
           tr += `<td class="tdel gsp">${tDel || "—"}</td>`;
-          tr += `<td class="gsp"><input class="ci auc" value="${row.al || ""}" onchange="onAuc('${cur}',${ri},'al',this.value)" placeholder="Loc" style="width:100%"></td>`;
-          tr += `<td><input class="ci auc" value="${row.av || ""}" onchange="onAuc('${cur}',${ri},'av',this.value)" placeholder="Val" style="width:100%"></td>`;
+          tr += `<td class="col-sep"><input class="ci auc" type="number" min="0" value="${row.av || ''}" onchange="onAuc('${cur}',${ri},'av',this.value)" placeholder="Val" style="width:100%"></td>`;
           tr += `<td class="tcb gsp">${closing}</td>`;
           tr += `<td class="timp gsp">${tImp || "—"}</td>`;
           tr += "</tr>";
@@ -7393,19 +7433,21 @@
           imp: LOCS.map(() => 0),
         };
         const lastClosing = getClosing(last);
-        let foot = `<tr class="foot"><td colspan="2" style="text-align:center;font-size:9px">TOTAL</td>`;
+        let foot = `<tr class="foot"><td style="text-align:center;font-size:9px">TOTAL</td><td class="col-sep"></td>`;
         LOCS.forEach((loc, li) => {
           const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
+          const csep = "col-sep";
           foot += `<td class="${gsp}" style="color:#1a3a5c;font-weight:700;font-size:10px">${last.bal[li]}</td>`;
-          foot += `<td style="color:#1d4ed8;font-size:10px">${fd[li] || "—"}</td>`;
-          foot += `<td style="color:#92400e;font-size:10px">${fi[li] || "—"}</td>`;
+          foot += `<td style="color:#1d4ed8;font-size:10px">${fd[li]}</td>`;
+          foot += `<td class="${csep}" style="color:#92400e;font-size:10px">${fi[li]}</td>`;
         });
         const td2 = fd.reduce((a, b) => a + b, 0),
           ti2 = fi.reduce((a, b) => a + b, 0);
-        foot += `<td class="gsp" style="color:#1d4ed8;font-size:10px">${td2 || "—"}</td>
-               <td class="gsp"></td><td></td>
+        const aucTotal = fa;
+        foot += `<td class="gsp" style="color:#1d4ed8;font-size:10px">${td2 > 0 ? td2.toLocaleString() : "—"}</td>
+               <td style="color:#7c3aed;font-size:10px;font-weight:700">${aucTotal > 0 ? aucTotal.toLocaleString() : "—"}</td>
                <td class="gsp" style="color:#166534;font-size:12px;font-weight:700">${lastClosing}</td>
-               <td class="gsp" style="color:#92400e;font-size:10px">${ti2 || "—"}</td></tr>`;
+               <td class="gsp" style="color:#92400e;font-size:10px">${ti2 > 0 ? ti2.toLocaleString() : "—"}</td></tr>`;
         body += foot + "</tbody>";
 
         // Keep existing colgroup, just update thead/tbody
@@ -8679,10 +8721,8 @@
               ensureMonth(currentYear, currentMonth);
               cur = mk(currentYear, currentMonth);
             } else {
-              const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-              const prevYear =
-                currentMonth === 1 ? currentYear - 1 : currentYear;
-              cur = mk(prevYear, prevMonth);
+              ensureMonth(currentYear, currentMonth);
+              cur = mk(currentYear, currentMonth);
             }
             renderAll();
 
