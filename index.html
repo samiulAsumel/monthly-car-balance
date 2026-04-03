@@ -7194,13 +7194,17 @@
           localStorage.setItem("loginTime", Date.now().toString());
 
           closeLogin();
-          showSuccess("Login successful!");
+          showSuccess("Login successful! Refreshing...");
+
+          // Auto-refresh after successful login
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
 
           if (loginCallback) {
             loginCallback();
             loginCallback = null;
           }
-
           renderAll();
         } else {
           showError("Invalid credentials");
