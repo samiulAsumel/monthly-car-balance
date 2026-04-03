@@ -7197,6 +7197,20 @@
         // Show last 12 months or all if user expanded
         const displayMonths = showAllMonths ? ms : ms.slice(-12);
         
+        // Add "Previous" button FIRST if there are more than 12 months
+        if (ms.length > 12 && !showAllMonths) {
+          const btn = document.createElement("button");
+          btn.className = "mtab";
+          btn.style.background = "#1a3a5c";
+          btn.style.color = "#fff";
+          btn.textContent = "⬅ Previous";
+          btn.onclick = () => {
+            showAllMonths = true;
+            renderMbar();
+          };
+          el.appendChild(btn);
+        }
+        
         displayMonths.forEach((k) => {
           const [y, m] = k.split("-").map(Number);
           const t = document.createElement("div");
@@ -7209,15 +7223,15 @@
           el.appendChild(t);
         });
         
-        // Add "Show More/Previous" button if there are more than 12 months
-        if (ms.length > 12) {
+        // Add "Show Less" button on the right if showing all
+        if (showAllMonths) {
           const btn = document.createElement("button");
           btn.className = "mtab";
-          btn.style.background = showAllMonths ? "#1a3a5c" : "#fff";
-          btn.style.color = showAllMonths ? "#fff" : "#1a3a5c";
-          btn.textContent = showAllMonths ? "Show Less" : "⬅ Previous";
+          btn.style.background = "#1a3a5c";
+          btn.style.color = "#fff";
+          btn.textContent = "Show Less";
           btn.onclick = () => {
-            showAllMonths = !showAllMonths;
+            showAllMonths = false;
             renderMbar();
           };
           el.appendChild(btn);
