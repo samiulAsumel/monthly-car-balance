@@ -7227,7 +7227,7 @@
           el.insertBefore(btn, el.firstChild);
         }
         
-        // Add "Less" button on the far right if showing all
+        // Add "Collapse" button on the far right if showing all
         if (showAllMonths) {
           const btn = document.createElement("button");
           btn.className = "mtab";
@@ -7235,8 +7235,8 @@
           btn.style.color = "#fff";
           btn.style.marginLeft = "8px";
           btn.style.border = "none";
-          btn.textContent = "−";
-          btn.title = "Show Less";
+          btn.textContent = "→";
+          btn.title = "Show Last 12 Months";
           btn.onclick = () => {
             showAllMonths = false;
             renderMbar();
