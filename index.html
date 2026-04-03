@@ -2305,44 +2305,101 @@
 
     <!-- SETTINGS PAGE -->
     <div class="page" id="page-settings">
-      <div style="max-width: 560px">
-        <div class="set-card">
-          <div class="set-hdr">Default Red Days</div>
-          <div style="display: flex; gap: 14px; flex-wrap: wrap">
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                font-size: 11px;
-                cursor: pointer;
-              "
-              ><input type="checkbox" id="cb-fri" onchange="saveSett()" />
-              Friday</label
-            >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                font-size: 11px;
-                cursor: pointer;
-              "
-              ><input type="checkbox" id="cb-sat" onchange="saveSett()" />
-              Saturday</label
-            >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                font-size: 11px;
-                cursor: pointer;
-              "
-              ><input type="checkbox" id="cb-sun" onchange="saveSett()" />
-              Sunday</label
-            >
+      <div style="max-width: 700px; margin: 0 auto;">
+        
+        <!-- Calendar Settings -->
+        <div class="rpt-sec">
+          <div class="rpt-hdr">📅 Calendar Settings</div>
+          <div style="padding: 15px;">
+            <div style="margin-bottom: 12px;">
+              <div style="font-size: 12px; font-weight: 600; color: #1a3a5c; margin-bottom: 8px;">Default Red Days</div>
+              <div style="display: flex; gap: 16px; flex-wrap: wrap">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; padding: 6px 12px; background: #f3f4f6; border-radius: 6px;">
+                  <input type="checkbox" id="cb-fri" onchange="saveSett()" style="width:16px;height:16px;" />
+                  Friday
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; padding: 6px 12px; background: #f3f4f6; border-radius: 6px;">
+                  <input type="checkbox" id="cb-sat" onchange="saveSett()" style="width:16px;height:16px;" />
+                  Saturday
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; padding: 6px 12px; background: #f3f4f6; border-radius: 6px;">
+                  <input type="checkbox" id="cb-sun" onchange="saveSett()" style="width:16px;height:16px;" />
+                  Sunday
+                </label>
+              </div>
+            </div>
           </div>
+        </div>
+        
+        <!-- Custom Red Dates -->
+        <div class="rpt-sec">
+          <div class="rpt-hdr">🎯 Add Custom Red Date</div>
+          <div style="padding: 15px;">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+              <input type="date" id="hol-date" class="mf" style="flex:1; max-width: 200px;" />
+              <button class="btn pri" onclick="addHol()">+ Add</button>
+            </div>
+            <div style="font-size: 11px; font-weight: 600; color: #666; margin-bottom: 6px;">Custom red dates:</div>
+            <div id="hol-list"></div>
+          </div>
+        </div>
+        
+        <!-- Remove Red Dates -->
+        <div class="rpt-sec">
+          <div class="rpt-hdr">❌ Remove Red from Date</div>
+          <div style="padding: 15px;">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+              <input type="date" id="exc-date" class="mf" style="flex:1; max-width: 200px;" />
+              <button class="btn" style="border-color: #dc2626; color: #dc2626;" onclick="addExc()">Remove</button>
+            </div>
+            <div style="font-size: 11px; font-weight: 600; color: #666; margin-bottom: 6px;">Exceptions (not red):</div>
+            <div id="exc-list"></div>
+          </div>
+        </div>
+        
+        <!-- Users -->
+        <div class="rpt-sec">
+          <div class="rpt-hdr">👥 Registered Users</div>
+          <div style="padding: 15px;">
+            <div id="user-list" style="font-size: 12px; color: #555;"></div>
+          </div>
+        </div>
+        
+        <!-- Admin Password -->
+        <div class="rpt-sec">
+          <div class="rpt-hdr">🔐 Admin Password</div>
+          <div style="padding: 15px;">
+            <input type="password" class="mf" id="current-password" placeholder="Current password" style="margin-bottom: 8px;" />
+            <input type="password" class="mf" id="new-password" placeholder="New password" style="margin-bottom: 8px;" />
+            <input type="password" class="mf" id="confirm-password" placeholder="Confirm password" style="margin-bottom: 12px;" />
+            <button class="btn pri" onclick="changeAdminPassword()" style="width: 100%;">Change Password</button>
+          </div>
+        </div>
+        
+        <!-- Cloud Sync -->
+        <div class="rpt-sec">
+          <div class="rpt-hdr">☁️ Cloud Sync (Firebase)</div>
+          <div style="padding: 15px;">
+            <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+              Data syncs automatically to cloud. All devices will see the same data.
+            </div>
+            <div id="gs-status" style="font-size: 13px; color: #059669; font-weight: 600; padding: 10px; background: #dcfce7; border-radius: 6px; text-align: center;">
+              ☁️ Connected
+            </div>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="text-align: center; padding: 30px 20px; margin-top: 20px; border-top: 1px solid #e2e8f0;">
+          <div style="font-size: 12px; color: #666;">
+            © 2026 samiulAsumel. All rights reserved.
+          </div>
+          <div style="font-size: 11px; color: #999; margin-top: 4px;">
+            Daily Car Balance Tracker | Powered by Firebase
+          </div>
+        </div>
+      </div>
+    </div>
         </div>
         <div class="set-card">
           <div class="set-hdr">Add Custom Red Date</div>
@@ -2454,16 +2511,6 @@
             style="font-size: 11px; color: #059669; font-weight: 600"
           >
             ☁️ Connected
-          </div>
-        </div>
-        
-        <!-- Footer -->
-        <div style="text-align: center; padding: 20px; margin-top: 30px; border-top: 1px solid #e2e8f0;">
-          <div style="font-size: 11px; color: #888;">
-            © 2026 samiulAsumel. All rights reserved.
-          </div>
-          <div style="font-size: 10px; color: #aaa; margin-top: 4px;">
-            Daily Car Balance Tracker | Powered by Firebase
           </div>
         </div>
       </div>
