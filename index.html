@@ -157,31 +157,150 @@
         width: 100%;
       }
 
-      /* ── TOPBAR ── */
-      .topbar {
-        background: #1a3a5c;
-        color: #fff;
-        padding: 0 14px;
-        height: 46px;
-        display: flex;
+      /* Enhanced button styling with consistent size and shape */
+      .tbtn {
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        position: sticky;
-        top: 0;
-        z-index: 500;
-        gap: 8px;
-        flex-wrap: nowrap;
+        justify-content: center;
+        gap: 6px;
+        min-width: 40px;
+        height: 40px;
+        padding: 8px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        border-radius: 20px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
       }
-      .t-brand {
-        font-size: 13px;
+
+      .tbtn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.15),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .tbtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .tbtn:hover::before {
+        left: 100%;
+      }
+
+      .tbtn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Button color variants */
+      .tbtn.gold {
+        background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+        border-color: #d97706;
+        color: #ffffff;
+      }
+
+      .tbtn.gold:hover {
+        background: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+        border-color: #f59e0b;
+      }
+
+      .tbtn.blue {
+        background: linear-gradient(135deg, #1e40af 0%, #2b6cb8 100%);
+        border-color: #3b82f6;
+        color: #ffffff;
+      }
+
+      .tbtn.red {
+        background: linear-gradient(135deg, #7f1d1d 0%, #a52a2a 100%);
+        border-color: #dc2626;
+        color: #ffffff;
+      }
+
+      .tbtn.red:hover {
+        background: linear-gradient(135deg, #a52a2a 0%, #c82333 100%);
+        border-color: #7f1d1d;
+      }
+      .sv {
+        font-size: 10px;
+        padding: 3px 8px;
+        border-radius: 8px;
         font-weight: 700;
-        letter-spacing: 0.3px;
         white-space: nowrap;
       }
+      .sv.ok {
+        background: rgba(34, 197, 94, 0.2);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+      .sv.dirty {
+        background: rgba(251, 146, 60, 0.2);
+        color: #fdba74;
+        border: 1px solid rgba(251, 146, 60, 0.3);
+      }
+
+      /* Button labels styling */
+      .btn-label {
+        font-size: 10px;
+        font-weight: 600;
+        margin-left: 4px;
+        opacity: 0.9;
+        transition: opacity 0.2s ease;
+      }
+
+      .tbtn:hover .btn-label {
+        opacity: 1;
+      }
+
+      /* ── TOPBAR ── */
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+        border-bottom: 1px solid #4a5568;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+      .t-brand {
+        font-size: 16px;
+        font-weight: 700;
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
       .t-sub {
-        font-size: 9px;
-        opacity: 0.6;
-        margin-top: 1px;
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
       }
       .t-right {
         display: flex;
@@ -190,29 +309,38 @@
         flex-shrink: 0;
       }
       .tbtn {
-        padding: 4px 10px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 12px;
         font-size: 11px;
-        cursor: pointer;
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        font-family: Arial;
         font-weight: 600;
         white-space: nowrap;
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
       }
-      .tbtn:hover {
-        background: rgba(255, 255, 255, 0.22);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+      .tbtn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transition: left 0.5s ease;
       }
-      .tbtn:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+      .tbtn:hover::before {
+        left: 100%;
       }
+
       .tbtn.gold {
         background: #7a5608;
         border-color: #c9a227;
@@ -255,6 +383,53 @@
         background: rgba(251, 146, 60, 0.2);
         color: #fdba74;
         border: 1px solid rgba(251, 146, 60, 0.3);
+      }
+
+      /* Button labels styling */
+      .btn-label {
+        font-size: 10px;
+        font-weight: 600;
+        margin-left: 4px;
+        opacity: 0.9;
+        transition: opacity 0.2s ease;
+      }
+
+      .tbtn:hover .btn-label {
+        opacity: 1;
+      }
+
+      /* Enhanced button styling with better spacing */
+      .tbtn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .tbtn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .tbtn:hover::before {
+        left: 100%;
       }
 
       /* ── NAV ── */
@@ -315,39 +490,39 @@
         position: sticky;
         top: 82px;
         z-index: 300;
-      }
-      .mbar-lbl {
-        font-size: 10px;
-        color: #888;
-        font-weight: 700;
-        white-space: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
       .mtab {
-        padding: 3px 9px;
-        border: 1px solid #c8d3dc;
-        border-radius: 10px;
         font-size: 10px;
-        cursor: pointer;
-        background: #fff;
-        color: #555;
+        padding: 8px 16px;
         font-weight: 600;
-        white-space: nowrap;
+        color: #666;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
       .mtab:hover {
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d3748 100%);
         border-color: #1a3a5c;
-        color: #1a3a5c;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(26, 58, 92, 0.2);
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 6px rgba(26, 58, 92, 0.25);
       }
       .mtab.on {
-        background: #1a3a5c;
-        color: #fff;
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d3748 100%);
         border-color: #1a3a5c;
+        color: #ffffff;
         transform: scale(1.05);
-        box-shadow: 0 2px 8px rgba(26, 58, 92, 0.3);
+        box-shadow: 0 2px 8px rgba(26, 58, 92, 0.4);
+        font-weight: 700;
       }
       .mtab::before {
         content: "";
@@ -1925,34 +2100,51 @@
         <div class="t-brand">
           &#9660; Daily Car Balance &mdash; Vehicle Position Tracker
         </div>
-        <div class="t-sub" id="tsub">Loading&hellip;</div>
+        <div class="t-sub" id="tsub"></div>
       </div>
       <div class="t-right">
         <span class="sv ok" id="sv-badge">&#10003; Saved</span>
-        <button class="tbtn" onclick="undoLast()">&#8630; Undo</button>
-        <button class="tbtn gold" onclick="doSave()">&#128190; Save</button>
-        <button class="tbtn blue" onclick="generateNextMonths()">
-          &#127919; Generate Next Months
+        <button class="tbtn" onclick="undoLast()" title="Undo Last Action">
+          <span>&#8630;</span>
+          <span class="btn-label">Undo</span>
+        </button>
+        <button class="tbtn gold" onclick="doSave()" title="Save Current Data">
+          <span>&#128190;</span>
+          <span class="btn-label">Save</span>
+        </button>
+        <button
+          class="tbtn blue"
+          onclick="generateNextMonths()"
+          title="Generate Next Months"
+        >
+          <span>&#127919;</span>
+          <span class="btn-label">Generate Next Months</span>
         </button>
         <button
           class="tbtn red"
           id="logout-btn"
           onclick="logout()"
           style="display: none"
+          title="Logout"
         >
-          &#128274; Logout
+          <span>&#128274;</span>
+          <span class="btn-label">Logout</span>
         </button>
         <button
           class="tbtn"
           onclick="document.getElementById('ov-export').classList.add('on')"
+          title="Export Data"
         >
-          &#8659; Export
+          <span>&#8659;</span>
+          <span class="btn-label">Export</span>
         </button>
         <button
           class="tbtn red"
           onclick="document.getElementById('ov-setup').classList.add('on')"
+          title="Settings & Setup"
         >
-          &#128273; Setup
+          <span>&#128273;</span>
+          <span class="btn-label">Setup</span>
         </button>
       </div>
     </div>
@@ -1985,8 +2177,9 @@
     <div class="page on" id="page-daily">
       <div class="cards-row" id="sum-cards"></div>
       <div
+        class="location-summary-header"
         style="
-          font-size: 9px;
+          font-size: 16px;
           font-weight: 700;
           color: #1a3a5c;
           margin-bottom: 5px;
@@ -2251,9 +2444,15 @@
         <div class="set-card">
           <div class="set-hdr">☁️ Cloud Sync (Firebase)</div>
           <div style="font-size: 10px; color: #666; margin-bottom: 10px">
-            Data syncs automatically to cloud. All devices will see the same data.
+            Data syncs automatically to cloud. All devices will see the same
+            data.
           </div>
-          <div id="gs-status" style="font-size: 11px; color: #059669; font-weight: 600">☁️ Connected</div>
+          <div
+            id="gs-status"
+            style="font-size: 11px; color: #059669; font-weight: 600"
+          >
+            ☁️ Connected
+          </div>
         </div>
       </div>
     </div>
@@ -5857,11 +6056,12 @@
       //  FIREBASE CONFIG
       // ═══════════════════════════════════════════════════════════════════════
       const firebaseConfig = {
-        databaseURL: "https://monthly-car-balance-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        databaseURL:
+          "https://monthly-car-balance-default-rtdb.asia-southeast1.firebasedatabase.app/",
       };
-      
+
       let firebaseDb = null;
-      
+
       // Initialize Firebase
       if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
@@ -6000,51 +6200,64 @@
       // ═══════════════════════════════════════════════════════════════════════
       //  FIREBASE SYNC
       // ═══════════════════════════════════════════════════════════════════════
-      
+
       function loadFromFirebase(callback) {
         if (!firebaseDb) {
-          console.log('Firebase not initialized, using localStorage');
+          console.log("Firebase not initialized, using localStorage");
           loadLS();
           if (callback) callback();
           return;
         }
-        
-        firebaseDb.ref('carBalance').once('value').then((snapshot) => {
-          const data = snapshot.val();
-          if (data) {
-            if (data.db) {
-              Object.keys(data.db).forEach((k) => {
-                DB[k] = data.db[k];
-              });
+
+        firebaseDb
+          .ref("carBalance")
+          .once("value")
+          .then((snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+              if (data.db) {
+                Object.keys(data.db).forEach((k) => {
+                  DB[k] = data.db[k];
+                });
+              }
+              if (data.sett) Object.assign(sett, data.sett);
+              if (data.users) users = data.users;
+              if (data.loggedIn) loggedIn = data.loggedIn;
+              console.log("Loaded from Firebase");
+            } else {
+              loadLS();
+              console.log("No Firebase data, using localStorage");
             }
-            if (data.sett) Object.assign(sett, data.sett);
-            if (data.users) users = data.users;
-            if (data.loggedIn) loggedIn = data.loggedIn;
-            console.log('Loaded from Firebase');
-          } else {
+            if (callback) callback();
+          })
+          .catch((e) => {
+            console.log("Failed to load from Firebase, using localStorage", e);
             loadLS();
-            console.log('No Firebase data, using localStorage');
-          }
-          if (callback) callback();
-        }).catch((e) => {
-          console.log('Failed to load from Firebase, using localStorage', e);
-          loadLS();
-          if (callback) callback();
-        });
+            if (callback) callback();
+          });
       }
 
       function saveToFirebase() {
         if (!firebaseDb) return false;
-        
-        const dataToSave = {db: DB, sett: sett, users: users, loggedIn: loggedIn};
-        
-        firebaseDb.ref('carBalance').set(dataToSave).then(() => {
-          console.log('Saved to Firebase');
-          return true;
-        }).catch((e) => {
-          console.log('Failed to save to Firebase', e);
-          return false;
-        });
+
+        const dataToSave = {
+          db: DB,
+          sett: sett,
+          users: users,
+          loggedIn: loggedIn,
+        };
+
+        firebaseDb
+          .ref("carBalance")
+          .set(dataToSave)
+          .then(() => {
+            console.log("Saved to Firebase");
+            return true;
+          })
+          .catch((e) => {
+            console.log("Failed to save to Firebase", e);
+            return false;
+          });
         return true;
       }
 
@@ -6064,7 +6277,7 @@
         }
         const restoreButton = showButtonLoading("save-button");
         saveLS();
-        
+
         // Save to Firebase
         if (firebaseDb) {
           const fbSuccess = saveToFirebase();
@@ -6973,12 +7186,18 @@
 
       // ════════════════════════════════════════════════════
       //  MONTH BAR
-      // ════════════════════════════════════════════════════
+      // ═══════════════════════════════════════════════════════════════════════
+      let showAllMonths = false;
+      
       function renderMbar() {
         const ms = months();
         const el = document.getElementById("mbar");
         el.innerHTML = "";
-        ms.forEach((k) => {
+        
+        // Show last 12 months or all if user expanded
+        const displayMonths = showAllMonths ? ms : ms.slice(-12);
+        
+        displayMonths.forEach((k) => {
           const [y, m] = k.split("-").map(Number);
           const t = document.createElement("div");
           t.className = "mtab" + (k === cur ? " on" : "");
@@ -6989,6 +7208,20 @@
           };
           el.appendChild(t);
         });
+        
+        // Add "Show More/Previous" button if there are more than 12 months
+        if (ms.length > 12) {
+          const btn = document.createElement("button");
+          btn.className = "mtab";
+          btn.style.background = showAllMonths ? "#1a3a5c" : "#fff";
+          btn.style.color = showAllMonths ? "#fff" : "#1a3a5c";
+          btn.textContent = showAllMonths ? "Show Less" : "⬅ Previous";
+          btn.onclick = () => {
+            showAllMonths = !showAllMonths;
+            renderMbar();
+          };
+          el.appendChild(btn);
+        }
 
         // Update login status
         document.getElementById("lock-info").textContent = isLoggedIn
@@ -8292,7 +8525,10 @@
       function renderAll() {
         showLoading("Loading data...");
 
-        // Use setTimeout to allow the UI to update
+        // Update current date display
+        updateCurrentDate();
+
+        // Use setTimeout to allow UI to update
         setTimeout(() => {
           renderMbar();
           renderSumCards();
@@ -8319,8 +8555,26 @@
       // ════════════════════════════════════════════════════
       //  INIT
       // ════════════════════════════════════════════════════
+      function updateCurrentDate() {
+        const currentDate = new Date();
+        const options = {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        };
+        const formattedDate = currentDate.toLocaleDateString("en-US", options);
+        const tsubElement = document.getElementById("tsub");
+        if (tsubElement) {
+          tsubElement.textContent = formattedDate;
+        }
+      }
+
       function init() {
         showLoading("Initializing application...");
+
+        // Update current date display
+        updateCurrentDate();
 
         setTimeout(() => {
           // Performance: Check login status first
@@ -8333,7 +8587,7 @@
           }
 
           buildHist();
-          
+
           // Load from Firebase for cloud sync
           loadFromFirebase(() => {
             const n = new Date();
@@ -8345,14 +8599,16 @@
               cur = mk(currentYear, currentMonth);
             } else {
               const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-              const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+              const prevYear =
+                currentMonth === 1 ? currentYear - 1 : currentYear;
               cur = mk(prevYear, prevMonth);
             }
             renderAll();
-            
+
             // Show connected status
             if (firebaseDb) {
-              document.getElementById('gs-status').innerHTML = '<span style="color:#059669">✅ Connected to cloud</span>';
+              document.getElementById("gs-status").innerHTML =
+                '<span style="color:#059669">✅ Connected to cloud</span>';
             }
           });
           document.getElementById("today-lbl").textContent =
@@ -8488,20 +8744,24 @@
 
       // Auto-generate months and ensure all have proper structure
       function autoGenerateMonths(currentYear, currentMonth) {
-        // Generate months only up to PREVIOUS month (not current month)
-        const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-        const previousYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-
-        // Generate months from January to previous month
-        for (let month = 1; month <= previousMonth; month++) {
-          ensureMonth(previousYear, month);
+        // Generate up to 12 months of historical data
+        const today = new Date();
+        const currentY = today.getFullYear();
+        const currentM = today.getMonth() + 1;
+        
+        // Generate last 12 months (including current)
+        for (let i = 0; i < 12; i++) {
+          let month = currentM - i;
+          let year = currentY;
+          while (month <= 0) {
+            month += 12;
+            year -= 1;
+          }
+          ensureMonth(year, month);
         }
-
-        // Also ensure the December before previous year exists for proper data flow
-        ensureMonth(previousYear - 1, 12);
-
-        // DO NOT generate current month - let user create it manually
-        // DO NOT remove any existing months - keep all data accessible
+        
+        // Also ensure the December before that exists for proper data flow
+        ensureMonth(currentY - 1, 12);
 
         // Ensure all existing months have proper column structure
         ensureAllMonthsHaveColumns();
