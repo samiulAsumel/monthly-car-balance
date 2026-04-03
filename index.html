@@ -6,6 +6,8 @@
     <title>Daily Car Balance Tracker</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
       * {
         box-sizing: border-box;
@@ -2247,25 +2249,11 @@
           </div>
         </div>
         <div class="set-card">
-          <div class="set-hdr">☁️ Cloud Sync (Google Sheets)</div>
+          <div class="set-hdr">☁️ Cloud Sync (Firebase)</div>
           <div style="font-size: 10px; color: #666; margin-bottom: 10px">
-            Enter your Google Sheets Web App URL to sync data across devices.
+            Data syncs automatically to cloud. All devices will see the same data.
           </div>
-          <input
-            type="text"
-            class="mf"
-            id="gs-url"
-            placeholder="https://script.google.com/.../exec"
-            style="margin-bottom: 8px; width: 100%"
-          />
-          <button
-            class="btn"
-            style="border-color: #059669; color: #059669; width: 100%; margin-bottom: 8px"
-            onclick="saveGSUrl()"
-          >
-            Save URL
-          </button>
-          <div id="gs-status" style="font-size: 10px; color: #666"></div>
+          <div id="gs-status" style="font-size: 11px; color: #059669; font-weight: 600">☁️ Connected</div>
         </div>
       </div>
     </div>
@@ -5866,14 +5854,19 @@
       ];
 
       // ═══════════════════════════════════════════════════════════════════════
-      //  GOOGLE SHEETS CONFIG - CHANGE THIS TO YOUR DEPLOYED WEB APP URL
+      //  FIREBASE CONFIG
       // ═══════════════════════════════════════════════════════════════════════
-      const GS_URL = localStorage.getItem('gs_url') || '';
+      const firebaseConfig = {
+        databaseURL: "https://monthly-car-balance-default-rtdb.asia-southeast1.firebasedatabase.app/"
+      };
       
-      function setGSUrl(url) {
-        localStorage.setItem('gs_url', url);
-        GS_URL = url;
+      let firebaseDb = null;
+      
+      // Initialize Firebase
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
       }
+      firebaseDb = firebase.database();
 
       // ═══════════════════════════════════════════════════════════════════════
       //  STATE
@@ -6005,50 +5998,54 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════════
-      //  GOOGLE SHEETS SYNC
+      //  FIREBASE SYNC
       // ═══════════════════════════════════════════════════════════════════════
-      async function loadFromGS() {
-        if (!GS_URL) {
-          console.log('No GS_URL configured, using localStorage');
+      
+      function loadFromFirebase(callback) {
+        if (!firebaseDb) {
+          console.log('Firebase not initialized, using localStorage');
           loadLS();
+          if (callback) callback();
           return;
         }
-        try {
-          const response = await fetch(GS_URL, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({action: 'load'})
-          });
-          const result = await response.json();
-          if (result.success && result.data) {
-            Object.keys(result.data).forEach((k) => {
-              DB[k] = result.data[k];
-            });
-            if (result.data.sett) Object.assign(sett, result.data.sett);
-            if (result.data.users) users = result.data.users;
-            if (result.data.loggedIn) loggedIn = result.data.loggedIn;
+        
+        firebaseDb.ref('carBalance').once('value').then((snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            if (data.db) {
+              Object.keys(data.db).forEach((k) => {
+                DB[k] = data.db[k];
+              });
+            }
+            if (data.sett) Object.assign(sett, data.sett);
+            if (data.users) users = data.users;
+            if (data.loggedIn) loggedIn = data.loggedIn;
+            console.log('Loaded from Firebase');
+          } else {
+            loadLS();
+            console.log('No Firebase data, using localStorage');
           }
-        } catch(e) {
-          console.log('Failed to load from GS, using localStorage', e);
+          if (callback) callback();
+        }).catch((e) => {
+          console.log('Failed to load from Firebase, using localStorage', e);
           loadLS();
-        }
+          if (callback) callback();
+        });
       }
 
-      async function saveToGS() {
-        if (!GS_URL) return false;
-        try {
-          const dataToSave = {db: DB, sett: sett, users: users, loggedIn: loggedIn};
-          const response = await fetch(GS_URL, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({action: 'save', db: dataToSave})
-          });
-          const result = await response.json();
-          return result.success;
-        } catch(e) {
-          console.log('Failed to save to GS', e);
+      function saveToFirebase() {
+        if (!firebaseDb) return false;
+        
+        const dataToSave = {db: DB, sett: sett, users: users, loggedIn: loggedIn};
+        
+        firebaseDb.ref('carBalance').set(dataToSave).then(() => {
+          console.log('Saved to Firebase');
+          return true;
+        }).catch((e) => {
+          console.log('Failed to save to Firebase', e);
           return false;
-        }
+        });
+        return true;
       }
 
       function saveLS() {
@@ -6060,31 +6057,6 @@
         setDirty(false);
       }
 
-      function saveGSUrl() {
-        const url = document.getElementById('gs-url').value.trim();
-        if (!url) {
-          document.getElementById('gs-status').innerHTML = '<span style="color:#b91c1c">Please enter a URL</span>';
-          return;
-        }
-        setGSUrl(url);
-        document.getElementById('gs-status').innerHTML = '<span style="color:#059669">URL saved! Testing connection...</span>';
-        
-        // Test the connection
-        fetch(url, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({action: 'load'})
-        }).then(r => r.json()).then(data => {
-          if (data.success) {
-            document.getElementById('gs-status').innerHTML = '<span style="color:#059669">✅ Connected! Data will sync automatically.</span>';
-          } else {
-            document.getElementById('gs-status').innerHTML = '<span style="color:#b91c1c">❌ Connection failed: ' + (data.error || 'Unknown error') + '</span>';
-          }
-        }).catch(e => {
-          document.getElementById('gs-status').innerHTML = '<span style="color:#b91c1c">❌ Connection failed: ' + e.message + '</span>';
-        });
-      }
-
       function doSave() {
         if (!loggedIn) {
           showLogin("save");
@@ -6093,13 +6065,12 @@
         const restoreButton = showButtonLoading("save-button");
         saveLS();
         
-        // Also save to Google Sheets if configured
-        if (GS_URL) {
-          saveToGS().then(gsSuccess => {
-            setDirty(false);
-            restoreButton();
-            showSuccess(gsSuccess ? "Saved to cloud & device!" : "Saved to device only!");
-          });
+        // Save to Firebase
+        if (firebaseDb) {
+          const fbSuccess = saveToFirebase();
+          setDirty(false);
+          restoreButton();
+          showSuccess(fbSuccess ? "Saved to cloud!" : "Saved to device only!");
         } else {
           setDirty(false);
           setTimeout(() => {
@@ -8363,31 +8334,8 @@
 
           buildHist();
           
-          // Load from Google Sheets if URL configured, otherwise localStorage
-          if (GS_URL) {
-            loadFromGS().then(() => {
-              const n = new Date();
-              const currentYear = n.getFullYear();
-              const currentMonth = n.getMonth() + 1;
-              autoGenerateMonths(currentYear, currentMonth);
-              if (isLoggedIn) {
-                ensureMonth(currentYear, currentMonth);
-                cur = mk(currentYear, currentMonth);
-              } else {
-                const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-                const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-                cur = mk(prevYear, prevMonth);
-              }
-              renderAll();
-              
-              // Pre-fill the GS URL in settings
-              if (GS_URL) {
-                document.getElementById('gs-url').value = GS_URL;
-                document.getElementById('gs-status').innerHTML = '<span style="color:#059669">✅ Connected to cloud</span>';
-              }
-            });
-          } else {
-            loadLS();
+          // Load from Firebase for cloud sync
+          loadFromFirebase(() => {
             const n = new Date();
             const currentYear = n.getFullYear();
             const currentMonth = n.getMonth() + 1;
@@ -8401,7 +8349,12 @@
               cur = mk(prevYear, prevMonth);
             }
             renderAll();
-          }
+            
+            // Show connected status
+            if (firebaseDb) {
+              document.getElementById('gs-status').innerHTML = '<span style="color:#059669">✅ Connected to cloud</span>';
+            }
+          });
           document.getElementById("today-lbl").textContent =
             "Today: " + n.toISOString().slice(0, 10);
 
