@@ -1,826 +1,7 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src * https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com; frame-ancestors 'none'; base-uri 'self' 'unsafe-inline'; form-action 'self' 'unsafe-eval'">
-    <title>Daily Car Balance Tracker</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23166534'><path d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/></svg>" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="styles.css">
-    <script src="config.js"></script>
-    <script src="module-loader.js"></script>
-    <script src="script-full.js"></script>
-  </head>
-  <body>
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loading-overlay">
-      <div class="loading-spinner"></div>
-      <div class="loading-text">Loading...</div>
-    </div>
-
-    <!-- Progress Bar -->
-    <div class="progress-bar" id="progress-bar"></div>
-
-    <!-- TOPBAR -->
-    <div class="topbar">
-      <div>
-        <div class="t-brand">
-          &#9660; Daily Car Balance &mdash; Vehicle Position Tracker
-        </div>
-        <div class="t-sub" id="tsub"></div>
-      </div>
-      <div class="t-right">
-        <span class="sv ok" id="sv-badge">✓ Saved</span>
-        <button class="tbtn" onclick="undoLast()" title="Undo Last Action">
-          ↶ Undo
-        </button>
-        <button class="tbtn gold" onclick="doSave()" title="Save Current Data">
-          💾 Save
-        </button>
-        <button
-          class="tbtn blue"
-          onclick="generateNextMonths()"
-          title="Generate Next Months"
-        >
-          ➕ Next Month
-        </button>
-        <button
-          class="tbtn green"
-          id="login-btn"
-          onclick="showLoginForm()"
-          title="Login"
-        >
-          🔐 Login
-        </button>
-        <button
-          class="tbtn red"
-          id="logout-btn"
-          onclick="logout()"
-          style="display: none"
-          title="Logout"
-        >
-          🚪 Logout
-        </button>
-        <button
-          class="tbtn"
-          onclick="document.getElementById('ov-export').classList.add('on')"
-          title="Export Data"
-        >
-          ⬇ Export
-        </button>
-      </div>
-    </div>
-
-    <!-- NAV -->
-    <div class="nav">
-      <div class="ntab on" onclick="showPage('daily', this)">
-        &#128197; Daily Entry
-      </div>
-      <div class="ntab" onclick="showPage('chart', this)">&#128200; Charts</div>
-      <div class="ntab" onclick="showPage('report', this)">
-        &#128203; Reports
-      </div>
-      <div class="ntab" onclick="showPage('settings', this)">
-        &#9881; Settings
-      </div>
-    </div>
-
-    <!-- MONTH BAR -->
-    <div class="mbar">
-      <div
-        id="mbar"
-        style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center"
-      ></div>
-      <span
-        style="
-          margin-left: auto;
-          font-size: 10px;
-          color: #666;
-          font-weight: 600;
-        "
-        id="today-lbl"
-      ></span>
-    </div>
-
-    <!-- DAILY PAGE -->
-    <div class="page on" id="page-daily">
-      <div class="cards-row" id="sum-cards"></div>
-      <div
-        class="location-summary-header"
-        style="
-          font-size: 16px;
-          font-weight: 700;
-          color: #1a3a5c;
-          margin-bottom: 5px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          border-bottom: 2px solid #e2e8f0;
-          padding-bottom: 3px;
-        "
-      >
-        Location Summary vs Previous Month
-      </div>
-      <div class="grp3" id="grp-cards"></div>
-      <div class="legend">
-        <div class="leg">
-          <div
-            class="lbox"
-            style="background: #a61d1d; border: 1px solid #7f1515"
-          ></div>
-          Fri/Sat/Holiday
-        </div>
-        <div class="leg">
-          <div
-            class="lbox"
-            style="background: #ffd700; border: 1px solid #ccaa00"
-          ></div>
-          Today
-        </div>
-        <div class="leg">
-          <div
-            class="lbox"
-            style="background: #f0fdf4; border: 1px solid #86efac"
-          ></div>
-          Closing Balance
-        </div>
-        <span
-          style="margin-left: auto; font-size: 9px; color: #888"
-          id="lock-info"
-        ></span>
-      </div>
-      <div class="tbl-wrap">
-        <div class="tbl-scroll" id="tbl-scroll">
-          <table class="dt" id="main-tbl">
-            <colgroup>
-              <col class="cd" />
-              <col class="cdy" />
-              <col class="cb" />
-              <col class="cdel" />
-              <col class="ci" />
-              <col class="cb" />
-              <col class="cdel" />
-              <col class="ci" />
-              <col class="cb" />
-              <col class="cdel" />
-              <col class="ci" />
-              <col class="cb" />
-              <col class="cdel" />
-              <col class="ci" />
-              <col class="cb" />
-              <col class="cdel" />
-              <col class="ci" />
-              <col class="cb" />
-              <col class="cdel" />
-              <col class="ci" />
-              <col class="cb" />
-              <col class="cdel" />
-              <col class="ci" />
-              <col class="cb" />
-              <col class="cdel" />
-              <col class="ci" />
-              <col class="ctd" />
-              <col class="cav" />
-              <col class="ccb" />
-              <col class="cti" />
-            </colgroup>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- CHART PAGE -->
-    <div class="page" id="page-chart">
-      <!-- Advanced Analytics Header -->
-      <div style="background:linear-gradient(135deg,#1e293b 0%,#334155 50%,#475569 100%);color:#fff;padding:24px;border-radius:16px;margin-bottom:24px;box-shadow:0 8px 32px rgba(0,0,0,0.12);">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <h1 style="font-size:24px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
-              <span style="font-size:32px;">📊</span>
-              Advanced Analytics Dashboard
-            </h1>
-            <p style="font-size:14px;opacity:0.9;margin:0;">Comprehensive business intelligence and performance insights</p>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:12px;opacity:0.8;">Data Range</div>
-            <div style="font-size:16px;font-weight:600;" id="analytics-date-range">Last 12 Months</div>
-            <div style="font-size:11px;opacity:0.7;margin-top:4px;" id="last-updated">Updated: Just now</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- KPI Summary Cards -->
-      <div class="cards-row" id="chart-quick-stats" style="margin-bottom: 24px"></div>
-
-      <!-- Performance Metrics Grid -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:24px;">
-        <!-- Efficiency Score Card -->
-        <div class="metric-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
-              <span>⚡</span> Efficiency Score
-            </h3>
-            <span style="background:#10b981;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;" id="efficiency-badge">EXCELLENT</span>
-          </div>
-          <div style="font-size:36px;font-weight:700;color:#10b981;margin-bottom:8px;" id="efficiency-score">92%</div>
-          <div style="font-size:12px;color:#6b7280;">Overall operational efficiency</div>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;">
-            <div style="display:flex;justify-content:space-between;font-size:11px;">
-              <span style="color:#6b7280;">Delivery Rate</span>
-              <span style="font-weight:600;color:#1f2937;" id="delivery-rate">94%</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px;">
-              <span style="color:#6b7280;">Utilization</span>
-              <span style="font-weight:600;color:#1f2937;" id="utilization-rate">89%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Stock Trends Card -->
-        <div class="metric-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
-              <span>📊</span> Stock Trends
-            </h3>
-            <span style="background:#3b82f6;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;">Current Month</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-            <div>
-              <div style="font-size:24px;font-weight:700;color:#3b82f6;" id="stock-receive">0</div>
-              <div style="font-size:11px;color:#6b7280;">Total Receive</div>
-            </div>
-            <div>
-              <div style="font-size:24px;font-weight:700;color:#10b981;" id="stock-delivery">0</div>
-              <div style="font-size:11px;color:#6b7280;">Total Delivery</div>
-            </div>
-          </div>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;">
-            <div style="font-size:11px;color:#6b7280;">Net Change</div>
-            <div style="font-size:12px;font-weight:600;color:#1f2937;" id="net-change">0</div>
-          </div>
-        </div>
-
-        <!-- Risk Assessment Card -->
-        <div class="metric-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
-              <span>🛡️</span> Risk Assessment
-            </h3>
-            <span style="background:#f59e0b;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;">MODERATE</span>
-          </div>
-          <div style="font-size:36px;font-weight:700;color:#f59e0b;margin-bottom:8px;" id="risk-score">6.5</div>
-          <div style="font-size:12px;color:#6b7280;">Risk level (1-10 scale)</div>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;">
-            <div style="display:flex;justify-content:space-between;font-size:11px;">
-              <span style="color:#6b7280;">Stock Volatility</span>
-              <span style="font-weight:600;color:#f59e0b;">Medium</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px;">
-              <span style="color:#6b7280;">Market Risk</span>
-              <span style="font-weight:600;color:#10b981;">Low</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Advanced Charts Section -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;">
-        <!-- Main Trend Chart -->
-        <div class="ch-full" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <div>
-              <h3 style="font-size:18px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
-                <span>📊</span> Comprehensive Performance Analysis
-              </h3>
-              <p style="font-size:12px;color:#6b7280;margin:4px 0 0 0;">Multi-metric trend analysis with forecasting</p>
-            </div>
-            <div style="display:flex;gap:8px;">
-              <button onclick="changeChartPeriod('6m')" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;font-size:11px;cursor:pointer;" id="btn-6m">6M</button>
-              <button onclick="changeChartPeriod('12m')" style="padding:6px 12px;border:1px solid #3b82f6;border-radius:6px;background:#3b82f6;color:#fff;font-size:11px;cursor:pointer;" id="btn-12m">12M</button>
-              <button onclick="changeChartPeriod('all')" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;font-size:11px;cursor:pointer;" id="btn-all">ALL</button>
-            </div>
-          </div>
-          <canvas id="c-trend" height="80"></canvas>
-        </div>
-
-        <!-- Real-time Metrics -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
-            <span>⚡</span> Live Metrics
-          </h3>
-          <div id="live-metrics" style="display:grid;gap:12px;">
-            <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #3b82f6;">
-              <div style="font-size:11px;color:#6b7280;">Current Balance</div>
-              <div style="font-size:20px;font-weight:700;color:#1f2937;" id="live-balance">0</div>
-            </div>
-            <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #10b981;">
-              <div style="font-size:11px;color:#6b7280;">Today's Movement</div>
-              <div style="font-size:20px;font-weight:700;color:#10b981;" id="live-movement">+0</div>
-            </div>
-            <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #f59e0b;">
-              <div style="font-size:11px;color:#6b7280;">Week Performance</div>
-              <div style="font-size:20px;font-weight:700;color:#f59e0b;" id="week-performance">0%</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Secondary Charts Grid -->
-      <div class="ch2">
-        <div class="ch-card">
-          <div class="ch-ttl">
-            <span>📤 Delivery vs Receive Analysis</span>
-            <span style="font-weight:400;font-size:10px;color:#9ca3af;">Comparative monthly performance</span>
-          </div>
-          <canvas id="c-di" height="120"></canvas>
-        </div>
-        <div class="ch-card">
-          <div class="ch-ttl">
-            <span>📅 Daily Balance Patterns</span>
-            <span style="font-weight:400;font-size:10px;color:#9ca3af;">Current month volatility analysis</span>
-          </div>
-          <canvas id="c-daily" height="120"></canvas>
-        </div>
-      </div>
-
-      <!-- Advanced Analytics Section -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
-        <div class="ch-card">
-          <div class="ch-ttl">
-            <span>🎯 Location Efficiency Matrix</span>
-            <span style="font-weight:400;font-size:10px;color:#9ca3af;">Performance by location</span>
-          </div>
-          <canvas id="c-ratio" height="120"></canvas>
-        </div>
-        <div class="ch-card">
-          <div class="ch-ttl">
-            <span>📊 Stock Flow Analysis</span>
-            <span style="font-weight:400;font-size:10px;color:#9ca3af;">Net change patterns</span>
-          </div>
-          <canvas id="c-net" height="120"></canvas>
-        </div>
-      </div>
-
-      <!-- Predictive Analytics -->
-      <div class="ch-full" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-          <div>
-            <h3 style="font-size:18px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
-              <span>🔮</span> Predictive Analytics & Forecasting
-            </h3>
-            <p style="font-size:12px;color:#6b7280;margin:4px 0 0 0;">AI-powered predictions based on historical patterns</p>
-          </div>
-          <button onclick="refreshPredictions()" style="padding:8px 16px;background:#3b82f6;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;">🔄 Refresh</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr;gap:20px;">
-          <div>
-            <canvas id="c-cum" height="120"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Location Performance Deep Dive -->
-      <div class="ch-full" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-        <div class="ch-ttl" style="margin-bottom:20px;">
-          <span>🏭 Location Performance Deep Dive</span>
-          <span style="font-weight:400;font-size:10px;color:#9ca3af;">Comprehensive efficiency metrics and rankings</span>
-        </div>
-        <div id="location-performance" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;"></div>
-      </div>
-    </div>
-
-    <!-- REPORT PAGE -->
-    <div class="page" id="page-report">
-      <div style="max-width: 1400px; margin: 0 auto">
-        <!-- Report Header -->
-        <div style="background:linear-gradient(135deg,#1e293b 0%,#334155 50%,#475569 100%);color:#fff;padding:24px 32px;border-radius:16px;margin-bottom:24px;box-shadow:0 8px 32px rgba(0,0,0,0.12);position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;right:0;width:200px;height:200px;background:rgba(255,255,255,0.05);border-radius:50%;transform:translate(50%,-50%);"></div>
-          <div style="position:absolute;bottom:0;left:0;width:150px;height:150px;background:rgba(255,255,255,0.05);border-radius:50%;transform:translate(-50%,50%);"></div>
-          
-          <div style="display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;">
-            <div>
-              <h1 style="font-size:24px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
-                <span style="font-size:28px;">📊</span>
-                Analytics Report
-              </h1>
-              <p style="font-size:14px;opacity:0.9;margin:0 0 12px 0;">Monthly trend analysis and location performance insights</p>
-              <div style="display:flex;gap:20px;font-size:12px;">
-                <div>
-                  <span style="opacity:0.7;">Report Period:</span>
-                  <span style="font-weight:600;" id="report-period-display">--</span>
-                </div>
-                <div>
-                  <span style="opacity:0.7;">Generated:</span>
-                  <span style="font-weight:600;" id="report-generated">--</span>
-                </div>
-                <div>
-                  <span style="opacity:0.7;">Status:</span>
-                  <span style="background:#10b981;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">LIVE</span>
-                </div>
-              </div>
-            </div>
-            <div style="text-align:right;display:flex;gap:8px;">
-              <button onclick="exportReport()" style="background:#3b82f6;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
-                <span>📥</span> Export
-              </button>
-              <button onclick="refreshReport()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
-                <span>🔄</span> Refresh
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Monthly Trend Analysis & Forecasting -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div class="rpt-hdr" style="background:linear-gradient(135deg,#3b82f6,#2563eb);margin:-24px -24px 20px -24px;padding:16px 24px;border-radius:16px 16px 0 0;">
-            📅 Monthly Trend Analysis & Forecasting
-          </div>
-          <div id="rpt-monthly" style="min-height:350px;"></div>
-        </div>
-
-        <!-- Location Performance Deep Dive -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div class="rpt-hdr" style="background:linear-gradient(135deg,#10b981,#059669);margin:-24px -24px 20px -24px;padding:16px 24px;border-radius:16px 16px 0 0;">
-            🏭 Location Performance Deep Dive
-          </div>
-          <div id="rpt-location" style="min-height:350px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SETTINGS PAGE -->
-    <div class="page" id="page-settings">
-      <div style="max-width: 700px; margin: 0 auto">
-        <!-- Calendar Settings -->
-        <div class="rpt-sec">
-          <div class="rpt-hdr">📅 Calendar Settings</div>
-          <div style="padding: 15px">
-            <div style="margin-bottom: 12px">
-              <div
-                style="
-                  font-size: 12px;
-                  font-weight: 600;
-                  color: #1a3a5c;
-                  margin-bottom: 8px;
-                "
-              >
-                Timezone
-              </div>
-              <select
-                id="tz-select"
-                onchange="sett.tz=this.value;setDirty(true);saveSett();renderTable();"
-                style="padding: 8px 12px; font-size: 12px; border-radius: 6px; border: 1px solid #d1d5db; width: 100%; max-width: 350px"
-              >
-                <!-- Asia -->
-                <optgroup label="🌏 Asia">
-                  <option value="Asia/Dhaka" ${sett.tz === 'Asia/Dhaka' ? 'selected' : ''}>🇧🇩 Bangladesh (GMT+6)</option>
-                  <option value="Asia/Kolkata" ${sett.tz === 'Asia/Kolkata' ? 'selected' : ''}>🇮🇳 India (GMT+5:30)</option>
-                  <option value="Asia/Karachi" ${sett.tz === 'Asia/Karachi' ? 'selected' : ''}>🇵🇰 Pakistan (GMT+5)</option>
-                  <option value="Asia/Kabul" ${sett.tz === 'Asia/Kabul' ? 'selected' : ''}>🇦🇫 Afghanistan (GMT+4:30)</option>
-                  <option value="Asia/Kuala_Lumpur" ${sett.tz === 'Asia/Kuala_Lumpur' ? 'selected' : ''}>🇲🇾 Malaysia (GMT+8)</option>
-                  <option value="Asia/Singapore" ${sett.tz === 'Asia/Singapore' ? 'selected' : ''}>🇸🇬 Singapore (GMT+8)</option>
-                  <option value="Asia/Bangkok" ${sett.tz === 'Asia/Bangkok' ? 'selected' : ''}>🇹🇭 Thailand (GMT+7)</option>
-                  <option value="Asia/Jakarta" ${sett.tz === 'Asia/Jakarta' ? 'selected' : ''}>🇮🇩 Indonesia (GMT+7)</option>
-                  <option value="Asia/Manila" ${sett.tz === 'Asia/Manila' ? 'selected' : ''}>🇵🇭 Philippines (GMT+8)</option>
-                  <option value="Asia/Tokyo" ${sett.tz === 'Asia/Tokyo' ? 'selected' : ''}>🇯🇵 Japan (GMT+9)</option>
-                  <option value="Asia/Seoul" ${sett.tz === 'Asia/Seoul' ? 'selected' : ''}>🇰🇷 South Korea (GMT+9)</option>
-                  <option value="Asia/Shanghai" ${sett.tz === 'Asia/Shanghai' ? 'selected' : ''}>🇨🇳 China (GMT+8)</option>
-                  <option value="Asia/Hong_Kong" ${sett.tz === 'Asia/Hong_Kong' ? 'selected' : ''}>🇭🇰 Hong Kong (GMT+8)</option>
-                  <option value="Asia/Dubai" ${sett.tz === 'Asia/Dubai' ? 'selected' : ''}>🇦🇪 UAE (GMT+4)</option>
-                  <option value="Asia/Riyadh" ${sett.tz === 'Asia/Riyadh' ? 'selected' : ''}>🇸🇦 Saudi Arabia (GMT+3)</option>
-                </optgroup>
-                
-                <!-- Europe -->
-                <optgroup label="🌍 Europe">
-                  <option value="Europe/London" ${sett.tz === 'Europe/London' ? 'selected' : ''}>🇬🇧 UK (GMT+0)</option>
-                  <option value="Europe/Paris" ${sett.tz === 'Europe/Paris' ? 'selected' : ''}>🇫🇷 France (GMT+1)</option>
-                  <option value="Europe/Berlin" ${sett.tz === 'Europe/Berlin' ? 'selected' : ''}>🇩🇪 Germany (GMT+1)</option>
-                  <option value="Europe/Rome" ${sett.tz === 'Europe/Rome' ? 'selected' : ''}>🇮🇹 Italy (GMT+1)</option>
-                  <option value="Europe/Madrid" ${sett.tz === 'Europe/Madrid' ? 'selected' : ''}>🇪🇸 Spain (GMT+1)</option>
-                  <option value="Europe/Amsterdam" ${sett.tz === 'Europe/Amsterdam' ? 'selected' : ''}>🇳🇱 Netherlands (GMT+1)</option>
-                  <option value="Europe/Moscow" ${sett.tz === 'Europe/Moscow' ? 'selected' : ''}>🇷🇺 Russia (GMT+3)</option>
-                </optgroup>
-                
-                <!-- Americas -->
-                <optgroup label="🌎 Americas">
-                  <option value="America/New_York" ${sett.tz === 'America/New_York' ? 'selected' : ''}>🇺🇸 USA Eastern (GMT-5)</option>
-                  <option value="America/Chicago" ${sett.tz === 'America/Chicago' ? 'selected' : ''}>🇺🇸 USA Central (GMT-6)</option>
-                  <option value="America/Denver" ${sett.tz === 'America/Denver' ? 'selected' : ''}>🇺🇸 USA Mountain (GMT-7)</option>
-                  <option value="America/Los_Angeles" ${sett.tz === 'America/Los_Angeles' ? 'selected' : ''}>🇺🇸 USA Pacific (GMT-8)</option>
-                  <option value="America/Toronto" ${sett.tz === 'America/Toronto' ? 'selected' : ''}>🇨🇦 Canada Eastern (GMT-5)</option>
-                  <option value="America/Vancouver" ${sett.tz === 'America/Vancouver' ? 'selected' : ''}>🇨🇦 Canada Pacific (GMT-8)</option>
-                  <option value="America/Mexico_City" ${sett.tz === 'America/Mexico_City' ? 'selected' : ''}>🇲🇽 Mexico (GMT-6)</option>
-                  <option value="America/Sao_Paulo" ${sett.tz === 'America/Sao_Paulo' ? 'selected' : ''}>🇧🇷 Brazil (GMT-3)</option>
-                  <option value="America/Buenos_Aires" ${sett.tz === 'America/Buenos_Aires' ? 'selected' : ''}>🇦🇷 Argentina (GMT-3)</option>
-                </optgroup>
-                
-                <!-- Africa -->
-                <optgroup label="🌍 Africa">
-                  <option value="Africa/Cairo" ${sett.tz === 'Africa/Cairo' ? 'selected' : ''}>🇪🇬 Egypt (GMT+2)</option>
-                  <option value="Africa/Lagos" ${sett.tz === 'Africa/Lagos' ? 'selected' : ''}>🇳🇬 Nigeria (GMT+1)</option>
-                  <option value="Africa/Johannesburg" ${sett.tz === 'Africa/Johannesburg' ? 'selected' : ''}>🇿🇦 South Africa (GMT+2)</option>
-                  <option value="Africa/Nairobi" ${sett.tz === 'Africa/Nairobi' ? 'selected' : ''}>🇰🇪 Kenya (GMT+3)</option>
-                </optgroup>
-                
-                <!-- Oceania -->
-                <optgroup label="🌏 Oceania">
-                  <option value="Australia/Sydney" ${sett.tz === 'Australia/Sydney' ? 'selected' : ''}>🇦🇺 Australia Eastern (GMT+10)</option>
-                  <option value="Australia/Melbourne" ${sett.tz === 'Australia/Melbourne' ? 'selected' : ''}>🇦🇺 Australia Melbourne (GMT+10)</option>
-                  <option value="Australia/Perth" ${sett.tz === 'Australia/Perth' ? 'selected' : ''}>🇦🇺 Australia Western (GMT+8)</option>
-                  <option value="Pacific/Auckland" ${sett.tz === 'Pacific/Auckland' ? 'selected' : ''}>🇳🇿 New Zealand (GMT+12)</option>
-                </optgroup>
-                
-                <!-- Universal -->
-                <optgroup label="🌍 Universal">
-                  <option value="UTC" ${sett.tz === 'UTC' ? 'selected' : ''}>🌍 UTC</option>
-                </optgroup>
-              </select>
-            </div>
-            <div style="margin-bottom: 12px">
-              <div
-                style="
-                  font-size: 12px;
-                  font-weight: 600;
-                  color: #1a3a5c;
-                  margin-bottom: 8px;
-                "
-              >
-                Default Red Days
-              </div>
-              <div style="display: flex; gap: 16px; flex-wrap: wrap">
-                <label
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    font-size: 12px;
-                    cursor: pointer;
-                    padding: 6px 12px;
-                    background: #f3f4f6;
-                    border-radius: 6px;
-                  "
-                >
-                  <input
-                    type="checkbox"
-                    id="cb-fri"
-                    onchange="saveSett()"
-                    style="width: 16px; height: 16px"
-                  />
-                  Friday
-                </label>
-                <label
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    font-size: 12px;
-                    cursor: pointer;
-                    padding: 6px 12px;
-                    background: #f3f4f6;
-                    border-radius: 6px;
-                  "
-                >
-                  <input
-                    type="checkbox"
-                    id="cb-sat"
-                    onchange="saveSett()"
-                    style="width: 16px; height: 16px"
-                  />
-                  Saturday
-                </label>
-                <label
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    font-size: 12px;
-                    cursor: pointer;
-                    padding: 6px 12px;
-                    background: #f3f4f6;
-                    border-radius: 6px;
-                  "
-                >
-                  <input
-                    type="checkbox"
-                    id="cb-sun"
-                    onchange="saveSett()"
-                    style="width: 16px; height: 16px"
-                  />
-                  Sunday
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Custom Red Dates -->
-        <div class="rpt-sec">
-          <div class="rpt-hdr">🎯 Add Custom Red Date</div>
-          <div style="padding: 15px">
-            <div
-              style="
-                display: flex;
-                gap: 10px;
-                align-items: center;
-                margin-bottom: 12px;
-              "
-            >
-              <input
-                type="date"
-                id="hol-date"
-                class="mf"
-                style="flex: 1; max-width: 200px"
-              />
-              <button class="btn pri" onclick="addHol()">+ Add</button>
-            </div>
-            <div
-              style="
-                font-size: 11px;
-                font-weight: 600;
-                color: #666;
-                margin-bottom: 6px;
-              "
-            >
-              Custom red dates:
-            </div>
-            <div id="hol-list"></div>
-          </div>
-        </div>
-
-        <!-- Remove Red Dates -->
-        <div class="rpt-sec">
-          <div class="rpt-hdr">❌ Remove Red from Date</div>
-          <div style="padding: 15px">
-            <div
-              style="
-                display: flex;
-                gap: 10px;
-                align-items: center;
-                margin-bottom: 12px;
-              "
-            >
-              <input
-                type="date"
-                id="exc-date"
-                class="mf"
-                style="flex: 1; max-width: 200px"
-              />
-              <button
-                class="btn"
-                style="border-color: #dc2626; color: #dc2626"
-                onclick="addExc()"
-              >
-                Remove
-              </button>
-            </div>
-            <div
-              style="
-                font-size: 11px;
-                font-weight: 600;
-                color: #666;
-                margin-bottom: 6px;
-              "
-            >
-              Exceptions (not red):
-            </div>
-            <div id="exc-list"></div>
-          </div>
-        </div>
-
-        <!-- Admin Password -->
-        <div class="rpt-sec">
-          <div class="rpt-hdr">🔐 Admin Password</div>
-          <div style="padding: 15px">
-            <input
-              type="password"
-              class="mf"
-              id="current-password"
-              style="margin-bottom: 8px"
-            />
-            <input
-              type="password"
-              class="mf"
-              id="new-password"
-              style="margin-bottom: 8px"
-            />
-            <input
-              type="password"
-              class="mf"
-              id="confirm-password"
-              style="margin-bottom: 12px"
-            />
-            <button
-              class="btn pri"
-              onclick="changeAdminPassword()"
-              style="width: 100%"
-            >
-              Change Password
-            </button>
-          </div>
-        </div>
-
-        <!-- Cloud Sync -->
-        <div class="rpt-sec">
-          <div class="rpt-hdr">☁️ Cloud Sync (Firebase)</div>
-          <div style="padding: 15px">
-            <div style="font-size: 12px; color: #666; margin-bottom: 10px">
-              Data syncs automatically to cloud. All devices will see the same
-              data.
-            </div>
-            <div
-              id="gs-status"
-              style="
-                font-size: 13px;
-                color: #059669;
-                font-weight: 600;
-                padding: 10px;
-                background: #dcfce7;
-                border-radius: 6px;
-                text-align: center;
-              "
-            >
-              ☁️ Connected
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div
-          style="
-            text-align: center;
-            padding: 30px 20px;
-            margin-top: 20px;
-            border-top: 1px solid #e2e8f0;
-          "
-        >
-          <div style="font-size: 11px; color: #444">
-            © 2026 samiulAsumel. All rights reserved.
-          </div>
-          <div style="font-size: 10px; color: #666; margin-top: 6px">
-            Daily Car Balance Tracker | Powered by Firebase
-          </div>
-        </div>
-      </div>
-    </div>
-
-
-
-    <!-- EXPORT OVERLAY -->
-    <div class="ov" id="ov-export">
-      <div class="mbox">
-        <h2>&#8659; Export to Excel</h2>
-        <div
-          style="
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-            margin-bottom: 11px;
-          "
-        >
-          <label
-            style="
-              display: flex;
-              align-items: center;
-              gap: 7px;
-              font-size: 12px;
-              cursor: pointer;
-            "
-            ><input type="radio" name="exp" value="cur" checked /> Current
-            month</label
-          >
-          <label
-            style="
-              display: flex;
-              align-items: center;
-              gap: 7px;
-              font-size: 12px;
-              cursor: pointer;
-            "
-            ><input type="radio" name="exp" value="all" /> All months</label
-          >
-        </div>
-        <div class="mbtns">
-          <button
-            class="btn"
-            onclick="
-              document.getElementById('ov-export').classList.remove('on')
-            "
-          >
-            Cancel
-          </button>
-          <button class="btn pri" onclick="doExport()">&#8659; Download</button>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      // ════════════════════════════════════════════════════
-      //  HISTORICAL DATA
-      // ════════════════════════════════════════════════════
-      const HIST_DATA = {
+    // ════════════════════════════════════════════════════
+//  HISTORICAL DATA
+// ════════════════════════════════════════════════════
+const HIST_DATA = {
         rows: [
           {
             d: "2025-01-01",
@@ -4277,18 +3458,35 @@
       // ═══════════════════════════════════════════════════════════════════════
       //  FIREBASE CONFIG
       // ═══════════════════════════════════════════════════════════════════════
-      const firebaseConfig = {
-        databaseURL:
-          "https://monthly-car-balance-default-rtdb.asia-southeast1.firebasedatabase.app/",
-      };
-
       let firebaseDb = null;
+      
+      // Secure Firebase initialization with environment-based configuration
+      function initializeFirebase() {
+        try {
+          // Load configuration from secure source
+          const firebaseConfig = getFirebaseConfig();
+          
+          if (!firebaseConfig.databaseURL) {
+            console.warn('Firebase database URL not configured. Cloud sync will be disabled.');
+            return false;
+          }
 
-      // Initialize Firebase
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+          // Initialize Firebase if not already initialized
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            console.info('Firebase initialized with secured configuration');
+          }
+          
+          firebaseDb = firebase.database();
+          return true;
+        } catch (error) {
+          console.error('Failed to initialize Firebase:', error);
+          return false;
+        }
       }
-      firebaseDb = firebase.database();
+
+      // Initialize Firebase on load
+      const firebaseInitialized = initializeFirebase();
 
       // ═══════════════════════════════════════════════════════════════════════
       //  STATE
@@ -4854,25 +4052,212 @@
           .filter((k) => /^\d{4}-\d{2}$/.test(k))
           .sort();
 
-      // ════════════════════════════════════════════════════
-      //  AUTHENTICATION & SECURITY
+// ════════════════════════════════════════════════════
+      //  AUTHENTICATION & SECURITY (using authManager)
       // ════════════════════════════════════════════════════
       const ADMIN_USER = "admin";
-      const ADMIN_DEFAULT_PASSWORD = "admin";
-      let ADMIN_HASH = hash(ADMIN_DEFAULT_PASSWORD); // Will be updated when password changes
       let isLoggedIn = false;
       let currentUser = null;
 
-      // Enhanced security functions
+      // Use authManager if available, otherwise fallback to localStorage
+      const authMan = window.authManager || {
+        isLoggedIn: false,
+        currentUser: null,
+        init: function() {
+          const savedUser = localStorage.getItem('car_balance_current_user');
+          if (savedUser) {
+            try {
+              const user = JSON.parse(savedUser);
+              if (user.expiry > Date.now()) {
+                this.currentUser = user.username;
+                this.isLoggedIn = true;
+                return true;
+              }
+            } catch (e) {}
+          }
+          localStorage.removeItem('car_balance_current_user');
+          this.currentUser = null;
+          this.isLoggedIn = false;
+          return false;
+        },
+        authenticate: function(username, password) {
+          const usersData = localStorage.getItem('car_balance_users');
+          if (!usersData) return false;
+          try {
+            const users = JSON.parse(usersData);
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+              const session = { username: username, expiry: Date.now() + (24 * 60 * 60 * 1000) };
+              localStorage.setItem('car_balance_current_user', JSON.stringify(session));
+              this.currentUser = username;
+              this.isLoggedIn = true;
+              return true;
+            }
+          } catch (e) { console.error('Auth error:', e); }
+          return false;
+        },
+        logout: function() {
+          localStorage.removeItem('car_balance_current_user');
+          this.currentUser = null;
+          this.isLoggedIn = false;
+          return true;
+        }
+      };
+
+      // Initialize auth on load
+      function initAuth() {
+        if (authMan.init && authMan.init()) {
+          isLoggedIn = true;
+          currentUser = authMan.currentUser;
+        }
+        checkLoginStatus();
+      }
+
+      // Legacy hash function for backward compatibility
       function hash(str) {
-        // Simple hash function for demo (in production, use bcrypt/scrypt)
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
           const char = str.charCodeAt(i);
           hash = (hash << 5) - hash + char;
-          hash = hash & hash; // Convert to 32-bit integer
+          hash = hash & hash;
         }
         return hash.toString(36);
+      }
+
+      function validateInput(input, type = "text") {
+        if (typeof input !== "string") return false;
+        const clean = input.trim().replace(/[<>]/g, "").replace(/['"]/g, "").replace(/[;&]/g, "");
+        if (type === "username") return /^[a-zA-Z0-9_]{3,20}$/.test(clean);
+        if (type === "password") return clean.length >= 4 && clean.length <= 50;
+        return clean.length > 0 && clean.length <= 100;
+      }
+
+      function sanitizeInput(input) {
+        if (typeof input !== "string") return "";
+        return input.trim().replace(/[<>]/g, "").replace(/['"]/g, "").replace(/[;&]/g, "");
+      }
+
+      function showLoginForm() {
+        const userid = prompt("Enter username:");
+        if (!userid) return;
+        const password = prompt("Enter password:");
+        if (!password) return;
+        doLoginSimple(userid, password);
+      }
+
+      let loginAttempts = 0;
+      let lastLoginAttempt = 0;
+      const MAX_LOGIN_ATTEMPTS = 5;
+      const LOCKOUT_TIME = 60000;
+
+      function checkRateLimit() {
+        const now = Date.now();
+        if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+          if (now - lastLoginAttempt < LOCKOUT_TIME) return true;
+          loginAttempts = 0;
+        }
+        return false;
+      }
+
+      function recordFailedLogin() { loginAttempts++; lastLoginAttempt = Date.now(); }
+      function resetLoginAttempts() { loginAttempts = 0; }
+
+      function doLoginSimple(userid, password) {
+        if (checkRateLimit()) { showError("Too many failed attempts. Please wait 1 minute."); return; }
+        userid = sanitizeInput(userid);
+        if (!validateInput(userid, "username")) { showError("Invalid username format"); return; }
+
+        // Check admin credentials from localStorage
+        const adminData = localStorage.getItem('car_balance_admin');
+        let adminHash = "dm5ob3"; // default hash for "admin"
+        if (adminData) {
+          try { adminHash = JSON.parse(adminData).hash; } catch(e) {}
+        }
+        
+        // Check against admin hash
+        if (userid === ADMIN_USER && hash(password) === adminHash) {
+          resetLoginAttempts();
+          isLoggedIn = true;
+          currentUser = userid;
+          const sessionToken = crypto.randomUUID ? crypto.randomUUID() : 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          localStorage.setItem("sessionToken", sessionToken);
+          localStorage.setItem("isLoggedIn", "true");
+          localStorage.setItem("currentUser", userid);
+          localStorage.setItem("loginTime", Date.now().toString());
+          showSuccess("Login successful!");
+          updateLoginUI();
+          return;
+        }
+        
+        // Check regular users
+        if (authMan.authenticate && authMan.authenticate(userid, password)) {
+          resetLoginAttempts();
+          isLoggedIn = true;
+          currentUser = userid;
+          localStorage.setItem("sessionToken", crypto.randomUUID ? crypto.randomUUID() : 'sess_' + Date.now());
+          localStorage.setItem("isLoggedIn", "true");
+          localStorage.setItem("currentUser", userid);
+          localStorage.setItem("loginTime", Date.now().toString());
+          showSuccess("Login successful!");
+          updateLoginUI();
+          return;
+        }
+        
+        // Fallback: check old users object
+        if (users && users[userid] && users[userid] === hash(password)) {
+          resetLoginAttempts();
+          isLoggedIn = true;
+          currentUser = userid;
+          localStorage.setItem("sessionToken", crypto.randomUUID ? crypto.randomUUID() : 'sess_' + Date.now());
+          localStorage.setItem("isLoggedIn", "true");
+          localStorage.setItem("currentUser", userid);
+          localStorage.setItem("loginTime", Date.now().toString());
+          showSuccess("Login successful!");
+          updateLoginUI();
+          return;
+        }
+        
+        console.log("Login failed for:", userid);
+        recordFailedLogin();
+        showError("Invalid credentials");
+      }
+
+      function logout() {
+        isLoggedIn = false;
+        currentUser = null;
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("loginTime");
+        localStorage.removeItem("sessionToken");
+        if (authMan.logout) authMan.logout();
+        showSuccess("Logged out successfully");
+        renderAll();
+      }
+
+      function updateLoginUI() {
+        document.getElementById("lock-info").textContent = isLoggedIn ? `Logged in: ${currentUser}` : "Not logged in — login to edit/save";
+        const loginBtn = document.getElementById("login-btn");
+        const logoutBtn = document.getElementById("logout-btn");
+        if (loginBtn) loginBtn.style.display = isLoggedIn ? "none" : "inline-block";
+        if (logoutBtn) logoutBtn.style.display = isLoggedIn ? "inline-block" : "none";
+      }
+
+      function checkLoginStatus() {
+        const savedLogin = localStorage.getItem("isLoggedIn");
+        const savedUser = localStorage.getItem("currentUser");
+        const loginTime = localStorage.getItem("loginTime");
+        const sessionToken = localStorage.getItem("sessionToken");
+        if (savedLogin === "true" && savedUser && loginTime && sessionToken) {
+          const timeDiff = Date.now() - parseInt(loginTime);
+          const maxSessionTime = 60 * 60 * 1000;
+          if (timeDiff < maxSessionTime) {
+            isLoggedIn = true;
+            currentUser = savedUser;
+            return;
+          }
+        }
+        isLoggedIn = false;
+        currentUser = null;
       }
 
       function validateInput(input, type = "text") {
@@ -4907,80 +4292,9 @@
       function showLoginForm() {
         const userid = prompt("Enter username:");
         if (!userid) return;
-
         const password = prompt("Enter password:");
         if (!password) return;
-
         doLoginSimple(userid, password);
-      }
-
-      // Rate limiting for login attempts
-      let loginAttempts = 0;
-      let lastLoginAttempt = 0;
-      const MAX_LOGIN_ATTEMPTS = 5;
-      const LOCKOUT_TIME = 60000; // 1 minute lockout
-
-      function checkRateLimit() {
-        const now = Date.now();
-        if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
-          if (now - lastLoginAttempt < LOCKOUT_TIME) {
-            return true; // Still locked out
-          }
-          // Reset after lockout period
-          loginAttempts = 0;
-        }
-        return false;
-      }
-
-      function recordFailedLogin() {
-        loginAttempts++;
-        lastLoginAttempt = Date.now();
-      }
-
-      function resetLoginAttempts() {
-        loginAttempts = 0;
-      }
-
-      function doLoginSimple(userid, password) {
-        if (checkRateLimit()) {
-          showError("Too many failed attempts. Please wait 1 minute.");
-          return;
-        }
-        
-        // Sanitize inputs
-        userid = sanitizeInput(userid);
-        if (!validateInput(userid, "username")) {
-          showError("Invalid username format");
-          return;
-        }
-
-        console.log("Attempting login with:", userid);
-        if (checkCred(userid, password)) {
-          console.log("Login successful, setting state");
-          resetLoginAttempts();
-          isLoggedIn = true;
-          currentUser = userid;
-          
-          // Secure session token
-          const sessionToken = crypto.randomUUID ? crypto.randomUUID() : 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-          localStorage.setItem("sessionToken", sessionToken);
-          localStorage.setItem("isLoggedIn", "true");
-          localStorage.setItem("currentUser", userid);
-          localStorage.setItem("loginTime", Date.now().toString());
-
-          showSuccess("Login successful! Refreshing...");
-          updateLoginUI();
-
-          console.log("Setting up auto-refresh");
-          setTimeout(() => {
-            console.log("Refreshing now...");
-            window.location.reload();
-          }, 500);
-        } else {
-          console.log("Login failed");
-          recordFailedLogin();
-          showError("Invalid credentials");
-        }
       }
 
       function logout() {
@@ -5062,7 +4376,7 @@
         const newPass = document.getElementById("new-password").value;
         const confirmPass = document.getElementById("confirm-password").value;
 
-        if (hash(currentPass) !== ADMIN_HASH) {
+        if (hash(currentPass) !== getAdminHash()) {
           showError("Current password is incorrect");
           return;
         }
@@ -5077,8 +4391,8 @@
           return;
         }
 
-        ADMIN_HASH = hash(newPass);
-        localStorage.setItem("adminHash", ADMIN_HASH);
+        const newHash = hash(newPass);
+        localStorage.setItem("car_balance_admin", JSON.stringify({ hash: newHash, updated: Date.now() }));
 
         // Clear password fields
         document.getElementById("current-password").value = "";
@@ -5094,9 +4408,24 @@
       function isAdmin(u) {
         return u === ADMIN_USER;
       }
+      
+      // Get current admin hash from localStorage or use default
+      function getAdminHash() {
+        const savedHash = localStorage.getItem("car_balance_admin");
+        if (savedHash) {
+          try { return JSON.parse(savedHash).hash; } catch(e) {}
+        }
+        return "dm5ob3"; // default hash for "admin"
+      }
+      
       function checkCred(u, p) {
-        if (u === ADMIN_USER && hash(p) === ADMIN_HASH) return true;
-        return users[u] && users[u] === hash(p);
+        // Check admin first
+        if (u === ADMIN_USER && hash(p) === getAdminHash()) return true;
+        // Check regular users
+        if (users && users[u] && users[u] === hash(p)) return true;
+        // Check with authManager
+        if (authMan.authenticate && authMan.authenticate(u, p)) return true;
+        return false;
       }
 
       function showLogin(reason = "edit") {
@@ -7330,13 +6659,14 @@
         updateCurrentDate();
 
         setTimeout(() => {
-          // Performance: Check login status first
-          const wasLoggedIn = checkLoginStatus();
+          // Initialize authentication
+          initAuth();
 
           // Load saved admin hash if exists
-          const savedHash = localStorage.getItem("adminHash");
+          const savedHash = localStorage.getItem("car_balance_admin");
+          let adminHash = "dm5ob3";
           if (savedHash) {
-            ADMIN_HASH = savedHash;
+            try { adminHash = JSON.parse(savedHash).hash; } catch(e) {}
           }
 
           buildHist();
@@ -7469,7 +6799,7 @@
 
       // Helper function to get month name
       function getMonthName(month) {
-        const months = [
+        const monthNames = [
           "January",
           "February",
           "March",
@@ -7483,7 +6813,7 @@
           "November",
           "December",
         ];
-        return months[month - 1];
+        return monthNames[month - 1];
       }
 
       // Auto-generate months and ensure all have proper structure
@@ -7570,3 +6900,15 @@
                 al: "",
                 av: 0,
               });
+
+              lastRow = DB[monthKey][DB[monthKey].length - 1];
+            }
+          }
+        });
+      }
+      // Wait for DOM to be ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
