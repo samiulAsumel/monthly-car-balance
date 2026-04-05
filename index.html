@@ -7389,13 +7389,66 @@
       }
 
       function showLoginForm() {
-        const userid = prompt("Enter username:");
-        if (!userid) return;
-
-        const password = prompt("Enter password:");
-        if (!password) return;
-
-        doLoginSimple(userid, password);
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 10000;
+        `;
+        
+        modal.innerHTML = `
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); min-width: 400px;">
+            <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px;">🔐 Login Required</h3>
+            <div style="margin-bottom: 15px;">
+              <label style="display: block; margin-bottom: 5px; color: #374151; font-size: 14px; font-weight: 500;">Username:</label>
+              <input type="text" id="login-username" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;" placeholder="Enter username">
+            </div>
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 5px; color: #374151; font-size: 14px; font-weight: 500;">Password:</label>
+              <input type="password" id="login-password" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;" placeholder="Enter password">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+              <button onclick="this.closest('.login-modal').remove()" style="padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: white; color: #374151; cursor: pointer; font-size: 14px;">Cancel</button>
+              <button onclick="submitLogin(this)" style="padding: 8px 16px; border: none; border-radius: 6px; background: #3b82f6; color: white; cursor: pointer; font-size: 14px;">Login</button>
+            </div>
+          </div>
+        `;
+        
+        modal.className = 'login-modal';
+        document.body.appendChild(modal);
+        
+        // Focus on username field
+        setTimeout(() => {
+          document.getElementById('login-username').focus();
+        }, 100);
+        
+        // Handle Enter key
+        modal.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            submitLogin(modal.querySelector('button[onclick="submitLogin(this)"]'));
+          }
+        });
+      }
+      
+      function submitLogin(button) {
+        const modal = button.closest('.login-modal');
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value;
+        
+        if (!username || !password) {
+          showError('Please enter both username and password');
+          return;
+        }
+        
+        modal.remove();
+        doLoginSimple(username, password);
       }
 
       // Rate limiting for login attempts
