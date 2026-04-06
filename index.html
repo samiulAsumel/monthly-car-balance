@@ -10072,9 +10072,8 @@
               cur = mk(currentYear, currentMonth);
             }
             renderAll();
-            if (!dirty) {
-              setDirty(false);
-            }
+            // Always mark as clean after successful data load
+            setDirty(false);
 
             // Show connected status
             if (firebaseDb) {
@@ -10278,8 +10277,8 @@
         }
         
         if (changesMade) {
-          setDirty(true);
-          showSuccess("Month transitions have been fixed.");
+          // Don't set dirty during initialization - this is automatic correction
+          console.log("Month transitions automatically corrected during load");
         }
       }
       
