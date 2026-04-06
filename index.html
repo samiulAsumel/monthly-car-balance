@@ -8231,15 +8231,50 @@
         const ms = months();
         const idx = ms.indexOf(cur);
         const ps = idx > 0 ? summ(ms[idx - 1]) : null;
-        const [y, m] = cur.split("-").map(Number);
         const rows = DB[cur] || [];
-        const wDays = rows.filter((r) => !isRed(r.date)).length;
-        const aucDelTotal = rows.reduce((sum, row) => sum + (parseInt(row.av) || 0), 0);
-        
-                const net = s.imp - s.del;
+        const sortedRows = rows.slice().sort((a, b) => a.date.localeCompare(b.date));
+        const wDays = sortedRows.filter((r) => !isRed(r.date)).length;
+        const aucDelTotal = sortedRows.reduce((sum, row) => sum + (parseInt(row.av) || 0), 0);
+        const net = s.imp - s.del;
         const ratio = s.imp ? Math.round((s.del / s.imp) * 100) : 0;
         const avgDel = wDays ? Math.round(s.del / wDays) : 0;
         const avgImp = wDays ? Math.round(s.imp / wDays) : 0;
+
+        const formatDMY = (dateStr) => {
+          if (!dateStr) return "—";
+          const [year, month, day] = dateStr.split("-");
+          return `${day}-${month}-${year}`;
+        };
+
+        const formatMonthLabel = (monthKey) => {
+          if (!monthKey) return "—";
+          const [year, month] = monthKey.split("-").map(Number);
+          const date = new Date(year, month - 1, 1);
+          return date.toLocaleDateString("en-GB", {
+            month: "long",
+            year: "numeric",
+          });
+        };
+
+        const totalForRow = (row, field) => {
+          if (!row || !Array.isArray(row[field])) return 0;
+          return row[field].reduce((acc, val) => acc + Number(val || 0), 0);
+        };
+
+        const prevMonthClose = ps ? fmt(ps.bal) : "—";
+        const todayDate = TODAY;
+        const rowsBeforeToday = sortedRows.filter((r) => r.date < todayDate);
+        const nonRedBeforeToday = rowsBeforeToday.filter((r) => !isRed(r.date));
+        const prevWorkingRow = nonRedBeforeToday.length
+          ? nonRedBeforeToday[nonRedBeforeToday.length - 1]
+          : null;
+        const prevWorkDel = totalForRow(prevWorkingRow, "del");
+        const prevWorkDate = prevWorkingRow ? formatDMY(prevWorkingRow.date) : "—";
+        const currentRow = sortedRows.find((r) => r.date === todayDate) || sortedRows[sortedRows.length - 1] || null;
+        const prevDayIndex = currentRow ? sortedRows.indexOf(currentRow) - 1 : -1;
+        const prevDay = prevDayIndex >= 0 ? sortedRows[prevDayIndex] : null;
+        const prevDayReceive = totalForRow(prevDay, "imp");
+        const prevDayDate = prevDay ? formatDMY(prevDay.date) : "—";
 
         const card = (lbl, val, color, sub, hl = false) =>
           `<div class="card${hl ? " hl" : ""}">
@@ -8249,6 +8284,24 @@
           </div>`;
 
         let h = "";
+        h += card(
+          "Prev Month Closing",
+          prevMonthClose,
+          "#1f2937",
+          ps ? `as of ${formatMonthLabel(ms[idx - 1])}` : "No prev month",
+        );
+        h += card(
+          "Prev Working Day Delivery",
+          fmt(prevWorkDel),
+          "#1d4ed8",
+          prevWorkingRow ? `${prevWorkDate}` : "No working day",
+        );
+        h += card(
+          "Prev Day Receive",
+          fmt(prevDayReceive),
+          "#92400e",
+          prevDay ? prevDayDate : "No previous day",
+        );
         h += card(
           "Closing Balance",
           fmt(s.bal),
