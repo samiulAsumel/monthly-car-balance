@@ -6,6 +6,12 @@
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:; connect-src * https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com">
     <title>Daily Car Balance Tracker</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23166534'><path d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/></svg>" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1a3a5c" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Car Balance" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180' fill='%23166534'><path d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/></svg>" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -2527,14 +2533,15 @@
       </div>
       <div class="t-right">
         <span class="sv ok" id="sv-badge">✓ Saved</span>
-        <button class="tbtn" onclick="undoLast()" title="Undo Last Action">
+        <button class="tbtn" id="undo-button" onclick="undoLast()" title="Undo Last Action">
           ↶ Undo
         </button>
-        <button class="tbtn gold" onclick="doSave()" title="Save Current Data">
+        <button class="tbtn gold" id="save-button" onclick="doSave()" title="Save Current Data">
           💾 Save
         </button>
          <button
            class="tbtn blue"
+           id="next-month-button"
            onclick="generateNextMonths()"
            title="Generate Next Months"
          >
@@ -2542,6 +2549,7 @@
          </button>
          <button
            class="tbtn purple"
+           id="fix-button"
            onclick="fixMonthTransitions()"
            title="Fix Month Transitions"
          >
@@ -7021,7 +7029,7 @@
       }
 
       function saveToFirebase() {
-        if (!firebaseDb || !isLoggedIn) return false;
+        if (!firebaseDb || !isLoggedIn) return Promise.resolve(false);
 
         const dataToSave = {
           db: DB,
@@ -7031,7 +7039,7 @@
           adminHash: ADMIN_HASH
         };
 
-        firebaseDb
+        return firebaseDb
           .ref("carBalance")
           .set(dataToSave)
           .then(() => {
@@ -7042,7 +7050,6 @@
             console.log("Failed to save to Firebase", e);
             return false;
           });
-        return true;
       }
 
       function saveLS() {
@@ -7072,10 +7079,14 @@
 
         // Save to Firebase
         if (firebaseDb) {
-          const fbSuccess = saveToFirebase();
-          setDirty(false);
-          restoreButton();
-          showSuccess(fbSuccess ? "Saved to cloud!" : "Saved to device only!");
+          saveToFirebase().then((fbSuccess) => {
+            setDirty(false);
+            restoreButton();
+            showSuccess(fbSuccess ? "Saved to cloud!" : "Saved to device only!");
+          }).catch((err) => {
+            restoreButton();
+            showError("Failed to save: " + err.message);
+          });
         } else {
           setDirty(false);
           setTimeout(() => {
@@ -7252,7 +7263,7 @@
         // Show subtle auto-save indicator
         showAutoSaveIndicator();
 
-        // Save data
+        // Save data locally
         const lsSuccess = saveLS();
         if (!lsSuccess) {
           hideAutoSaveIndicator();
@@ -7260,10 +7271,26 @@
         }
         setDirty(false);
 
-        // Hide indicator after a short delay
-        setTimeout(() => {
-          hideAutoSaveIndicator();
-        }, 2000);
+        // Also save to Firebase
+        if (firebaseDb) {
+          saveToFirebase().then((fbSuccess) => {
+            if (!fbSuccess) {
+              console.warn("Auto-save to Firebase failed");
+            }
+            setTimeout(() => {
+              hideAutoSaveIndicator();
+            }, 2000);
+          }).catch((err) => {
+            console.error("Auto-save error:", err);
+            setTimeout(() => {
+              hideAutoSaveIndicator();
+            }, 2000);
+          });
+        } else {
+          setTimeout(() => {
+            hideAutoSaveIndicator();
+          }, 2000);
+        }
       }
 
       function showAutoSaveIndicator() {
@@ -9936,7 +9963,9 @@
           if (changesMade) {
             setDirty(true);
             renderAll();
-            showSuccess("Month transitions have been fixed!");
+            // Auto-save after fixing transitions
+            doSave();
+            showSuccess("Month transitions have been fixed and saved!");
           } else {
             showSuccess("No balance mismatches found.");
           }
@@ -10305,6 +10334,55 @@
         });
       }
       init();
+    </script>
+
+    <!-- Service Worker Registration for PWA -->
+    <script>
+      // Register service worker for offline functionality
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/service-worker.js')
+            .then((registration) => {
+              console.log(
+                'Service Worker registered:',
+                registration.scope
+              );
+
+              // Check for updates periodically
+              setInterval(() => {
+                registration.update();
+              }, 60000); // Check every minute
+            })
+            .catch((error) => {
+              console.log('Service Worker registration failed:', error);
+            });
+        });
+      }
+
+      // Handle PWA install prompt
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Show install button or notification
+        console.log('PWA can be installed');
+      });
+
+      // Handle successful app installation
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed');
+        deferredPrompt = null;
+      });
+
+      // Listen for background sync messages
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data.type === 'SYNC_START') {
+            console.log('Data sync started...');
+          }
+        });
+      }
     </script>
   </body>
 </html>
