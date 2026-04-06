@@ -7991,7 +7991,6 @@
           recalcFrom(key, ri);
           setDirty(true);
           renderAll();
-          startAutoSave(); // Start auto-save timer
         });
       }
       function onImp(key, ri, li, val) {
@@ -8007,7 +8006,6 @@
           recalcFrom(key, ri);
           setDirty(true);
           renderAll();
-          startAutoSave(); // Start auto-save timer
         });
       }
       function onAuc(key, ri, f, val) {
@@ -8039,7 +8037,6 @@
             DB[key][ri][f] = val;
           }
           setDirty(true);
-          startAutoSave(); // Start auto-save timer
         });
       }
       function onOpenBal(key, ri, li, val) {
@@ -8055,7 +8052,6 @@
           recalcFrom(key, ri);
           setDirty(true);
           renderAll();
-          startAutoSave(); // Start auto-save timer
         });
       }
 
@@ -10065,8 +10061,8 @@
             const currentMonth = n.getMonth() + 1;
             autoGenerateMonths(currentYear, currentMonth);
             
-            // Check for month transition issues (but don't auto-fix user data)
-            checkAndFixMonthTransitions();
+            // Do not auto-fix month transitions on load to preserve saved state
+            // Manual fix remains available via the Fix Balances button.
             
             if (isLoggedIn) {
               ensureMonth(currentYear, currentMonth);
@@ -10076,6 +10072,9 @@
               cur = mk(currentYear, currentMonth);
             }
             renderAll();
+            if (!dirty) {
+              setDirty(false);
+            }
 
             // Show connected status
             if (firebaseDb) {
