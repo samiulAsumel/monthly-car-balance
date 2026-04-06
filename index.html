@@ -2769,28 +2769,6 @@
             <div style="font-size:12px;font-weight:600;color:#1f2937;" id="net-change">0</div>
           </div>
         </div>
-
-        <!-- Risk Assessment Card -->
-        <div class="metric-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
-              <span>🛡️</span> Risk Assessment
-            </h3>
-            <span style="background:#f59e0b;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;">MODERATE</span>
-          </div>
-          <div style="font-size:36px;font-weight:700;color:#f59e0b;margin-bottom:8px;" id="risk-score">6.5</div>
-          <div style="font-size:12px;color:#6b7280;">Risk level (1-10 scale)</div>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;">
-            <div style="display:flex;justify-content:space-between;font-size:11px;">
-              <span style="color:#6b7280;">Stock Volatility</span>
-              <span style="font-weight:600;color:#f59e0b;">Medium</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px;">
-              <span style="color:#6b7280;">Market Risk</span>
-              <span style="font-weight:600;color:#10b981;">Low</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Advanced Charts Section -->
@@ -2824,12 +2802,16 @@
               <div style="font-size:20px;font-weight:700;color:#1f2937;" id="live-balance">0</div>
             </div>
             <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #10b981;">
-              <div style="font-size:11px;color:#6b7280;">Today's Movement</div>
-              <div style="font-size:20px;font-weight:700;color:#10b981;" id="live-movement">+0</div>
+              <div style="font-size:11px;color:#6b7280;">Prev Day Delivery</div>
+              <div style="font-size:20px;font-weight:700;color:#10b981;" id="prev-day-delivery">0</div>
             </div>
             <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #f59e0b;">
-              <div style="font-size:11px;color:#6b7280;">Week Performance</div>
-              <div style="font-size:20px;font-weight:700;color:#f59e0b;" id="week-performance">0%</div>
+              <div style="font-size:11px;color:#6b7280;">Weekly Total Delivery</div>
+              <div style="font-size:20px;font-weight:700;color:#f59e0b;" id="week-delivery">0</div>
+            </div>
+            <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #8b5cf6;">
+              <div style="font-size:11px;color:#6b7280;">Weekly Total Received</div>
+              <div style="font-size:20px;font-weight:700;color:#8b5cf6;" id="week-received">0</div>
             </div>
           </div>
         </div>
@@ -8284,12 +8266,35 @@
           </div>`;
 
         let h = "";
+        // 1. Historical Context
         h += card(
           "Prev Month Closing",
           prevMonthClose,
           "#1f2937",
           ps ? `as of ${formatMonthLabel(ms[idx - 1])}` : "No prev month",
         );
+        // 2. Primary Operations
+        h += card(
+          "Total Delivery",
+          fmt(s.del),
+          "#1d4ed8",
+          ps ? pBadge(s.del, ps.del, false) : "—",
+        );
+        h += card(
+          "Total Receive",
+          fmt(s.imp),
+          "#92400e",
+          ps ? pBadge(s.imp, ps.imp, true) : "—",
+        );
+        // 3. Current State (Highlighted)
+        h += card(
+          "Closing Balance",
+          fmt(s.bal),
+          "#166534",
+          ps ? pBadge(s.bal, ps.bal) : "First month",
+          true,
+        );
+        // 4. Recent Activity
         h += card(
           "Prev Working Day Delivery",
           fmt(prevWorkDel),
@@ -8302,36 +8307,18 @@
           "#92400e",
           prevDay ? prevDayDate : "No previous day",
         );
+        // 5. Performance & Derived Metrics
         h += card(
-          "Closing Balance",
-          fmt(s.bal),
-          "#166534",
-          ps ? pBadge(s.bal, ps.bal) : "First month",
-          true,
-        );
-        h += card(
-          "Total Receive",
-          fmt(s.imp),
-          "#92400e",
-          ps ? pBadge(s.imp, ps.imp, true) : "—",
-        );
-        h += card(
-          "Total Delivery",
-          fmt(s.del),
-          "#1d4ed8",
-          ps ? pBadge(s.del, ps.del, false) : "—",
+          "Net Stock Change",
+          (net >= 0 ? "+" : "") + fmt(net),
+          net > 0 ? "#92400e" : net < 0 ? "#166534" : "#555",
+          net > 0 ? "Stock up" : net < 0 ? "Stock down" : "Balanced",
         );
         h += card(
           "Del/Rec Ratio",
           ratio + "%",
           ratio >= 100 ? "#166534" : ratio >= 75 ? "#92400e" : "#b91c1c",
           `${fmt(s.del)} of ${fmt(s.imp)}`,
-        );
-        h += card(
-          "Net Stock Change",
-          (net >= 0 ? "+" : "") + fmt(net),
-          net > 0 ? "#92400e" : net < 0 ? "#166534" : "#555",
-          net > 0 ? "Stock up" : net < 0 ? "Stock down" : "Balanced",
         );
         h += card(
           "Avg Daily Del",
@@ -8658,30 +8645,62 @@
       function updateLiveMetrics() {
         // Update live metrics with real data
         const currentData = summ(cur);
-        const today = new Date().toISOString().split('T')[0];
-        const todayData = (DB[cur] || []).find(row => row.date === today);
-        
-        // Update live balance
+        const allRows = DB[cur] || [];
+
+        // Update live balance (same as Closing Balance)
         const liveBalance = document.getElementById('live-balance');
         if (liveBalance) liveBalance.textContent = fmt(currentData.bal);
-        
-        // Update today's movement
-        const liveMovement = document.getElementById('live-movement');
-        if (liveMovement && todayData) {
-          const movement = todayData.imp.reduce((a, b) => a + b, 0) - todayData.del.reduce((a, b) => a + b, 0);
-          liveMovement.textContent = (movement >= 0 ? '+' : '') + fmt(movement);
+
+        // Update previous working day delivery (same logic as Prev Working Day Delivery)
+        const prevDayDelivery = document.getElementById('prev-day-delivery');
+        if (prevDayDelivery && allRows.length > 0) {
+          // Sort rows by date to ensure proper ordering
+          const sortedRows = allRows.sort((a, b) => new Date(a.date) - new Date(b.date));
+          const todayDate = TODAY;
+          const rowsBeforeToday = sortedRows.filter((r) => r.date < todayDate);
+          const nonRedBeforeToday = rowsBeforeToday.filter((r) => !isRed(r.date));
+          const prevWorkingRow = nonRedBeforeToday.length
+            ? nonRedBeforeToday[nonRedBeforeToday.length - 1]
+            : null;
+
+          if (prevWorkingRow) {
+            const totalPrevWorkDelivery = prevWorkingRow.del.reduce((a, b) => a + b, 0);
+            prevDayDelivery.textContent = fmt(totalPrevWorkDelivery);
+          } else {
+            prevDayDelivery.textContent = "—";
+          }
         }
-        
-        // Update week performance
-        const weekPerf = document.getElementById('week-performance');
-        if (weekPerf) {
-          const weekData = (DB[cur] || []).slice(-7);
-          const weekTotal = weekData.reduce((sum, row) => {
-            return sum + (row.imp.reduce((a, b) => a + b, 0) - row.del.reduce((a, b) => a + b, 0));
+
+        // Update week total delivery (sum of all deliveries in last 7 days)
+        const weekDelivery = document.getElementById('week-delivery');
+        if (weekDelivery && allRows.length >= 7) {
+          const weekData = allRows.slice(-7); // Last 7 days
+          const totalWeekDelivery = weekData.reduce((sum, row) => {
+            return sum + row.del.reduce((a, b) => a + b, 0);
           }, 0);
-          const avgDaily = weekTotal / 7;
-          const perfPercent = avgDaily > 0 ? Math.round((avgDaily / 100) * 100) : 0;
-          weekPerf.textContent = perfPercent + '%';
+          weekDelivery.textContent = fmt(totalWeekDelivery);
+        } else if (weekDelivery) {
+          // If less than 7 days of data, show total for available days
+          const totalWeekDelivery = allRows.reduce((sum, row) => {
+            return sum + row.del.reduce((a, b) => a + b, 0);
+          }, 0);
+          weekDelivery.textContent = fmt(totalWeekDelivery);
+        }
+
+        // Update week total received (sum of all receives in last 7 days)
+        const weekReceived = document.getElementById('week-received');
+        if (weekReceived && allRows.length >= 7) {
+          const weekData = allRows.slice(-7); // Last 7 days
+          const totalWeekReceived = weekData.reduce((sum, row) => {
+            return sum + row.imp.reduce((a, b) => a + b, 0);
+          }, 0);
+          weekReceived.textContent = fmt(totalWeekReceived);
+        } else if (weekReceived) {
+          // If less than 7 days of data, show total for available days
+          const totalWeekReceived = allRows.reduce((sum, row) => {
+            return sum + row.imp.reduce((a, b) => a + b, 0);
+          }, 0);
+          weekReceived.textContent = fmt(totalWeekReceived);
         }
       }
 
