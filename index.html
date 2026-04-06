@@ -4739,7 +4739,7 @@
           },
           {
             d: "2025-07-17",
-            v: [9, 0, 9, 0, 2, 0, 0, 0, 5, 0, 7, 0, 5, 0, 1, 0],
+            v: [9, 0, 9, 0, 2, 0, 0, 0, 5, 0, 0, 7, 5, 0, 1, 0],
             al: "",
             av: "",
             ob: null,
@@ -7314,7 +7314,7 @@
         if (prevRows.length) {
           // Use the actual closing balances from last day of previous month
           const lastDay = prevRows[prevRows.length - 1];
-          openBals = [...lastDay.bal]; // Direct copy of closing balances
+          openBals = calcLocBals(lastDay.bal, lastDay.del, lastDay.imp);
         } else {
           openBals = LOCS.map(() => 0);
         }
@@ -7946,7 +7946,7 @@
           );
           pushUndo();
           DB[key][ri].del[li] = validatedValue;
-          recalcFrom(key, ri + 1);
+          recalcFrom(key, ri);
           setDirty(true);
           renderAll();
           startAutoSave(); // Start auto-save timer
@@ -7962,7 +7962,7 @@
           );
           pushUndo();
           DB[key][ri].imp[li] = validatedValue;
-          recalcFrom(key, ri + 1);
+          recalcFrom(key, ri);
           setDirty(true);
           renderAll();
           startAutoSave(); // Start auto-save timer
@@ -8010,7 +8010,7 @@
           );
           pushUndo();
           DB[key][ri].bal[li] = validatedValue;
-          recalcFrom(key, ri + 1);
+          recalcFrom(key, ri);
           setDirty(true);
           renderAll();
           startAutoSave(); // Start auto-save timer
@@ -8392,11 +8392,12 @@
           imp: LOCS.map(() => 0),
         };
         const lastClosing = getClosing(last);
+        const lastLocClosing = calcLocBals(last.bal, last.del, last.imp);
         let foot = `<tr class="foot"><td style="text-align:center;font-size:9px">TOTAL</td><td class="col-sep"></td>`;
         LOCS.forEach((loc, li) => {
           const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
           const csep = "col-sep";
-          foot += `<td class="${gsp}" style="color:#1a3a5c;font-weight:700;font-size:10px">${last.bal[li]}</td>`;
+          foot += `<td class="${gsp}" style="color:#1a3a5c;font-weight:700;font-size:10px">${lastLocClosing[li]}</td>`;
           foot += `<td style="color:#1d4ed8;font-size:10px">${fd[li]}</td>`;
           foot += `<td class="${csep}" style="color:#92400e;font-size:10px">${fi[li]}</td>`;
         });
@@ -9905,7 +9906,7 @@
             
             // Get closing balances from previous month
             const prevLastDay = prevMonthData[prevMonthData.length - 1];
-            const prevClosingBalances = prevLastDay.bal.slice();
+            const prevClosingBalances = calcLocBals(prevLastDay.bal, prevLastDay.del, prevLastDay.imp);
             
             // Get opening balances from current month
             const currentFirstDay = currentMonthData[0];
@@ -10191,6 +10192,7 @@
       function checkAndFixMonthTransitions() {
         // Get all months sorted chronologically
         const allMonths = Object.keys(DB).sort();
+        let changesMade = false;
         
         for (let i = 0; i < allMonths.length; i++) {
           const currentMonth = allMonths[i];
@@ -10208,7 +10210,7 @@
           
           // Get closing balances from previous month
           const prevLastDay = prevMonthData[prevMonthData.length - 1];
-          const prevClosingBalances = prevLastDay.bal.slice();
+          const prevClosingBalances = calcLocBals(prevLastDay.bal, prevLastDay.del, prevLastDay.imp);
           
           // Get opening balances from current month (first day)
           const currentFirstDay = currentMonthData[0];
@@ -10220,14 +10222,21 @@
           );
           
           if (!balancesMatch) {
-            console.log(`Balance mismatch found: ${prevMonth} closing ${prevClosingBalances} vs ${currentMonth} opening ${currentOpeningBalances}`);
+            console.log(`Balance mismatch fixed: ${prevMonth} closing ${prevClosingBalances} -> ${currentMonth} opening ${currentOpeningBalances}`);
+            currentFirstDay.bal = prevClosingBalances.slice();
             
-            // Only fix if this is likely a data entry error (not user's intentional change)
-            // We'll be conservative and not automatically change user data
-            if (isLoggedIn) {
-              showError(`Balance mismatch between ${prevMonth} and ${currentMonth}. Please review month transitions in settings.`);
+            for (let dayIdx = 1; dayIdx < currentMonthData.length; dayIdx++) {
+              const prevDay = currentMonthData[dayIdx - 1];
+              const currentDay = currentMonthData[dayIdx];
+              currentDay.bal = calcLocBals(prevDay.bal, prevDay.del, prevDay.imp);
             }
+            changesMade = true;
           }
+        }
+        
+        if (changesMade) {
+          setDirty(true);
+          showSuccess("Month transitions have been fixed.");
         }
       }
       
