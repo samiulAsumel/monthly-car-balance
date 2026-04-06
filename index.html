@@ -231,10 +231,21 @@
         color: #ffffff;
       }
 
+      .tbtn.purple {
+        background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+        border-color: #8b5cf6;
+        color: #ffffff;
+      }
+
       .tbtn.red {
         background: linear-gradient(135deg, #7f1d1d 0%, #a52a2a 100%);
         border-color: #dc2626;
         color: #ffffff;
+      }
+
+      .tbtn.purple:hover {
+        background: linear-gradient(135deg, #9333ea 0%, #a855f7 100%);
+        border-color: #7c3aed;
       }
 
       .tbtn.red:hover {
@@ -2522,21 +2533,28 @@
         <button class="tbtn gold" onclick="doSave()" title="Save Current Data">
           💾 Save
         </button>
-        <button
-          class="tbtn blue"
-          onclick="generateNextMonths()"
-          title="Generate Next Months"
-        >
-          ➕ Next Month
-        </button>
-        <button
-          class="tbtn green"
-          id="login-btn"
-          onclick="showLoginForm()"
-          title="Login"
-        >
-          🔐 Login
-        </button>
+         <button
+           class="tbtn blue"
+           onclick="generateNextMonths()"
+           title="Generate Next Months"
+         >
+           ➕ Next Month
+         </button>
+         <button
+           class="tbtn purple"
+           onclick="fixMonthTransitions()"
+           title="Fix Month Transitions"
+         >
+           🔄 Fix Balances
+         </button>
+         <button
+           class="tbtn green"
+           id="login-btn"
+           onclick="showLoginForm()"
+           title="Login"
+         >
+           🔐 Login
+         </button>
         <button
           class="tbtn red"
           id="logout-btn"
@@ -3203,7 +3221,7 @@
           </div>
         </div>
 
-        <!-- Cloud Sync -->
+         <!-- Cloud Sync -->
         <div class="rpt-sec">
           <div class="rpt-hdr">☁️ Cloud Sync (Firebase)</div>
           <div style="padding: 15px">
@@ -3211,6 +3229,43 @@
               Data syncs automatically to cloud. All devices will see the same
               data.
             </div>
+            <div
+              id="gs-status"
+              style=
+                "font-size: 13px;
+                color: #059669;
+                font-weight: 600;
+                padding: 10px;
+                background: #dcfce7;
+                border-radius: 6px;
+                text-align: center;
+              "
+            >
+              ☁️ Connected
+            </div>
+          </div>
+        </div>
+        
+        <!-- Fix Month Transitions -->
+        <div class="rpt-sec">
+          <div class="rpt-hdr">🔄 Fix Month Transitions</div>
+          <div style="padding: 15px">
+            <div style="font-size: 12px; color: #666; margin-bottom: 10px">
+              If opening balances don't match closing balances from previous months,
+              click below to automatically fix transitions.
+            </div>
+            <button
+              class="btn pri"
+              onclick="fixMonthTransitions()"
+              style="width: 100%; margin-bottom: 8px"
+            >
+              Fix All Month Transitions
+            </button>
+            <div style="font-size: 11px; color: #666; font-style: italic">
+              Note: This will recalculate balances to ensure continuity.
+            </div>
+          </div>
+        </div>
             <div
               id="gs-status"
               style="
@@ -6873,7 +6928,12 @@
       }
 
       function buildHist() {
-        HIST_DATA.rows.forEach((r) => {
+        // Don't clear existing data - preserve user's work
+        
+        // Sort historical data by date to ensure proper order
+        const sortedData = HIST_DATA.rows.slice().sort((a, b) => a.d.localeCompare(b.d));
+        
+        sortedData.forEach((r) => {
           const key = r.d.slice(0, 7);
           if (!DB[key]) DB[key] = [];
           const del = LOCS.map((_, i) => r.v[i * 2]);
@@ -6896,6 +6956,9 @@
             av: r.av || "",
           });
         });
+        
+        // Only fix transitions if there are inconsistencies
+        checkAndFixMonthTransitions();
       }
 
       function loadLS() {
@@ -6939,6 +7002,10 @@
               if (data.sett) Object.assign(sett, data.sett);
               if (data.users) users = data.users;
               if (data.loggedIn) loggedIn = data.loggedIn;
+              if (data.adminHash) {
+                ADMIN_HASH = data.adminHash;
+                console.log("Loaded admin hash from Firebase");
+              }
               console.log("Loaded from Firebase");
             } else {
               loadLS();
@@ -6961,6 +7028,7 @@
           sett: sett,
           users: users,
           loggedIn: loggedIn,
+          adminHash: ADMIN_HASH
         };
 
         firebaseDb
@@ -7244,9 +7312,9 @@
         const prevRows = DB[pk] || [];
         let openBals;
         if (prevRows.length) {
-          // Opening bal for this month = last row's loc bals carried forward
-          const last = prevRows.slice(-1)[0];
-          openBals = calcLocBals(last.bal, last.del, last.imp);
+          // Use the actual closing balances from last day of previous month
+          const lastDay = prevRows[prevRows.length - 1];
+          openBals = [...lastDay.bal]; // Direct copy of closing balances
         } else {
           openBals = LOCS.map(() => 0);
         }
@@ -7613,6 +7681,18 @@
 
         ADMIN_HASH = hash(newPass);
         localStorage.setItem("adminHash", ADMIN_HASH);
+
+        // Sync with Firebase if available
+        if (firebaseDb && isLoggedIn) {
+          firebaseDb.ref("carBalance/adminHash").set(ADMIN_HASH)
+            .then(() => {
+              console.log("Admin password synced to Firebase");
+            })
+            .catch((e) => {
+              console.log("Failed to sync admin password", e);
+              showError("Password changed but cloud sync failed", "warning");
+            });
+        }
 
         // Clear password fields
         document.getElementById("current-password").value = "";
@@ -9804,6 +9884,64 @@
         return () => {};
       }
 
+      // Function to manually fix month transitions (callable from console)
+      function fixMonthTransitions() {
+        requireLogin(() => {
+          const allMonths = Object.keys(DB).sort();
+          let changesMade = false;
+          
+          for (let i = 0; i < allMonths.length; i++) {
+            const currentMonth = allMonths[i];
+            
+            // Skip the first month
+            if (i === 0) continue;
+            
+            const prevMonth = allMonths[i - 1];
+            const prevMonthData = DB[prevMonth];
+            const currentMonthData = DB[currentMonth];
+            
+            if (!prevMonthData || prevMonthData.length === 0) continue;
+            if (!currentMonthData || currentMonthData.length === 0) continue;
+            
+            // Get closing balances from previous month
+            const prevLastDay = prevMonthData[prevMonthData.length - 1];
+            const prevClosingBalances = prevLastDay.bal.slice();
+            
+            // Get opening balances from current month
+            const currentFirstDay = currentMonthData[0];
+            const currentOpeningBalances = currentFirstDay.bal.slice();
+            
+            // Check if they match
+            const balancesMatch = prevClosingBalances.every((bal, idx) => 
+              bal === currentOpeningBalances[idx]
+            );
+            
+            if (!balancesMatch) {
+              // Fix the opening balances
+              currentFirstDay.bal = prevClosingBalances.slice();
+              
+              // Recalculate all subsequent days in the month
+              for (let dayIdx = 1; dayIdx < currentMonthData.length; dayIdx++) {
+                const prevDay = currentMonthData[dayIdx - 1];
+                const currentDay = currentMonthData[dayIdx];
+                currentDay.bal = calcLocBals(prevDay.bal, prevDay.del, prevDay.imp);
+              }
+              
+              console.log(`Fixed transition from ${prevMonth} to ${currentMonth}`);
+              changesMade = true;
+            }
+          }
+          
+          if (changesMade) {
+            setDirty(true);
+            renderAll();
+            showSuccess("Month transitions have been fixed!");
+          } else {
+            showSuccess("No balance mismatches found.");
+          }
+        });
+      }
+      
       // ════════════════════════════════════════════════════
       //  RENDER ALL
       // ════════════════════════════════════════════════════
@@ -9881,6 +10019,10 @@
             const currentYear = n.getFullYear();
             const currentMonth = n.getMonth() + 1;
             autoGenerateMonths(currentYear, currentMonth);
+            
+            // Check for month transition issues (but don't auto-fix user data)
+            checkAndFixMonthTransitions();
+            
             if (isLoggedIn) {
               ensureMonth(currentYear, currentMonth);
               cur = mk(currentYear, currentMonth);
@@ -10046,6 +10188,49 @@
       }
 
       // Ensure all months have proper column structure
+      function checkAndFixMonthTransitions() {
+        // Get all months sorted chronologically
+        const allMonths = Object.keys(DB).sort();
+        
+        for (let i = 0; i < allMonths.length; i++) {
+          const currentMonth = allMonths[i];
+          const [year, month] = currentMonth.split("-").map(Number);
+          
+          // Skip the first month (no previous month to compare with)
+          if (i === 0) continue;
+          
+          const prevMonth = allMonths[i - 1];
+          const prevMonthData = DB[prevMonth];
+          const currentMonthData = DB[currentMonth];
+          
+          if (!prevMonthData || prevMonthData.length === 0) continue;
+          if (!currentMonthData || currentMonthData.length === 0) continue;
+          
+          // Get closing balances from previous month
+          const prevLastDay = prevMonthData[prevMonthData.length - 1];
+          const prevClosingBalances = prevLastDay.bal.slice();
+          
+          // Get opening balances from current month (first day)
+          const currentFirstDay = currentMonthData[0];
+          const currentOpeningBalances = currentFirstDay.bal.slice();
+          
+          // Check if they match
+          const balancesMatch = prevClosingBalances.every((bal, idx) => 
+            bal === currentOpeningBalances[idx]
+          );
+          
+          if (!balancesMatch) {
+            console.log(`Balance mismatch found: ${prevMonth} closing ${prevClosingBalances} vs ${currentMonth} opening ${currentOpeningBalances}`);
+            
+            // Only fix if this is likely a data entry error (not user's intentional change)
+            // We'll be conservative and not automatically change user data
+            if (isLoggedIn) {
+              showError(`Balance mismatch between ${prevMonth} and ${currentMonth}. Please review month transitions in settings.`);
+            }
+          }
+        }
+      }
+      
       function ensureAllMonthsHaveColumns() {
         Object.keys(DB).forEach((monthKey) => {
           const [year, month] = monthKey.split("-").map(Number);
