@@ -3,15 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:; connect-src * https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:; connect-src * https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com"
+    />
     <title>Daily Car Balance Tracker</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23166534'><path d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/></svg>" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23166534'><path d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/></svg>"
+    />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#1a3a5c" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="apple-mobile-web-app-title" content="Car Balance" />
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180' fill='%23166534'><path d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/></svg>" />
+    <link
+      rel="apple-touch-icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180' fill='%23166534'><path d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/></svg>"
+    />
 
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -34,44 +47,141 @@
 
     <!-- TOPBAR -->
     <div class="topbar">
-      <div>
-        <div class="t-brand">
-          &#9660; Daily Car Balance &mdash; Vehicle Position Tracker
+      <div style="display: flex; align-items: center; gap: 16px">
+        <div
+          style="
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            box-shadow:
+              0 4px 15px rgba(15, 23, 42, 0.5),
+              inset 0 1px 2px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+          "
+        >
+          <img
+            src="car.png"
+            alt="Car"
+            style="
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+              object-position: center;
+            "
+          />
         </div>
-        <div class="t-sub" id="tsub"></div>
+        <div>
+          <div
+            class="t-brand"
+            style="
+              margin: 0;
+              font-size: 18px;
+              font-weight: 800;
+              letter-spacing: 0.5px;
+              color: #f1f5f9;
+              text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            "
+          >
+            MONGLA PORT AUTHORITY
+          </div>
+          <div
+            style="
+              font-size: 13px;
+              color: #fbbf24;
+              font-weight: 700;
+              margin-top: 2px;
+              letter-spacing: 0.3px;
+              text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+            "
+          >
+            Traffic Department • Vehicle Tracking Module
+          </div>
+          <div
+            style="
+              font-size: 12px;
+              color: #cbd5e1;
+              margin-top: 3px;
+              font-weight: 600;
+            "
+          >
+            Daily Car Balance & Position Tracking System
+          </div>
+        </div>
       </div>
+      <div
+        class="t-sub"
+        id="tsub"
+        style="
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: 1px;
+          color: #fbbf24;
+          text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+          text-transform: uppercase;
+          margin: 0 16px;
+          display: flex;
+          align-items: center;
+          min-width: 200px;
+          padding: 8px 16px;
+          border-radius: 8px;
+          box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.3),
+            inset 0 1px 2px rgba(255, 255, 255, 0.1);
+          border-left: 4px solid #fbbf24;
+          background-color: rgba(15, 23, 42, 0.6);
+          border: 1px solid rgba(251, 191, 36, 0.2);
+        "
+      ></div>
       <div class="t-right">
         <span class="sv ok" id="sv-badge">✓ Saved</span>
-        <button class="tbtn" id="undo-button" onclick="undoLast()" title="Undo Last Action">
+        <button
+          class="tbtn"
+          id="undo-button"
+          onclick="undoLast()"
+          title="Undo Last Action"
+        >
           ↶ Undo
         </button>
-        <button class="tbtn gold" id="save-button" onclick="doSave()" title="Save Current Data">
+        <button
+          class="tbtn gold"
+          id="save-button"
+          onclick="doSave()"
+          title="Save Current Data"
+        >
           💾 Save
         </button>
-         <button
-           class="tbtn blue"
-           id="next-month-button"
-           onclick="generateNextMonths()"
-           title="Generate Next Months"
-         >
-           ➕ Next Month
-         </button>
-         <button
-           class="tbtn purple"
-           id="fix-button"
-           onclick="fixMonthTransitions()"
-           title="Fix Month Transitions"
-         >
-           🔄 Fix Balances
-         </button>
-         <button
-           class="tbtn green"
-           id="login-btn"
-           onclick="showLoginForm()"
-           title="Login"
-         >
-           🔐 Login
-         </button>
+        <button
+          class="tbtn blue"
+          id="next-month-button"
+          onclick="generateNextMonths()"
+          title="Generate Next Months"
+        >
+          ➕ Next Month
+        </button>
+        <button
+          class="tbtn purple"
+          id="fix-button"
+          onclick="fixMonthTransitions()"
+          title="Fix Month Transitions"
+        >
+          🔄 Fix Balances
+        </button>
+        <button
+          class="tbtn green"
+          id="login-btn"
+          onclick="showLoginForm()"
+          title="Login"
+        >
+          🔐 Login
+        </button>
         <button
           class="tbtn red"
           id="logout-btn"
@@ -211,116 +321,446 @@
     <!-- CHART PAGE -->
     <div class="page" id="page-chart">
       <!-- Advanced Analytics Header -->
-      <div style="background:linear-gradient(135deg,#1e293b 0%,#334155 50%,#475569 100%);color:#fff;padding:24px;border-radius:16px;margin-bottom:24px;box-shadow:0 8px 32px rgba(0,0,0,0.12);">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div
+        style="
+          background: linear-gradient(
+            135deg,
+            #1e293b 0%,
+            #334155 50%,
+            #475569 100%
+          );
+          color: #fff;
+          padding: 24px;
+          border-radius: 16px;
+          margin-bottom: 24px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
           <div>
-            <h1 style="font-size:24px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
-              <span style="font-size:32px;">📊</span>
+            <h1
+              style="
+                font-size: 24px;
+                font-weight: 700;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+              "
+            >
+              <span style="font-size: 32px">📊</span>
               Advanced Analytics Dashboard
             </h1>
-            <p style="font-size:14px;opacity:0.9;margin:0;">Comprehensive business intelligence and performance insights</p>
+            <p style="font-size: 14px; opacity: 0.9; margin: 0">
+              Comprehensive business intelligence and performance insights
+            </p>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:12px;opacity:0.8;">Data Range</div>
-            <div style="font-size:16px;font-weight:600;" id="analytics-date-range">Last 12 Months</div>
-            <div style="font-size:11px;opacity:0.7;margin-top:4px;" id="last-updated">Updated: Just now</div>
+          <div style="text-align: right">
+            <div style="font-size: 12px; opacity: 0.8">Data Range</div>
+            <div
+              style="font-size: 16px; font-weight: 600"
+              id="analytics-date-range"
+            >
+              Last 12 Months
+            </div>
+            <div
+              style="font-size: 11px; opacity: 0.7; margin-top: 4px"
+              id="last-updated"
+            >
+              Updated: Just now
+            </div>
           </div>
         </div>
       </div>
 
       <!-- KPI Summary Cards -->
-      <div class="cards-row" id="chart-quick-stats" style="margin-bottom: 24px"></div>
+      <div
+        class="cards-row"
+        id="chart-quick-stats"
+        style="margin-bottom: 24px"
+      ></div>
 
       <!-- Performance Metrics Grid -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:24px;">
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 20px;
+          margin-bottom: 24px;
+        "
+      >
         <!-- Efficiency Score Card -->
-        <div class="metric-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
+        <div
+          class="metric-card"
+          style="
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          "
+        >
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 16px;
+            "
+          >
+            <h3
+              style="
+                font-size: 16px;
+                font-weight: 700;
+                color: #1f2937;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
               <span>⚡</span> Efficiency Score
             </h3>
-            <span style="background:#10b981;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;" id="efficiency-badge">EXCELLENT</span>
+            <span
+              style="
+                background: #10b981;
+                color: #fff;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-weight: 600;
+              "
+              id="efficiency-badge"
+              >EXCELLENT</span
+            >
           </div>
-          <div style="font-size:36px;font-weight:700;color:#10b981;margin-bottom:8px;" id="efficiency-score">92%</div>
-          <div style="font-size:12px;color:#6b7280;">Overall operational efficiency</div>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;">
-            <div style="display:flex;justify-content:space-between;font-size:11px;">
-              <span style="color:#6b7280;">Delivery Rate</span>
-              <span style="font-weight:600;color:#1f2937;" id="delivery-rate">94%</span>
+          <div
+            style="
+              font-size: 36px;
+              font-weight: 700;
+              color: #10b981;
+              margin-bottom: 8px;
+            "
+            id="efficiency-score"
+          >
+            92%
+          </div>
+          <div style="font-size: 12px; color: #6b7280">
+            Overall operational efficiency
+          </div>
+          <div
+            style="
+              margin-top: 12px;
+              padding-top: 12px;
+              border-top: 1px solid #f3f4f6;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                font-size: 11px;
+              "
+            >
+              <span style="color: #6b7280">Delivery Rate</span>
+              <span style="font-weight: 600; color: #1f2937" id="delivery-rate"
+                >94%</span
+              >
             </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px;">
-              <span style="color:#6b7280;">Utilization</span>
-              <span style="font-weight:600;color:#1f2937;" id="utilization-rate">89%</span>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                font-size: 11px;
+                margin-top: 4px;
+              "
+            >
+              <span style="color: #6b7280">Utilization</span>
+              <span
+                style="font-weight: 600; color: #1f2937"
+                id="utilization-rate"
+                >89%</span
+              >
             </div>
           </div>
         </div>
 
         <!-- Stock Trends Card -->
-        <div class="metric-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
+        <div
+          class="metric-card"
+          style="
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          "
+        >
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 16px;
+            "
+          >
+            <h3
+              style="
+                font-size: 16px;
+                font-weight: 700;
+                color: #1f2937;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
               <span>📊</span> Stock Trends
             </h3>
-            <span style="background:#3b82f6;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;">Current Month</span>
+            <span
+              style="
+                background: #3b82f6;
+                color: #fff;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-weight: 600;
+              "
+              >Current Month</span
+            >
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
             <div>
-              <div style="font-size:24px;font-weight:700;color:#3b82f6;" id="stock-receive">0</div>
-              <div style="font-size:11px;color:#6b7280;">Total Receive</div>
+              <div
+                style="font-size: 24px; font-weight: 700; color: #3b82f6"
+                id="stock-receive"
+              >
+                0
+              </div>
+              <div style="font-size: 11px; color: #6b7280">Total Receive</div>
             </div>
             <div>
-              <div style="font-size:24px;font-weight:700;color:#10b981;" id="stock-delivery">0</div>
-              <div style="font-size:11px;color:#6b7280;">Total Delivery</div>
+              <div
+                style="font-size: 24px; font-weight: 700; color: #10b981"
+                id="stock-delivery"
+              >
+                0
+              </div>
+              <div style="font-size: 11px; color: #6b7280">Total Delivery</div>
             </div>
           </div>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;">
-            <div style="font-size:11px;color:#6b7280;">Net Change</div>
-            <div style="font-size:12px;font-weight:600;color:#1f2937;" id="net-change">0</div>
+          <div
+            style="
+              margin-top: 12px;
+              padding-top: 12px;
+              border-top: 1px solid #f3f4f6;
+            "
+          >
+            <div style="font-size: 11px; color: #6b7280">Net Change</div>
+            <div
+              style="font-size: 12px; font-weight: 600; color: #1f2937"
+              id="net-change"
+            >
+              0
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Advanced Charts Section -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;">
+      <div
+        style="
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 20px;
+          margin-bottom: 24px;
+        "
+      >
         <!-- Main Trend Chart -->
-        <div class="ch-full" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div
+          class="ch-full"
+          style="
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          "
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
             <div>
-              <h3 style="font-size:18px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
+              <h3
+                style="
+                  font-size: 18px;
+                  font-weight: 700;
+                  color: #1f2937;
+                  margin: 0;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
                 <span>📊</span> Comprehensive Performance Analysis
               </h3>
-              <p style="font-size:12px;color:#6b7280;margin:4px 0 0 0;">Multi-metric trend analysis with forecasting</p>
+              <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0">
+                Multi-metric trend analysis with forecasting
+              </p>
             </div>
-            <div style="display:flex;gap:8px;">
-              <button onclick="changeChartPeriod('6m')" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;font-size:11px;cursor:pointer;" id="btn-6m">6M</button>
-              <button onclick="changeChartPeriod('12m')" style="padding:6px 12px;border:1px solid #3b82f6;border-radius:6px;background:#3b82f6;color:#fff;font-size:11px;cursor:pointer;" id="btn-12m">12M</button>
-              <button onclick="changeChartPeriod('all')" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;font-size:11px;cursor:pointer;" id="btn-all">ALL</button>
+            <div style="display: flex; gap: 8px">
+              <button
+                onclick="changeChartPeriod('6m')"
+                style="
+                  padding: 6px 12px;
+                  border: 1px solid #e2e8f0;
+                  border-radius: 6px;
+                  background: #fff;
+                  font-size: 11px;
+                  cursor: pointer;
+                "
+                id="btn-6m"
+              >
+                6M
+              </button>
+              <button
+                onclick="changeChartPeriod('12m')"
+                style="
+                  padding: 6px 12px;
+                  border: 1px solid #3b82f6;
+                  border-radius: 6px;
+                  background: #3b82f6;
+                  color: #fff;
+                  font-size: 11px;
+                  cursor: pointer;
+                "
+                id="btn-12m"
+              >
+                12M
+              </button>
+              <button
+                onclick="changeChartPeriod('all')"
+                style="
+                  padding: 6px 12px;
+                  border: 1px solid #e2e8f0;
+                  border-radius: 6px;
+                  background: #fff;
+                  font-size: 11px;
+                  cursor: pointer;
+                "
+                id="btn-all"
+              >
+                ALL
+              </button>
             </div>
           </div>
           <canvas id="c-trend" height="80"></canvas>
         </div>
 
         <!-- Real-time Metrics -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <h3 style="font-size:16px;font-weight:700;color:#1f2937;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
+        <div
+          style="
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          "
+        >
+          <h3
+            style="
+              font-size: 16px;
+              font-weight: 700;
+              color: #1f2937;
+              margin: 0 0 16px 0;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            "
+          >
             <span>⚡</span> Live Metrics
           </h3>
-          <div id="live-metrics" style="display:grid;gap:12px;">
-            <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #3b82f6;">
-              <div style="font-size:11px;color:#6b7280;">Current Balance</div>
-              <div style="font-size:20px;font-weight:700;color:#1f2937;" id="live-balance">0</div>
+          <div id="live-metrics" style="display: grid; gap: 12px">
+            <div
+              style="
+                padding: 12px;
+                background: #f8fafc;
+                border-radius: 8px;
+                border-left: 4px solid #3b82f6;
+              "
+            >
+              <div style="font-size: 11px; color: #6b7280">Current Balance</div>
+              <div
+                style="font-size: 20px; font-weight: 700; color: #1f2937"
+                id="live-balance"
+              >
+                0
+              </div>
             </div>
-            <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #10b981;">
-              <div style="font-size:11px;color:#6b7280;">Prev Day Delivery</div>
-              <div style="font-size:20px;font-weight:700;color:#10b981;" id="prev-day-delivery">0</div>
+            <div
+              style="
+                padding: 12px;
+                background: #f8fafc;
+                border-radius: 8px;
+                border-left: 4px solid #10b981;
+              "
+            >
+              <div style="font-size: 11px; color: #6b7280">
+                Prev Day Delivery
+              </div>
+              <div
+                style="font-size: 20px; font-weight: 700; color: #10b981"
+                id="prev-day-delivery"
+              >
+                0
+              </div>
             </div>
-            <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #f59e0b;">
-              <div style="font-size:11px;color:#6b7280;">Weekly Total Delivery</div>
-              <div style="font-size:20px;font-weight:700;color:#f59e0b;" id="week-delivery">0</div>
+            <div
+              style="
+                padding: 12px;
+                background: #f8fafc;
+                border-radius: 8px;
+                border-left: 4px solid #f59e0b;
+              "
+            >
+              <div style="font-size: 11px; color: #6b7280">
+                Weekly Total Delivery
+              </div>
+              <div
+                style="font-size: 20px; font-weight: 700; color: #f59e0b"
+                id="week-delivery"
+              >
+                0
+              </div>
             </div>
-            <div style="padding:12px;background:#f8fafc;border-radius:8px;border-left:4px solid #8b5cf6;">
-              <div style="font-size:11px;color:#6b7280;">Weekly Total Received</div>
-              <div style="font-size:20px;font-weight:700;color:#8b5cf6;" id="week-received">0</div>
+            <div
+              style="
+                padding: 12px;
+                background: #f8fafc;
+                border-radius: 8px;
+                border-left: 4px solid #8b5cf6;
+              "
+            >
+              <div style="font-size: 11px; color: #6b7280">
+                Weekly Total Received
+              </div>
+              <div
+                style="font-size: 20px; font-weight: 700; color: #8b5cf6"
+                id="week-received"
+              >
+                0
+              </div>
             </div>
           </div>
         </div>
@@ -331,49 +771,105 @@
         <div class="ch-card">
           <div class="ch-ttl">
             <span>📤 Delivery vs Receive Analysis</span>
-            <span style="font-weight:400;font-size:10px;color:#9ca3af;">Comparative monthly performance</span>
+            <span style="font-weight: 400; font-size: 10px; color: #9ca3af"
+              >Comparative monthly performance</span
+            >
           </div>
           <canvas id="c-di" height="120"></canvas>
         </div>
         <div class="ch-card">
           <div class="ch-ttl">
             <span>📅 Daily Balance Patterns</span>
-            <span style="font-weight:400;font-size:10px;color:#9ca3af;">Current month volatility analysis</span>
+            <span style="font-weight: 400; font-size: 10px; color: #9ca3af"
+              >Current month volatility analysis</span
+            >
           </div>
           <canvas id="c-daily" height="120"></canvas>
         </div>
       </div>
 
       <!-- Advanced Analytics Section -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+      <div
+        style="
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin-bottom: 24px;
+        "
+      >
         <div class="ch-card">
           <div class="ch-ttl">
             <span>🎯 Location Efficiency Matrix</span>
-            <span style="font-weight:400;font-size:10px;color:#9ca3af;">Performance by location</span>
+            <span style="font-weight: 400; font-size: 10px; color: #9ca3af"
+              >Performance by location</span
+            >
           </div>
           <canvas id="c-ratio" height="120"></canvas>
         </div>
         <div class="ch-card">
           <div class="ch-ttl">
             <span>📊 Stock Flow Analysis</span>
-            <span style="font-weight:400;font-size:10px;color:#9ca3af;">Net change patterns</span>
+            <span style="font-weight: 400; font-size: 10px; color: #9ca3af"
+              >Net change patterns</span
+            >
           </div>
           <canvas id="c-net" height="120"></canvas>
         </div>
       </div>
 
       <!-- Predictive Analytics -->
-      <div class="ch-full" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div
+        class="ch-full"
+        style="
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 24px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+          "
+        >
           <div>
-            <h3 style="font-size:18px;font-weight:700;color:#1f2937;margin:0;display:flex;align-items:center;gap:8px;">
+            <h3
+              style="
+                font-size: 18px;
+                font-weight: 700;
+                color: #1f2937;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
               <span>🔮</span> Predictive Analytics & Forecasting
             </h3>
-            <p style="font-size:12px;color:#6b7280;margin:4px 0 0 0;">AI-powered predictions based on historical patterns</p>
+            <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0">
+              AI-powered predictions based on historical patterns
+            </p>
           </div>
-          <button onclick="refreshPredictions()" style="padding:8px 16px;background:#3b82f6;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;">🔄 Refresh</button>
+          <button
+            onclick="refreshPredictions()"
+            style="
+              padding: 8px 16px;
+              background: #3b82f6;
+              color: #fff;
+              border: none;
+              border-radius: 6px;
+              font-size: 12px;
+              cursor: pointer;
+            "
+          >
+            🔄 Refresh
+          </button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr;gap:20px;">
+        <div style="display: grid; grid-template-columns: 1fr; gap: 20px">
           <div>
             <canvas id="c-cum" height="120"></canvas>
           </div>
@@ -381,12 +877,30 @@
       </div>
 
       <!-- Location Performance Deep Dive -->
-      <div class="ch-full" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-        <div class="ch-ttl" style="margin-bottom:20px;">
+      <div
+        class="ch-full"
+        style="
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 24px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        "
+      >
+        <div class="ch-ttl" style="margin-bottom: 20px">
           <span>🏭 Location Performance Deep Dive</span>
-          <span style="font-weight:400;font-size:10px;color:#9ca3af;">Comprehensive efficiency metrics and rankings</span>
+          <span style="font-weight: 400; font-size: 10px; color: #9ca3af"
+            >Comprehensive efficiency metrics and rankings</span
+          >
         </div>
-        <div id="location-performance" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;"></div>
+        <div
+          id="location-performance"
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+          "
+        ></div>
       </div>
     </div>
 
@@ -394,37 +908,136 @@
     <div class="page" id="page-report">
       <div style="max-width: 1400px; margin: 0 auto">
         <!-- Report Header -->
-        <div style="background:linear-gradient(135deg,#1e293b 0%,#334155 50%,#475569 100%);color:#fff;padding:24px 32px;border-radius:16px;margin-bottom:24px;box-shadow:0 8px 32px rgba(0,0,0,0.12);position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;right:0;width:200px;height:200px;background:rgba(255,255,255,0.05);border-radius:50%;transform:translate(50%,-50%);"></div>
-          <div style="position:absolute;bottom:0;left:0;width:150px;height:150px;background:rgba(255,255,255,0.05);border-radius:50%;transform:translate(-50%,50%);"></div>
-          
-          <div style="display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;">
+        <div
+          style="
+            background: linear-gradient(
+              135deg,
+              #1e293b 0%,
+              #334155 50%,
+              #475569 100%
+            );
+            color: #fff;
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+          "
+        >
+          <div
+            style="
+              position: absolute;
+              top: 0;
+              right: 0;
+              width: 200px;
+              height: 200px;
+              background: rgba(255, 255, 255, 0.05);
+              border-radius: 50%;
+              transform: translate(50%, -50%);
+            "
+          ></div>
+          <div
+            style="
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              width: 150px;
+              height: 150px;
+              background: rgba(255, 255, 255, 0.05);
+              border-radius: 50%;
+              transform: translate(-50%, 50%);
+            "
+          ></div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              position: relative;
+              z-index: 1;
+            "
+          >
             <div>
-              <h1 style="font-size:24px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
-                <span style="font-size:28px;">📊</span>
+              <h1
+                style="
+                  font-size: 24px;
+                  font-weight: 700;
+                  margin-bottom: 8px;
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                "
+              >
+                <span style="font-size: 28px">📊</span>
                 Analytics Report
               </h1>
-              <p style="font-size:14px;opacity:0.9;margin:0 0 12px 0;">Monthly trend analysis and location performance insights</p>
-              <div style="display:flex;gap:20px;font-size:12px;">
+              <p style="font-size: 14px; opacity: 0.9; margin: 0 0 12px 0">
+                Monthly trend analysis and location performance insights
+              </p>
+              <div style="display: flex; gap: 20px; font-size: 12px">
                 <div>
-                  <span style="opacity:0.7;">Report Period:</span>
-                  <span style="font-weight:600;" id="report-period-display">--</span>
+                  <span style="opacity: 0.7">Report Period:</span>
+                  <span style="font-weight: 600" id="report-period-display"
+                    >--</span
+                  >
                 </div>
                 <div>
-                  <span style="opacity:0.7;">Generated:</span>
-                  <span style="font-weight:600;" id="report-generated">--</span>
+                  <span style="opacity: 0.7">Generated:</span>
+                  <span style="font-weight: 600" id="report-generated">--</span>
                 </div>
                 <div>
-                  <span style="opacity:0.7;">Status:</span>
-                  <span style="background:#10b981;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">LIVE</span>
+                  <span style="opacity: 0.7">Status:</span>
+                  <span
+                    style="
+                      background: #10b981;
+                      color: #fff;
+                      padding: 2px 8px;
+                      border-radius: 4px;
+                      font-size: 11px;
+                      font-weight: 600;
+                    "
+                    >LIVE</span
+                  >
                 </div>
               </div>
             </div>
-            <div style="text-align:right;display:flex;gap:8px;">
-              <button onclick="exportReport()" style="background:#3b82f6;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <div style="text-align: right; display: flex; gap: 8px">
+              <button
+                onclick="exportReport()"
+                style="
+                  background: #3b82f6;
+                  color: #fff;
+                  border: none;
+                  padding: 10px 20px;
+                  border-radius: 8px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                "
+              >
                 <span>📥</span> Export
               </button>
-              <button onclick="refreshReport()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+              <button
+                onclick="refreshReport()"
+                style="
+                  background: rgba(255, 255, 255, 0.2);
+                  color: #fff;
+                  border: 1px solid rgba(255, 255, 255, 0.3);
+                  padding: 10px 16px;
+                  border-radius: 8px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                "
+              >
                 <span>🔄</span> Refresh
               </button>
             </div>
@@ -432,19 +1045,53 @@
         </div>
 
         <!-- Monthly Trend Analysis & Forecasting -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div class="rpt-hdr" style="background:linear-gradient(135deg,#3b82f6,#2563eb);margin:-24px -24px 20px -24px;padding:16px 24px;border-radius:16px 16px 0 0;">
+        <div
+          style="
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          "
+        >
+          <div
+            class="rpt-hdr"
+            style="
+              background: linear-gradient(135deg, #3b82f6, #2563eb);
+              margin: -24px -24px 20px -24px;
+              padding: 16px 24px;
+              border-radius: 16px 16px 0 0;
+            "
+          >
             📅 Monthly Trend Analysis & Forecasting
           </div>
-          <div id="rpt-monthly" style="min-height:350px;"></div>
+          <div id="rpt-monthly" style="min-height: 350px"></div>
         </div>
 
         <!-- Location Performance Deep Dive -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-          <div class="rpt-hdr" style="background:linear-gradient(135deg,#10b981,#059669);margin:-24px -24px 20px -24px;padding:16px 24px;border-radius:16px 16px 0 0;">
+        <div
+          style="
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          "
+        >
+          <div
+            class="rpt-hdr"
+            style="
+              background: linear-gradient(135deg, #10b981, #059669);
+              margin: -24px -24px 20px -24px;
+              padding: 16px 24px;
+              border-radius: 16px 16px 0 0;
+            "
+          >
             🏭 Location Performance Deep Dive
           </div>
-          <div id="rpt-location" style="min-height:350px;"></div>
+          <div id="rpt-location" style="min-height: 350px"></div>
         </div>
       </div>
     </div>
@@ -469,71 +1116,109 @@
               </div>
               <select
                 id="tz-select"
-                onchange="sett.tz=this.value;setDirty(true);saveSett();renderTable();"
-                style="padding: 8px 12px; font-size: 12px; border-radius: 6px; border: 1px solid #d1d5db; width: 100%; max-width: 350px"
+                onchange="
+                  sett.tz = this.value;
+                  setDirty(true);
+                  saveSett();
+                  renderTable();
+                "
+                style="
+                  padding: 8px 12px;
+                  font-size: 12px;
+                  border-radius: 6px;
+                  border: 1px solid #d1d5db;
+                  width: 100%;
+                  max-width: 350px;
+                "
               >
                 <!-- Asia -->
                 <optgroup label="🌏 Asia">
-                  <option value="Asia/Dhaka" ${sett.tz === 'Asia/Dhaka' ? 'selected' : ''}>🇧🇩 Bangladesh (GMT+6)</option>
-                  <option value="Asia/Kolkata" ${sett.tz === 'Asia/Kolkata' ? 'selected' : ''}>🇮🇳 India (GMT+5:30)</option>
-                  <option value="Asia/Karachi" ${sett.tz === 'Asia/Karachi' ? 'selected' : ''}>🇵🇰 Pakistan (GMT+5)</option>
-                  <option value="Asia/Kabul" ${sett.tz === 'Asia/Kabul' ? 'selected' : ''}>🇦🇫 Afghanistan (GMT+4:30)</option>
-                  <option value="Asia/Kuala_Lumpur" ${sett.tz === 'Asia/Kuala_Lumpur' ? 'selected' : ''}>🇲🇾 Malaysia (GMT+8)</option>
-                  <option value="Asia/Singapore" ${sett.tz === 'Asia/Singapore' ? 'selected' : ''}>🇸🇬 Singapore (GMT+8)</option>
-                  <option value="Asia/Bangkok" ${sett.tz === 'Asia/Bangkok' ? 'selected' : ''}>🇹🇭 Thailand (GMT+7)</option>
-                  <option value="Asia/Jakarta" ${sett.tz === 'Asia/Jakarta' ? 'selected' : ''}>🇮🇩 Indonesia (GMT+7)</option>
-                  <option value="Asia/Manila" ${sett.tz === 'Asia/Manila' ? 'selected' : ''}>🇵🇭 Philippines (GMT+8)</option>
-                  <option value="Asia/Tokyo" ${sett.tz === 'Asia/Tokyo' ? 'selected' : ''}>🇯🇵 Japan (GMT+9)</option>
-                  <option value="Asia/Seoul" ${sett.tz === 'Asia/Seoul' ? 'selected' : ''}>🇰🇷 South Korea (GMT+9)</option>
-                  <option value="Asia/Shanghai" ${sett.tz === 'Asia/Shanghai' ? 'selected' : ''}>🇨🇳 China (GMT+8)</option>
-                  <option value="Asia/Hong_Kong" ${sett.tz === 'Asia/Hong_Kong' ? 'selected' : ''}>🇭🇰 Hong Kong (GMT+8)</option>
-                  <option value="Asia/Dubai" ${sett.tz === 'Asia/Dubai' ? 'selected' : ''}>🇦🇪 UAE (GMT+4)</option>
-                  <option value="Asia/Riyadh" ${sett.tz === 'Asia/Riyadh' ? 'selected' : ''}>🇸🇦 Saudi Arabia (GMT+3)</option>
+                  <option value="Asia/Dhaka">🇧🇩 Bangladesh (GMT+6)</option>
+                  <option value="Asia/Kolkata">🇮🇳 India (GMT+5:30)</option>
+                  <option value="Asia/Karachi">🇵🇰 Pakistan (GMT+5)</option>
+                  <option value="Asia/Kabul">🇦🇫 Afghanistan (GMT+4:30)</option>
+                  <option value="Asia/Kuala_Lumpur">🇲🇾 Malaysia (GMT+8)</option>
+                  <option value="Asia/Singapore">🇸🇬 Singapore (GMT+8)</option>
+                  <option value="Asia/Bangkok">🇹🇭 Thailand (GMT+7)</option>
+                  <option value="Asia/Jakarta">🇮🇩 Indonesia (GMT+7)</option>
+                  <option value="Asia/Manila">🇵🇭 Philippines (GMT+8)</option>
+                  <option value="Asia/Tokyo">🇯🇵 Japan (GMT+9)</option>
+                  <option value="Asia/Seoul">🇰🇷 South Korea (GMT+9)</option>
+                  <option value="Asia/Shanghai">🇨🇳 China (GMT+8)</option>
+                  <option value="Asia/Hong_Kong">🇭🇰 Hong Kong (GMT+8)</option>
+                  <option value="Asia/Dubai">🇦🇪 UAE (GMT+4)</option>
+                  <option value="Asia/Riyadh">🇸🇦 Saudi Arabia (GMT+3)</option>
                 </optgroup>
-                
+
                 <!-- Europe -->
                 <optgroup label="🌍 Europe">
-                  <option value="Europe/London" ${sett.tz === 'Europe/London' ? 'selected' : ''}>🇬🇧 UK (GMT+0)</option>
-                  <option value="Europe/Paris" ${sett.tz === 'Europe/Paris' ? 'selected' : ''}>🇫🇷 France (GMT+1)</option>
-                  <option value="Europe/Berlin" ${sett.tz === 'Europe/Berlin' ? 'selected' : ''}>🇩🇪 Germany (GMT+1)</option>
-                  <option value="Europe/Rome" ${sett.tz === 'Europe/Rome' ? 'selected' : ''}>🇮🇹 Italy (GMT+1)</option>
-                  <option value="Europe/Madrid" ${sett.tz === 'Europe/Madrid' ? 'selected' : ''}>🇪🇸 Spain (GMT+1)</option>
-                  <option value="Europe/Amsterdam" ${sett.tz === 'Europe/Amsterdam' ? 'selected' : ''}>🇳🇱 Netherlands (GMT+1)</option>
-                  <option value="Europe/Moscow" ${sett.tz === 'Europe/Moscow' ? 'selected' : ''}>🇷🇺 Russia (GMT+3)</option>
+                  <option value="Europe/London">🇬🇧 UK (GMT+0)</option>
+                  <option value="Europe/Paris">🇫🇷 France (GMT+1)</option>
+                  <option value="Europe/Berlin">🇩🇪 Germany (GMT+1)</option>
+                  <option value="Europe/Rome">🇮🇹 Italy (GMT+1)</option>
+                  <option value="Europe/Madrid">🇪🇸 Spain (GMT+1)</option>
+                  <option value="Europe/Amsterdam">
+                    🇳🇱 Netherlands (GMT+1)
+                  </option>
+                  <option value="Europe/Moscow">🇷🇺 Russia (GMT+3)</option>
                 </optgroup>
-                
+
                 <!-- Americas -->
                 <optgroup label="🌎 Americas">
-                  <option value="America/New_York" ${sett.tz === 'America/New_York' ? 'selected' : ''}>🇺🇸 USA Eastern (GMT-5)</option>
-                  <option value="America/Chicago" ${sett.tz === 'America/Chicago' ? 'selected' : ''}>🇺🇸 USA Central (GMT-6)</option>
-                  <option value="America/Denver" ${sett.tz === 'America/Denver' ? 'selected' : ''}>🇺🇸 USA Mountain (GMT-7)</option>
-                  <option value="America/Los_Angeles" ${sett.tz === 'America/Los_Angeles' ? 'selected' : ''}>🇺🇸 USA Pacific (GMT-8)</option>
-                  <option value="America/Toronto" ${sett.tz === 'America/Toronto' ? 'selected' : ''}>🇨🇦 Canada Eastern (GMT-5)</option>
-                  <option value="America/Vancouver" ${sett.tz === 'America/Vancouver' ? 'selected' : ''}>🇨🇦 Canada Pacific (GMT-8)</option>
-                  <option value="America/Mexico_City" ${sett.tz === 'America/Mexico_City' ? 'selected' : ''}>🇲🇽 Mexico (GMT-6)</option>
-                  <option value="America/Sao_Paulo" ${sett.tz === 'America/Sao_Paulo' ? 'selected' : ''}>🇧🇷 Brazil (GMT-3)</option>
-                  <option value="America/Buenos_Aires" ${sett.tz === 'America/Buenos_Aires' ? 'selected' : ''}>🇦🇷 Argentina (GMT-3)</option>
+                  <option value="America/New_York">
+                    🇺🇸 USA Eastern (GMT-5)
+                  </option>
+                  <option value="America/Chicago">
+                    🇺🇸 USA Central (GMT-6)
+                  </option>
+                  <option value="America/Denver">
+                    🇺🇸 USA Mountain (GMT-7)
+                  </option>
+                  <option value="America/Los_Angeles">
+                    🇺🇸 USA Pacific (GMT-8)
+                  </option>
+                  <option value="America/Toronto">
+                    🇨🇦 Canada Eastern (GMT-5)
+                  </option>
+                  <option value="America/Vancouver">
+                    🇨🇦 Canada Pacific (GMT-8)
+                  </option>
+                  <option value="America/Mexico_City">🇲🇽 Mexico (GMT-6)</option>
+                  <option value="America/Sao_Paulo">🇧🇷 Brazil (GMT-3)</option>
+                  <option value="America/Buenos_Aires">
+                    🇦🇷 Argentina (GMT-3)
+                  </option>
                 </optgroup>
-                
+
                 <!-- Africa -->
                 <optgroup label="🌍 Africa">
-                  <option value="Africa/Cairo" ${sett.tz === 'Africa/Cairo' ? 'selected' : ''}>🇪🇬 Egypt (GMT+2)</option>
-                  <option value="Africa/Lagos" ${sett.tz === 'Africa/Lagos' ? 'selected' : ''}>🇳🇬 Nigeria (GMT+1)</option>
-                  <option value="Africa/Johannesburg" ${sett.tz === 'Africa/Johannesburg' ? 'selected' : ''}>🇿🇦 South Africa (GMT+2)</option>
-                  <option value="Africa/Nairobi" ${sett.tz === 'Africa/Nairobi' ? 'selected' : ''}>🇰🇪 Kenya (GMT+3)</option>
+                  <option value="Africa/Cairo">🇪🇬 Egypt (GMT+2)</option>
+                  <option value="Africa/Lagos">🇳🇬 Nigeria (GMT+1)</option>
+                  <option value="Africa/Johannesburg">
+                    🇿🇦 South Africa (GMT+2)
+                  </option>
+                  <option value="Africa/Nairobi">🇰🇪 Kenya (GMT+3)</option>
                 </optgroup>
-                
+
                 <!-- Oceania -->
                 <optgroup label="🌏 Oceania">
-                  <option value="Australia/Sydney" ${sett.tz === 'Australia/Sydney' ? 'selected' : ''}>🇦🇺 Australia Eastern (GMT+10)</option>
-                  <option value="Australia/Melbourne" ${sett.tz === 'Australia/Melbourne' ? 'selected' : ''}>🇦🇺 Australia Melbourne (GMT+10)</option>
-                  <option value="Australia/Perth" ${sett.tz === 'Australia/Perth' ? 'selected' : ''}>🇦🇺 Australia Western (GMT+8)</option>
-                  <option value="Pacific/Auckland" ${sett.tz === 'Pacific/Auckland' ? 'selected' : ''}>🇳🇿 New Zealand (GMT+12)</option>
+                  <option value="Australia/Sydney">
+                    🇦🇺 Australia Eastern (GMT+10)
+                  </option>
+                  <option value="Australia/Melbourne">
+                    🇦🇺 Australia Melbourne (GMT+10)
+                  </option>
+                  <option value="Australia/Perth">
+                    🇦🇺 Australia Western (GMT+8)
+                  </option>
+                  <option value="Pacific/Auckland">
+                    🇳🇿 New Zealand (GMT+12)
+                  </option>
                 </optgroup>
-                
+
                 <!-- Universal -->
                 <optgroup label="🌍 Universal">
-                  <option value="UTC" ${sett.tz === 'UTC' ? 'selected' : ''}>🌍 UTC</option>
+                  <option value="UTC">🌍 UTC</option>
                 </optgroup>
               </select>
             </div>
@@ -720,7 +1405,7 @@
           </div>
         </div>
 
-         <!-- Cloud Sync -->
+        <!-- Cloud Sync -->
         <div class="rpt-sec">
           <div class="rpt-hdr">☁️ Cloud Sync (Firebase)</div>
           <div style="padding: 15px">
@@ -728,43 +1413,6 @@
               Data syncs automatically to cloud. All devices will see the same
               data.
             </div>
-            <div
-              id="gs-status"
-              style=
-                "font-size: 13px;
-                color: #059669;
-                font-weight: 600;
-                padding: 10px;
-                background: #dcfce7;
-                border-radius: 6px;
-                text-align: center;
-              "
-            >
-              ☁️ Connected
-            </div>
-          </div>
-        </div>
-        
-        <!-- Fix Month Transitions -->
-        <div class="rpt-sec">
-          <div class="rpt-hdr">🔄 Fix Month Transitions</div>
-          <div style="padding: 15px">
-            <div style="font-size: 12px; color: #666; margin-bottom: 10px">
-              If opening balances don't match closing balances from previous months,
-              click below to automatically fix transitions.
-            </div>
-            <button
-              class="btn pri"
-              onclick="fixMonthTransitions()"
-              style="width: 100%; margin-bottom: 8px"
-            >
-              Fix All Month Transitions
-            </button>
-            <div style="font-size: 11px; color: #666; font-style: italic">
-              Note: This will recalculate balances to ensure continuity.
-            </div>
-          </div>
-        </div>
             <div
               id="gs-status"
               style="
@@ -778,6 +1426,27 @@
               "
             >
               ☁️ Connected
+            </div>
+          </div>
+        </div>
+
+        <!-- Fix Month Transitions -->
+        <div class="rpt-sec">
+          <div class="rpt-hdr">🔄 Fix Month Transitions</div>
+          <div style="padding: 15px">
+            <div style="font-size: 12px; color: #666; margin-bottom: 10px">
+              If opening balances don't match closing balances from previous
+              months, click below to automatically fix transitions.
+            </div>
+            <button
+              class="btn pri"
+              onclick="fixMonthTransitions()"
+              style="width: 100%; margin-bottom: 8px"
+            >
+              Fix All Month Transitions
+            </button>
+            <div style="font-size: 11px; color: #666; font-style: italic">
+              Note: This will recalculate balances to ensure continuity.
             </div>
           </div>
         </div>
@@ -800,8 +1469,6 @@
         </div>
       </div>
     </div>
-
-
 
     <!-- EXPORT OVERLAY -->
     <div class="ov" id="ov-export">
@@ -850,7 +1517,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- App Script -->
     <script src="app.js"></script>
