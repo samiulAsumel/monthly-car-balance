@@ -3472,17 +3472,6 @@ try {
       firebase.initializeApp(firebaseConfig);
     }
     firebaseDb = firebase.database();
-
-    // Anonymous login করো Firebase এ
-    firebase
-      .auth()
-      .signInAnonymously()
-      .then(() => {
-        console.log("Firebase anonymous auth done");
-      })
-      .catch((error) => {
-        console.error("Auth error:", error);
-      });
   } else {
     console.warn("Firebase SDK not loaded, app will use localStorage only");
     firebaseDb = null;
@@ -6779,41 +6768,33 @@ function init() {
 
     buildHist();
 
-    // Load Data after Firebase auth is ready
-    if (firebaseDb && firebase.auth) {
-      firebase.auth().onAuthStateChanged(function (user) {
-        loadFromFirebase(() => {
-          const n = new Date();
-          const currentYear = n.getFullYear();
-          const currentMonth = n.getMonth() + 1;
-          autoGenerateMonths(currentYear, currentMonth);
-          if (isLoggedIn) {
-            ensureMonth(currentYear, currentMonth);
-            cur = mk(currentYear, currentMonth);
-          } else {
-            ensureMonth(currentYear, currentMonth);
-            cur = mk(currentYear, currentMonth);
-          }
-          renderAll();
-          setDirty(false);
-          if (firebaseDb) {
-            document.getElementById("gs-status").innerHTML =
-              '<span style="color:#059669">✅ Connected to cloud</span>';
-          }
-        });
-      });
-    } else {
-      loadFromFirebase(() => {
-        const n = new Date();
-        const currentYear = n.getFullYear();
-        const currentMonth = n.getMonth() + 1;
-        autoGenerateMonths(currentYear, currentMonth);
+    // Load from Firebase for cloud sync
+    loadFromFirebase(() => {
+      const n = new Date();
+      const currentYear = n.getFullYear();
+      const currentMonth = n.getMonth() + 1;
+      autoGenerateMonths(currentYear, currentMonth);
+
+      // Do not auto-fix month transitions on load to preserve saved state
+      // Manual fix remains available via the Fix Balances button.
+
+      if (isLoggedIn) {
         ensureMonth(currentYear, currentMonth);
         cur = mk(currentYear, currentMonth);
-        renderAll();
-        setDirty(false);
-      });
-    }
+      } else {
+        ensureMonth(currentYear, currentMonth);
+        cur = mk(currentYear, currentMonth);
+      }
+      renderAll();
+      // Always mark as clean after successful data load
+      setDirty(false);
+
+      // Show connected status
+      if (firebaseDb) {
+        document.getElementById("gs-status").innerHTML =
+          '<span style="color:#059669">✅ Connected to cloud</span>';
+      }
+    });
     const n = new Date();
     const todayInTz = n.toLocaleDateString("en-CA", { timeZone: sett.tz });
     document.getElementById("today-lbl").textContent = "Today: " + todayInTz;
