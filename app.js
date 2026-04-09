@@ -3472,6 +3472,17 @@ try {
       firebase.initializeApp(firebaseConfig);
     }
     firebaseDb = firebase.database();
+
+    // Anonymous login করো Firebase এ
+    firebase
+      .auth()
+      .signInAnonymously()
+      .then(() => {
+        console.log("Firebase anonymous auth done");
+      })
+      .catch((error) => {
+        console.error("Auth error:", error);
+      });
   } else {
     console.warn("Firebase SDK not loaded, app will use localStorage only");
     firebaseDb = null;
