@@ -5182,14 +5182,12 @@ function renderTable() {
 //  CHARTS
 // ════════════════════════════════════════════════════
 function killCharts() {
-  ["c-trend", "c-di", "c-loc", "c-daily", "c-ratio", "c-net", "c-cum"].forEach(
-    (id) => {
-      if (CH[id]) {
-        CH[id].destroy();
-        delete CH[id];
-      }
-    },
-  );
+  ["c-trend", "c-di", "c-loc", "c-daily", "c-ratio", "c-net"].forEach((id) => {
+    if (CH[id]) {
+      CH[id].destroy();
+      delete CH[id];
+    }
+  });
 }
 // Advanced Analytics Functions
 function changeChartPeriod(period) {
@@ -5215,34 +5213,6 @@ function updateAnalyticsDateRange(period) {
         : "All Time";
   document.getElementById("analytics-date-range").textContent = rangeText;
   document.getElementById("last-updated").textContent = "Updated: Just now";
-}
-
-function refreshPredictions() {
-  // Simulate AI prediction refresh
-  const button = event.target;
-  button.textContent = "🔄 Refreshing...";
-  button.disabled = true;
-
-  setTimeout(() => {
-    // Update forecast values with slight variations
-    const forecastBalance = document.getElementById("forecast-balance");
-    const confidence = document.getElementById("forecast-confidence");
-    const risk = document.getElementById("forecast-risk");
-
-    if (forecastBalance)
-      forecastBalance.textContent = (Math.random() * 1000 + 1500).toFixed(0);
-    if (confidence)
-      confidence.textContent = (Math.random() * 10 + 85).toFixed(0) + "%";
-    if (risk) {
-      const risks = ["Low", "Medium", "High"];
-      risk.textContent = risks[Math.floor(Math.random() * risks.length)];
-    }
-
-    button.textContent = "🔄 Refresh";
-    button.disabled = false;
-
-    showSuccess("Predictions refreshed successfully");
-  }, 1500);
 }
 
 function changeReportView(view) {
@@ -5864,69 +5834,6 @@ function renderCharts() {
             title: {
               ...base.scales.y.title,
               text: "Net Change",
-            },
-          },
-        },
-      },
-    });
-
-    // 7. Cumulative Chart
-    let cumDel = 0,
-      cumImp = 0;
-    const cumDs = [],
-      cumIs = [];
-    ms.forEach((k) => {
-      const s = summ(k);
-      cumDel += s.del;
-      cumImp += s.imp;
-      cumDs.push(cumDel);
-      cumIs.push(cumImp);
-    });
-    CH["c-cum"] = new Chart(document.getElementById("c-cum"), {
-      type: "line",
-      data: {
-        labels: lbls,
-        datasets: [
-          {
-            label: "Cumulative Delivery",
-            data: cumDs,
-            borderColor: "#10b981",
-            backgroundColor: "rgba(16, 185, 129, 0.1)",
-            fill: true,
-            tension: 0.3,
-          },
-          {
-            label: "Cumulative Receive",
-            data: cumIs,
-            borderColor: "#f59e0b",
-            backgroundColor: "rgba(245, 158, 11, 0.1)",
-            fill: true,
-            tension: 0.3,
-          },
-        ],
-      },
-      options: {
-        ...base,
-        plugins: {
-          ...base.plugins,
-          legend: {
-            display: true,
-            position: "bottom",
-            labels: {
-              font: { size: 11 },
-              padding: 12,
-              usePointStyle: true,
-              pointStyle: "circle",
-            },
-          },
-        },
-        scales: {
-          ...base.scales,
-          y: {
-            ...base.scales.y,
-            title: {
-              ...base.scales.y.title,
-              text: "Cumulative Total",
             },
           },
         },
