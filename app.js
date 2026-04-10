@@ -5961,25 +5961,6 @@ function renderReport() {
   setTimeout(() => {
     const ms = months();
 
-    // Populate year dropdowns with available years
-    const availableYears = [...new Set(ms.map((m) => m.split("-")[0]))].sort();
-    const fromYearSelect = document.getElementById("range-from-year");
-    const toYearSelect = document.getElementById("range-to-year");
-
-    if (fromYearSelect && toYearSelect) {
-      fromYearSelect.innerHTML = availableYears
-        .map((year) => `<option value="${year}">${year}</option>`)
-        .join("");
-      toYearSelect.innerHTML = availableYears
-        .map((year) => `<option value="${year}">${year}</option>`)
-        .join("");
-
-      // Set default values
-      const currentYear = new Date().getFullYear();
-      fromYearSelect.value = currentYear;
-      toYearSelect.value = currentYear;
-    }
-
     // Update report header dates
     const now = new Date();
     const currentMonth = ms.length > 0 ? ms[ms.length - 1] : null;
