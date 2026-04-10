@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:; connect-src * https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app wss://*.firebaseio.com"
     />
     <title>Daily Car Balance Tracker</title>
     <link
@@ -29,8 +29,16 @@
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script
+      src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"
+      integrity="sha384-56271c4634b493f96f62caed68a5e4f844bad7fe0f01994523f98f1e62c2d585b32b40086d76c8e595c3cdc9b717c807"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"
+      integrity="sha384-7fafd4a738d38c85c04a5a76d1c02b42c69187512f1d525de647a0cbf81847d5b60f46b7d939c4a941225b8666ff93b4"
+      crossorigin="anonymous"
+    ></script>
 
     <!-- App Stylesheet -->
     <link rel="stylesheet" href="styles.css" />
