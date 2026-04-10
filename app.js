@@ -5182,7 +5182,7 @@ function renderTable() {
 //  CHARTS
 // ════════════════════════════════════════════════════
 function killCharts() {
-  ["c-trend", "c-di", "c-loc", "c-daily", "c-ratio", "c-net"].forEach((id) => {
+  ["c-trend", "c-di", "c-loc", "c-daily", "c-net"].forEach((id) => {
     if (CH[id]) {
       CH[id].destroy();
       delete CH[id];
@@ -5736,60 +5736,6 @@ function renderCharts() {
             title: {
               ...base.scales.y.title,
               text: "Balance",
-            },
-          },
-        },
-      },
-    });
-
-    // 5. Efficiency Ratio Chart
-    const ratios = LOCS.map((_, li) =>
-      cs.il[li] ? Math.round((cs.dl[li] / cs.il[li]) * 100) : 0,
-    );
-    CH["c-ratio"] = new Chart(document.getElementById("c-ratio"), {
-      type: "bar",
-      data: {
-        labels: LOCS.map((l) => l), // Full location names
-        datasets: [
-          {
-            label: "Efficiency %",
-            data: ratios,
-            backgroundColor: ratios.map((r) =>
-              r >= 100
-                ? "rgba(34, 197, 94, 0.8)"
-                : r >= 75
-                  ? "rgba(245, 158, 11, 0.8)"
-                  : "rgba(239, 68, 68, 0.8)",
-            ),
-            borderRadius: 4,
-          },
-        ],
-      },
-      options: {
-        ...base,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            ...base.plugins.tooltip,
-            callbacks: {
-              label: function (c) {
-                return "Efficiency: " + c.raw + "%";
-              },
-            },
-          },
-        },
-        scales: {
-          ...base.scales,
-          y: {
-            ...base.scales.y,
-            max: 150,
-            ticks: {
-              ...base.scales.y.ticks,
-              callback: (v) => v + "%",
-            },
-            title: {
-              ...base.scales.y.title,
-              text: "Efficiency (%)",
             },
           },
         },
