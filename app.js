@@ -3496,6 +3496,7 @@ let sett = {
   hols: [],
   excs: [],
   tz: "Asia/Dhaka",
+  transfers: {}, // { "YYYY-MM-DD": [{from, to, qty, note}] }
 };
 let users = {}; // username -> passHash  (max 3 + admin)
 let loggedIn = null; // current username or null
@@ -3601,22 +3602,26 @@ function buildHist() {
     const del = LOCS.map((_, i) => r.v[i * 2]);
     const imp = LOCS.map((_, i) => r.v[i * 2 + 1]);
     let locBals;
+    let isDay1 = false;
     if (r.ob) {
       // Day 1 of month: opening balances given
       locBals = r.ob.slice();
+      isDay1 = true;
     } else {
       // Day N: calc from previous row
       const prev = DB[key].slice(-1)[0];
       locBals = calcLocBals(prev.bal, prev.del, prev.imp);
     }
-    DB[key].push({
+    const newRow = {
       date: r.d,
       del,
       imp,
       bal: locBals,
       al: r.al || "",
       av: r.av || "",
-    });
+    };
+    if (isDay1) newRow.ob = locBals.slice(); // store original opening balance
+    DB[key].push(newRow);
   });
 
   // Only fix transitions if there are inconsistencies
@@ -4028,6 +4033,7 @@ function ensureMonth(y, m) {
         del: LOCS.map(() => 0),
         imp: LOCS.map(() => 0),
         bal: [...openBals],
+        ob: [...openBals], // store original opening balance for transfer recalc
         al: "",
         av: "",
       });
@@ -4048,13 +4054,344 @@ function ensureMonth(y, m) {
 
 function recalcFrom(key, fi) {
   const rows = DB[key];
-  // Starting point: for fi=0, keep opening bals as-is (they're hardcoded)
-  // For fi>0, recalc from fi using prev row
+  if (!rows) return;
+  // If starting from 0, do a full month recalc (restores ob + applies transfers)
+  if (fi === 0) {
+    fullRecalcMonth(key);
+    return;
+  }
   for (let i = fi; i < rows.length; i++) {
-    if (i === 0) continue; // day 1 opening bal is kept
+    if (i === 0) continue; // day 1 opening bal is kept (managed by fullRecalcMonth)
     const prev = rows[i - 1];
     rows[i].bal = calcLocBals(prev.bal, prev.del, prev.imp);
+    applyTransfersToRow(rows[i]); // apply any transfers for this specific day
   }
+}
+
+// ════════════════════════════════════════════════════
+//  CAR TRANSFER — core logic
+// ════════════════════════════════════════════════════
+
+/**
+ * Apply stored transfers for a given date to the row's bal[] array.
+ * Transfers increase the destination and decrease the source, leaving
+ * Total Delivery and Total Import/Receive completely unchanged.
+ */
+function applyTransfersToRow(row) {
+  const ts = (sett.transfers || {})[row.date] || [];
+  ts.forEach((t) => {
+    if (t.from >= 0 && t.from < LOCS.length)
+      row.bal[t.from] = (row.bal[t.from] || 0) - t.qty;
+    if (t.to >= 0 && t.to < LOCS.length)
+      row.bal[t.to] = (row.bal[t.to] || 0) + t.qty;
+  });
+}
+
+/**
+ * Fully recalculates all balances for a month from scratch.
+ * Restores day-1 from its stored ob (original opening balance),
+ * then cascades through every day applying transfers along the way.
+ */
+function fullRecalcMonth(key) {
+  const rows = DB[key];
+  if (!rows || !rows.length) return;
+  // Restore day-1 from stored original opening balance, then apply its transfers
+  if (rows[0].ob) rows[0].bal = rows[0].ob.slice();
+  applyTransfersToRow(rows[0]);
+  // Recalc days 2+ with transfers
+  for (let i = 1; i < rows.length; i++) {
+    rows[i].bal = calcLocBals(
+      rows[i - 1].bal,
+      rows[i - 1].del,
+      rows[i - 1].imp,
+    );
+    applyTransfersToRow(rows[i]);
+  }
+}
+
+/**
+ * After adding or removing a transfer, fully recalculates the given month
+ * AND propagates the change to all subsequent months.
+ */
+function recalcTransferCascade(startMonthKey) {
+  const allMonths = Object.keys(DB).sort();
+  const startIdx = allMonths.indexOf(startMonthKey);
+  if (startIdx < 0) return;
+
+  // Fully recalc the starting month
+  fullRecalcMonth(startMonthKey);
+
+  // Propagate to subsequent months
+  for (let i = startIdx + 1; i < allMonths.length; i++) {
+    const prevRows = DB[allMonths[i - 1]];
+    const currRows = DB[allMonths[i]];
+    if (!prevRows || !prevRows.length || !currRows || !currRows.length)
+      continue;
+
+    const prevLast = prevRows[prevRows.length - 1];
+    const newOpen = calcLocBals(prevLast.bal, prevLast.del, prevLast.imp);
+
+    // Update day-1 of the current month
+    currRows[0].ob = newOpen.slice();
+    currRows[0].bal = newOpen.slice();
+    applyTransfersToRow(currRows[0]);
+
+    // Recalc the rest of the month
+    for (let j = 1; j < currRows.length; j++) {
+      currRows[j].bal = calcLocBals(
+        currRows[j - 1].bal,
+        currRows[j - 1].del,
+        currRows[j - 1].imp,
+      );
+      applyTransfersToRow(currRows[j]);
+    }
+  }
+}
+
+/**
+ * Adds a car transfer record and triggers balance recalculation.
+ * Only the Balance column per location is affected — del[] and imp[] are untouched.
+ */
+function addCarTransfer(date, fromIdx, toIdx, qty, note) {
+  requireLogin(() => {
+    fromIdx = parseInt(fromIdx);
+    toIdx = parseInt(toIdx);
+    qty = parseInt(qty);
+
+    if (!date) {
+      showError("Please select a date.");
+      return;
+    }
+    if (isNaN(fromIdx) || isNaN(toIdx)) {
+      showError("Please select both locations.");
+      return;
+    }
+    if (fromIdx === toIdx) {
+      showError("Source and destination must be different locations.");
+      return;
+    }
+    if (!qty || qty <= 0) {
+      showError("Quantity must be greater than 0.");
+      return;
+    }
+    if (qty > 9999) {
+      showError("Quantity cannot exceed 9999.");
+      return;
+    }
+
+    const monthKey = date.slice(0, 7);
+    if (!DB[monthKey]) {
+      showError(
+        "No data found for " + date + ". Please generate the month first.",
+      );
+      return;
+    }
+
+    if (!sett.transfers) sett.transfers = {};
+    if (!sett.transfers[date]) sett.transfers[date] = [];
+    sett.transfers[date].push({
+      from: fromIdx,
+      to: toIdx,
+      qty,
+      note: (note || "").trim(),
+    });
+
+    recalcTransferCascade(monthKey);
+    setDirty(true);
+    renderTransferPage();
+    renderAll();
+    showSuccess(
+      `✓ Transfer recorded: ${qty} cars — ${LOCS[fromIdx]} → ${LOCS[toIdx]}`,
+    );
+  });
+}
+
+/**
+ * Removes a transfer record by date + index and triggers balance recalculation.
+ */
+function removeCarTransfer(date, idx) {
+  requireLogin(() => {
+    if (!sett.transfers || !sett.transfers[date]) return;
+    const t = sett.transfers[date][idx];
+    if (!t) return;
+    sett.transfers[date].splice(idx, 1);
+    if (!sett.transfers[date].length) delete sett.transfers[date];
+
+    recalcTransferCascade(date.slice(0, 7));
+    setDirty(true);
+    renderTransferPage();
+    renderAll();
+    showSuccess(
+      `✓ Transfer removed (${t.qty} cars — ${LOCS[t.from]} → ${LOCS[t.to]})`,
+    );
+  });
+}
+
+/**
+ * Renders the Car Transfer page: a form to add transfers + a list of existing ones.
+ */
+function renderTransferPage() {
+  const el = document.getElementById("page-transfer");
+  if (!el) return;
+
+  // Build location options for dropdowns
+  const locOptions = LOCS.map((loc, i) => {
+    const cfg = LOC_CFG[loc];
+    return `<option value="${i}" style="background:${cfg.lt};color:${cfg.bg}">${loc}</option>`;
+  }).join("");
+
+  // Get today's date for default value
+  const todayVal = TODAY || new Date().toLocaleDateString("en-CA");
+
+  // ── Form section ─────────────────────────────────
+  const form = `
+    <div class="transfer-form-card">
+      <div class="transfer-form-title">
+        <span style="font-size:20px">🚗</span> Add Car Transfer
+        <span style="font-size:11px;font-weight:500;color:#64748b;margin-left:auto">
+          Moves cars between locations — only Balance column is affected
+        </span>
+      </div>
+
+      <div class="transfer-form-grid">
+        <div class="transfer-field">
+          <label>📅 Transfer Date</label>
+          <input type="date" id="tr-date" value="${todayVal}" />
+        </div>
+        <div class="transfer-field">
+          <label>🔢 Number of Cars</label>
+          <input type="number" id="tr-qty" min="1" max="9999" placeholder="e.g. 10" />
+        </div>
+        <div class="transfer-field">
+          <label>🔴 From Location</label>
+          <select id="tr-from" onchange="renderTransferPreview()">${locOptions}</select>
+        </div>
+        <div class="transfer-field">
+          <label>🟢 To Location</label>
+          <select id="tr-to" onchange="renderTransferPreview()">${locOptions}</select>
+        </div>
+      </div>
+
+      <div class="transfer-arrow-row" id="tr-preview">
+        <div class="transfer-loc-chip" id="tr-chip-from" style="border-color:#fca5a5;color:#b91c1c;background:#fee2e2">${LOCS[0]}</div>
+        <div class="transfer-arrow-badge">→</div>
+        <div class="transfer-loc-chip" id="tr-chip-to" style="border-color:#86efac;color:#166534;background:#dcfce7">${LOCS[1]}</div>
+      </div>
+
+      <div class="transfer-field" style="margin-bottom:14px">
+        <label>📝 Note (optional)</label>
+        <input type="text" id="tr-note" placeholder="e.g. Repositioning for auction" maxlength="80" />
+      </div>
+
+      <button class="transfer-submit-btn" onclick="submitTransferForm()">
+        <span>🚗</span> Record Transfer
+      </button>
+    </div>`;
+
+  // ── Existing transfers list ───────────────────────
+  const transfers = sett.transfers || {};
+  const sortedDates = Object.keys(transfers).sort();
+
+  let listHtml = "";
+  if (!sortedDates.length) {
+    listHtml = `<div class="transfer-empty-state">
+      <div class="transfer-empty-icon">🚗</div>
+      <p>No transfers recorded yet.<br>Use the form above to add one.</p>
+    </div>`;
+  } else {
+    // Show most-recent dates first
+    sortedDates.reverse().forEach((date) => {
+      const dayTs = transfers[date];
+      if (!dayTs || !dayTs.length) return;
+
+      // Format date for display
+      const [yr, mo, dy] = date.split("-");
+      const dateObj = new Date(date + "T00:00:00");
+      const dayName = DAYS[dateObj.getDay()];
+      const displayDate = `${dayName}, ${dy}-${mo}-${yr}`;
+
+      const items = dayTs
+        .map((t, idx) => {
+          const fromCfg = LOC_CFG[LOCS[t.from]] || {};
+          const toCfg = LOC_CFG[LOCS[t.to]] || {};
+          const noteHtml = t.note
+            ? `<span class="transfer-item-note" title="${t.note}">💬 ${t.note}</span>`
+            : `<span class="transfer-item-note"></span>`;
+          return `<div class="transfer-item">
+          <span class="transfer-item-qty">🚗 ${t.qty}</span>
+          <span class="transfer-item-from" style="background:${fromCfg.lt || "#fee2e2"};color:${fromCfg.bg || "#b91c1c"};border-color:${fromCfg.bg || "#fca5a5"}">${LOCS[t.from] || "Loc " + t.from}</span>
+          <span class="transfer-item-arrow">→</span>
+          <span class="transfer-item-to" style="background:${toCfg.lt || "#dcfce7"};color:${toCfg.bg || "#166534"};border-color:${toCfg.bg || "#86efac"}">${LOCS[t.to] || "Loc " + t.to}</span>
+          ${noteHtml}
+          <button class="transfer-item-del" onclick="removeCarTransfer('${date}', ${idx})" title="Remove this transfer">✕</button>
+        </div>`;
+        })
+        .join("");
+
+      listHtml += `<div class="transfer-date-group">
+        <div class="transfer-date-label">📅 ${displayDate}</div>
+        ${items}
+      </div>`;
+    });
+  }
+
+  const list = `
+    <div class="transfer-list-card">
+      <div class="transfer-list-title">
+        <span style="font-size:20px">📋</span> Transfer History
+        <span style="font-size:11px;font-weight:500;color:#64748b;margin-left:auto">
+          ${sortedDates.length ? sortedDates.length + " date(s) with transfers" : "No transfers yet"}
+        </span>
+      </div>
+      ${listHtml}
+    </div>`;
+
+  el.innerHTML = `<div class="transfer-page-wrap" style="padding:10px 14px">${form}${list}</div>`;
+
+  // Set the "to" dropdown default to index 1 so from≠to by default
+  const toSel = document.getElementById("tr-to");
+  if (toSel && toSel.options.length > 1) toSel.selectedIndex = 1;
+  renderTransferPreview();
+}
+
+/**
+ * Updates the live from→to preview chips when dropdowns change.
+ */
+function renderTransferPreview() {
+  const fromSel = document.getElementById("tr-from");
+  const toSel = document.getElementById("tr-to");
+  if (!fromSel || !toSel) return;
+  const fi = parseInt(fromSel.value);
+  const ti = parseInt(toSel.value);
+
+  const chipFrom = document.getElementById("tr-chip-from");
+  const chipTo = document.getElementById("tr-chip-to");
+  if (!chipFrom || !chipTo) return;
+
+  const fromCfg = LOC_CFG[LOCS[fi]] || {};
+  const toCfg = LOC_CFG[LOCS[ti]] || {};
+
+  chipFrom.textContent = LOCS[fi] || "—";
+  chipFrom.style.background = fromCfg.lt || "#fee2e2";
+  chipFrom.style.color = fromCfg.bg || "#b91c1c";
+  chipFrom.style.borderColor = fromCfg.bg || "#fca5a5";
+
+  chipTo.textContent = LOCS[ti] || "—";
+  chipTo.style.background = toCfg.lt || "#dcfce7";
+  chipTo.style.color = toCfg.bg || "#166534";
+  chipTo.style.borderColor = toCfg.bg || "#86efac";
+}
+
+/**
+ * Reads the transfer form inputs and calls addCarTransfer().
+ */
+function submitTransferForm() {
+  const date = (document.getElementById("tr-date")?.value || "").trim();
+  const fromIdx = document.getElementById("tr-from")?.value;
+  const toIdx = document.getElementById("tr-to")?.value;
+  const qty = document.getElementById("tr-qty")?.value;
+  const note = document.getElementById("tr-note")?.value || "";
+  addCarTransfer(date, fromIdx, toIdx, qty, note);
 }
 
 function getClosing(row) {
@@ -6473,6 +6810,7 @@ function showPage(p, el) {
   }
   if (p === "report") renderReport();
   if (p === "settings") renderSettings();
+  if (p === "transfer") renderTransferPage();
 }
 
 // ════════════════════════════════════════════════════
@@ -6917,25 +7255,32 @@ function checkAndFixMonthTransitions() {
       prevLastDay.imp,
     );
 
-    // Get opening balances from current month (first day)
+    // Get opening balances from current month (first day, from stored ob if available)
     const currentFirstDay = currentMonthData[0];
-    const currentOpeningBalances = currentFirstDay.bal.slice();
+    // Compare against the ob (base) if available, else against current bal
+    const compareBase = currentFirstDay.ob
+      ? currentFirstDay.ob
+      : currentFirstDay.bal.slice();
 
-    // Check if they match
+    // Check if base opening balances match prev month closing
     const balancesMatch = prevClosingBalances.every(
-      (bal, idx) => bal === currentOpeningBalances[idx],
+      (bal, idx) => bal === compareBase[idx],
     );
 
     if (!balancesMatch) {
       console.log(
-        `Balance mismatch fixed: ${prevMonth} closing ${prevClosingBalances} -> ${currentMonth} opening ${currentOpeningBalances}`,
+        `Balance mismatch fixed: ${prevMonth} closing ${prevClosingBalances} -> ${currentMonth} opening ${compareBase}`,
       );
+      // Update stored opening balance and recompute with transfers
+      currentFirstDay.ob = prevClosingBalances.slice();
       currentFirstDay.bal = prevClosingBalances.slice();
+      applyTransfersToRow(currentFirstDay);
 
       for (let dayIdx = 1; dayIdx < currentMonthData.length; dayIdx++) {
         const prevDay = currentMonthData[dayIdx - 1];
         const currentDay = currentMonthData[dayIdx];
         currentDay.bal = calcLocBals(prevDay.bal, prevDay.del, prevDay.imp);
+        applyTransfersToRow(currentDay);
       }
       changesMade = true;
     }
@@ -6953,7 +7298,7 @@ function ensureAllMonthsHaveColumns() {
     const rows = DB[monthKey] || [];
 
     // Ensure each row has all required columns
-    rows.forEach((row) => {
+    rows.forEach((row, rowIdx) => {
       // Ensure arrays have correct length for all locations
       if (!row.del || row.del.length !== LOCS.length) {
         row.del = LOCS.map(() =>
@@ -6975,6 +7320,9 @@ function ensureAllMonthsHaveColumns() {
       if (!row.al) row.al = "";
       if (!row.av) row.av = "";
       if (!row.date) row.date = `${year}-${String(month).padStart(2, "0")}-01`;
+
+      // Ensure day-1 has stored opening balance (ob) for transfer recalculation
+      if (rowIdx === 0 && !row.ob) row.ob = row.bal.slice();
     });
 
     // Ensure month has all days
