@@ -3521,14 +3521,6 @@ async function sha256(message) {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function hash(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = (h << 5) - h + s.charCodeAt(i);
-    h |= 0;
-  }
-  return String(h);
-}
 
 async function secureHash(s) {
   return await sha256(s);
@@ -4684,15 +4676,6 @@ function checkLoginStatus() {
   return false;
 }
 
-function requireLogin(cb) {
-  if (isLoggedIn) {
-    cb();
-  } else {
-    loginCallback = cb;
-    showLoginForm();
-  }
-}
-
 function changeAdminPassword() {
   if (!isLoggedIn) {
     showError("Please login first");
@@ -5619,19 +5602,19 @@ function updateSummaryView() {
   renderReport(); // This will populate with existing summary data
 }
 
-function exportReport() {
-  showSuccess("Report export feature coming soon!");
-}
-
-function refreshReport() {
-  const button = event.target;
-  button.textContent = "🔄 Refreshing...";
-  button.disabled = true;
+function refreshReport(e) {
+  const button = (e && e.target) || (typeof event !== "undefined" && event.target);
+  if (button) {
+    button.textContent = "🔄 Refreshing...";
+    button.disabled = true;
+  }
 
   setTimeout(() => {
     renderReport();
-    button.innerHTML = "<span>🔄</span> Refresh";
-    button.disabled = false;
+    if (button) {
+      button.innerHTML = "<span>🔄</span> Refresh";
+      button.disabled = false;
+    }
     showSuccess("Report refreshed successfully");
   }, 1000);
 }
@@ -6721,7 +6704,11 @@ function generateEfficiencyMetrics(months) {
 }
 
 function exportReport(type) {
-  showSuccess(`Exporting ${type} report...`);
+  if (!type) {
+    showSuccess("Report export feature coming soon!");
+  } else {
+    showSuccess(`Exporting ${type} report...`);
+  }
 }
 
 function printReport(type) {
