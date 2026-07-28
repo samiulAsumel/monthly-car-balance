@@ -3489,7 +3489,7 @@ const GRP_SEC = [
 //   READ  (GET workerUrl): returns data.json (works for everyone, viewers too)
 //   WRITE (PUT workerUrl): commits data.json; requires the write key below
 const GITHUB_CONFIG = {
-  workerUrl: "https://carview-proxy.sa-sumel91.workers.dev",
+  workerUrl: "https://carview-proxy.sasas.workers.dev",
 };
 
 // Kept as a truthy flag so existing cloud-sync code paths that check
