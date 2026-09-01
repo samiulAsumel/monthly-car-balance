@@ -131,10 +131,16 @@ function fuzzyMatch(label, query) {
   return label.toLowerCase().includes(query.toLowerCase());
 }
 
+let cpTriggerEl = null;
+
 function openCommandPalette() {
   closeCommandPalette();
   cpItems = getCommandPaletteItems();
   cpActiveIndex = 0;
+  // The input is the only focusable node inside the overlay (see the Tab
+  // trap in cmdkInputKeydown below), so remembering what had focus before
+  // opening is the only way to give it back on close.
+  cpTriggerEl = document.activeElement;
 
   const overlay = document.createElement("div");
   overlay.id = "cmdk-overlay";
@@ -143,9 +149,10 @@ function openCommandPalette() {
     '<div class="cmdk-box" role="dialog" aria-modal="true" aria-label="Command palette">' +
     '<div class="cmdk-input-row">' +
     icon("search", 16) +
-    '<input type="text" id="cmdk-input" placeholder="Jump to a tab, month, location, report section, or action…" autocomplete="off" />' +
+    '<input type="text" id="cmdk-input" placeholder="Jump to a tab, month, location, report section, or action…" autocomplete="off" ' +
+    'role="combobox" aria-expanded="true" aria-controls="cmdk-list" aria-autocomplete="list" aria-activedescendant="" />' +
     "</div>" +
-    '<div class="cmdk-list" id="cmdk-list"></div>' +
+    '<div class="cmdk-list" id="cmdk-list" role="listbox"></div>' +
     "</div>";
   overlay.onclick = (e) => {
     if (e.target === overlay) closeCommandPalette();
@@ -165,14 +172,18 @@ function openCommandPalette() {
 function closeCommandPalette() {
   const el = document.getElementById("cmdk-overlay");
   if (el) el.remove();
+  if (cpTriggerEl && typeof cpTriggerEl.focus === "function") cpTriggerEl.focus();
+  cpTriggerEl = null;
 }
 
 function renderCommandPaletteList(query) {
   cpFiltered = cpItems.filter((it) => fuzzyMatch(it.label, query) || fuzzyMatch(it.group, query));
   const list = document.getElementById("cmdk-list");
+  const input = document.getElementById("cmdk-input");
   if (!list) return;
   if (!cpFiltered.length) {
     list.innerHTML = '<div class="cmdk-empty">No matches</div>';
+    if (input) input.setAttribute("aria-activedescendant", "");
     return;
   }
   let lastGroup = null;
@@ -182,12 +193,16 @@ function renderCommandPaletteList(query) {
       html += `<div class="cmdk-group">${esc(it.group)}</div>`;
       lastGroup = it.group;
     }
-    html += `<div class="cmdk-item${i === cpActiveIndex ? " active" : ""}" data-idx="${i}">${icon(it.icon, 15)}<span>${esc(it.label)}</span></div>`;
+    html +=
+      `<div class="cmdk-item${i === cpActiveIndex ? " active" : ""}" id="cmdk-item-${i}" ` +
+      `role="option" aria-selected="${i === cpActiveIndex}" data-idx="${i}">` +
+      `${icon(it.icon, 15)}<span>${esc(it.label)}</span></div>`;
   });
   list.innerHTML = html;
   list.querySelectorAll(".cmdk-item").forEach((el) => {
     el.onclick = () => runCommandPaletteItem(parseInt(el.dataset.idx, 10));
   });
+  if (input) input.setAttribute("aria-activedescendant", "cmdk-item-" + cpActiveIndex);
   const activeEl = list.querySelector(".cmdk-item.active");
   if (activeEl) activeEl.scrollIntoView({ block: "nearest" });
 }
@@ -214,5 +229,10 @@ function cmdkInputKeydown(e) {
   } else if (e.key === "Escape") {
     e.preventDefault();
     closeCommandPalette();
+  } else if (e.key === "Tab") {
+    // The input is the only focusable element in the overlay, so Tab has
+    // nowhere legitimate to go — block it instead of letting focus escape
+    // to the page behind the modal.
+    e.preventDefault();
   }
 }
