@@ -597,6 +597,53 @@ select {
   opacity: 1;
 }
 
+/* ── INSTALL BANNER (src/app.js: showInstallBanner) ──
+   Prepended ahead of .topbar in normal document flow -- see the JS
+   comment for why that placement needs no sticky-offset changes. */
+.install-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px var(--sp-4);
+  background: var(--gold-500);
+  color: var(--navy-900);
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+.install-banner-icon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.install-banner-text {
+  flex: 1;
+}
+
+.install-banner-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--r-md);
+  background: var(--navy-500);
+  color: var(--white);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.install-banner-dismiss {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border: none;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--navy-900);
+  cursor: pointer;
+}
+
 /* ── TOPBAR ── */
 .topbar {
   display: flex;

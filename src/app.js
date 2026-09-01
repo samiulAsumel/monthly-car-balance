@@ -4484,6 +4484,16 @@ function init() {
       // Always mark as clean after successful data load
       setDirty(false);
 
+      // manifest.json shortcuts (long-press the home-screen icon) land
+      // here as ?tab=<page>; jump straight there once the daily page
+      // (the default) has finished its own render above. Anything not
+      // matching a real tab's data-page is silently ignored.
+      const tabParam = new URLSearchParams(location.search).get("tab");
+      if (tabParam) {
+        const targetTab = document.querySelector(`.ntab[data-page="${tabParam}"]`);
+        if (targetTab) showPage(tabParam, targetTab);
+      }
+
       // Show connected status
       if (firebaseDb) {
         document.getElementById("gs-status").innerHTML =
@@ -4810,17 +4820,66 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-// Handle PWA install prompt
+// ── Install prompt ──
+// beforeinstallprompt only fires on Chromium browsers that haven't
+// already installed the app and don't yet have a dismissed preference
+// stored; Safari/iOS never fires it at all (no in-app affordance for
+// those users -- "Add to Home Screen" from the share sheet is manual).
+const INSTALL_DISMISSED_KEY = "installBannerDismissed";
 let deferredPrompt;
+
+function showInstallBanner() {
+  if (document.getElementById("install-banner")) return;
+  if (localStorage.getItem(INSTALL_DISMISSED_KEY)) return;
+  if (window.matchMedia("(display-mode: standalone)").matches) return;
+
+  const banner = document.createElement("div");
+  banner.id = "install-banner";
+  banner.className = "install-banner";
+  banner.setAttribute("role", "region");
+  banner.setAttribute("aria-label", "Install app");
+  banner.innerHTML =
+    '<span class="install-banner-icon">' + icon("download", 18) + "</span>" +
+    '<span class="install-banner-text">Install this app for quick, offline access.</span>' +
+    '<button type="button" class="install-banner-btn" onclick="installApp()">Install</button>' +
+    '<button type="button" class="install-banner-dismiss" onclick="dismissInstallBanner()" aria-label="Dismiss">' +
+    icon("x", 14) +
+    "</button>";
+  // Prepended to <body> (ahead of .topbar, which is position:sticky
+  // top:0) so it occupies normal document flow above everything else --
+  // it scrolls away and .topbar then sticks at the true viewport top, no
+  // change needed to updateStickyHeaderOffsets()'s measurements.
+  document.body.prepend(banner);
+}
+
+function hideInstallBanner() {
+  const banner = document.getElementById("install-banner");
+  if (banner) banner.remove();
+}
+
+function dismissInstallBanner() {
+  localStorage.setItem(INSTALL_DISMISSED_KEY, "1");
+  hideInstallBanner();
+}
+
+async function installApp() {
+  if (!deferredPrompt) return;
+  hideInstallBanner();
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+}
+
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  // Show install button or notification
+  showInstallBanner();
 });
 
 // Handle successful app installation
 window.addEventListener("appinstalled", () => {
   deferredPrompt = null;
+  hideInstallBanner();
 });
 
 // Listen for background sync messages
