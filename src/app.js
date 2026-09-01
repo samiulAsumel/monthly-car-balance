@@ -4138,7 +4138,7 @@ function saveLS() {
 
 function doSave() {
   if (!isLoggedIn) {
-    showLogin("save");
+    showLoginForm();
     return;
   }
   const restoreButton = showButtonLoading("save-button");
@@ -4186,6 +4186,10 @@ function doSave() {
 
 function showSuccess(message, iconName) {
   toast(message, "success", { icon: iconName });
+}
+
+function showInfo(message, iconName) {
+  toast(message, "info", { icon: iconName });
 }
 
 function addClickFeedback(element) {
@@ -5121,19 +5125,6 @@ async function checkCred(u, p) {
     return true;
   }
   return false;
-}
-
-function showLogin(reason = "edit") {
-  document.getElementById("lock-msg").textContent =
-    reason === "save"
-      ? "Save requires login."
-      : reason === "edit"
-        ? "Edit requires login."
-        : "Login required.";
-  document.getElementById("l-user").value = "";
-  document.getElementById("l-pass").value = "";
-  document.getElementById("l-err").style.display = "none";
-  document.getElementById("ov-lock").classList.add("on");
 }
 
 function requireLogin(cb) {
