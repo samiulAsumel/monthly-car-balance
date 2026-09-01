@@ -16,7 +16,7 @@ A zero-dependency, offline-first vehicle tracking system for managing daily car 
 6. Track inter-location movements on the **Car Transfer** tab
 7. Export data as Excel via the top bar (current month or all months)
 
-**No server required.** The app runs entirely from local files and syncs to the cloud (Cloudflare Worker → private GitHub repo) when online. All dates are shown as `dd-mm-yyyy`. Press **Ctrl+K** anywhere to jump to a tab, month, location, or report section without the mouse; below 700px width the daily table becomes one expandable card per date.
+**No server required.** The app runs entirely from local files and syncs to the cloud (Cloudflare Worker → private GitHub repo) when online. All dates are shown as `dd-mm-yyyy`. Press **Ctrl+K** anywhere to jump to a tab, month, location, or report section without the mouse — the palette traps focus and exposes full listbox ARIA semantics for screen-reader and keyboard-only use; below 700px width the daily table becomes one expandable card per date.
 
 ---
 
@@ -71,6 +71,8 @@ Each date is evaluated in this order:
 - **Cloud sync** via a Cloudflare Worker that commits a single `data.json` to a private GitHub repo (`carview-data`). The GitHub token never reaches the browser — it lives only in the Worker. See `docs/SETUP-GITHUB-SYNC.md`.
 - **Version History & restore** — every save is a GitHub commit, so any previous version can be restored from the in-app history (Settings → Cloud Sync)
 - **Overwrite protection** — concurrent edits from another device are detected (SHA conflict) and warned instead of silently clobbered
+- **Honest save status** — the "Saved"/"Unsaved" badge always reflects the real outcome, including a failed autosave (it stays "Unsaved" and shows a one-time warning rather than silently claiming success); a manual save and an autosave can never fire concurrently against the same cloud version
+- **Corrupted data self-heals instead of crashing** — a row synced from another device with a missing or malformed field is repaired in place (padded/trimmed to the expected shape) rather than taking the app down on load
 - **Save feedback** — distinguishes "✓ Saved to cloud!" from "⚠ Saved to device only!" (the latter signals the cloud write failed, e.g. expired token)
 - Excel export (current month or all months)
 - All dates display as **dd-mm-yyyy**; manual date-entry fields use **dd/mm/yyyy** with auto-formatting (stored internally as `YYYY-MM-DD`)
@@ -88,7 +90,10 @@ Each date is evaluated in this order:
 - Minimum 8-character password requirement
 - Warning banner when the default admin password is still in use
 - Cloudflare Worker write endpoint fails closed if misconfigured, and
-  validates/size-caps the request body before committing to GitHub
+  validates/size-caps the request body before committing to GitHub —
+  the size cap checks the actual body, not just the client-supplied
+  `Content-Length` header, which a request could omit to bypass a
+  header-only check
 
 ---
 
@@ -197,7 +202,9 @@ Edit the `LOCS` array and `LOC_CFG` object in `src/formula.js` to customize loca
 
 ## Production Checklist
 
-- [x] Database validation on load (corruption detection)
+- [x] Database validation on load, with self-healing of malformed rows
+      instead of crashing (a row missing/short on a data array is
+      repaired in place; only an unsalvageable row is dropped)
 - [x] Memory leak prevention (chart destruction)
 - [x] `prefers-reduced-motion` accessibility support
 - [x] User-facing error overlay with recovery
@@ -216,7 +223,12 @@ Edit the `LOCS` array and `LOC_CFG` object in `src/formula.js` to customize loca
       validates/size-caps the request body before committing
 - [x] Session persistence for authenticated users (admin and named users
       alike; 1-hour window)
-- [x] Auto-save with dirty-state tracking
+- [x] Auto-save with dirty-state tracking that always reflects the real
+      save outcome (never reports "Saved" after a failed cloud write),
+      and cannot fire concurrently with a manual save against the same
+      cloud version
+- [x] Command palette (Ctrl+K) has a keyboard focus trap, listbox/option
+      ARIA semantics, and returns focus to its trigger on close
 - [x] Input sanitization on all data entry
 - [x] Automated test suite for the balance-calculation core (`node --test`)
 
@@ -267,6 +279,15 @@ The Cloudflare Worker (`worker/worker.js`) is deployed separately from the app �
 ---
 
 ## Version
+
+**1.5.1** — Post-hardening audit pass: `validateDB()` now self-heals
+malformed synced rows instead of crashing on them, the save badge
+always reflects the true save outcome (a failed autosave no longer
+claims "Saved") with overlapping manual/auto saves prevented, the
+command palette got a keyboard focus trap and listbox ARIA semantics,
+and the Cloudflare Worker's request size cap now checks the actual
+body instead of trusting the client-supplied `Content-Length` header
+(September 2026)
 
 **1.5.0** — UI polish pass (self-hosted SVG icons replacing emoji, design
 tokens, sticky/keyboard-navigable daily table with a location filter and
