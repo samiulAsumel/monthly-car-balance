@@ -259,3 +259,39 @@ function validateNumber(value, fieldName, min = 0, max = 99999) {
     value: num,
   };
 }
+
+// Inert in the browser (`module` is undefined there) — lets
+// `node --test` require() this file directly for tests/formula.test.js
+// without affecting how index.html loads it as a classic script.
+if (typeof module !== "undefined") {
+  module.exports = {
+    LOCS,
+    DAYS,
+    MO,
+    LOC_CFG,
+    GRP_SEC,
+    getToday,
+    mk,
+    dIn,
+    dow,
+    fmtDMY,
+    isoToDMY,
+    dmyToISO,
+    fmt,
+    pct,
+    esc,
+    sha256,
+    PBKDF2_ITERATIONS,
+    bytesToHex,
+    hexToBytes,
+    pbkdf2DeriveHex,
+    hashPassword,
+    isPBKDF2Hash,
+    verifyAgainstStoredHash,
+    isRed,
+    calcLocBals,
+    calcClosing,
+    getClosing,
+    validateNumber,
+  };
+}
