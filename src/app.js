@@ -258,7 +258,11 @@ function pBadge(a, b, goodUp = true) {
   const good = goodUp ? p > 0 : p < 0;
   return `<span class="${good ? "pu" : "pd"}">${p > 0 ? "▲" : "▼"}${Math.abs(p)}%</span>`;
 }
-function setDirty(v) {
+// `schedule` controls whether this call arms the auto-save timer. Callers
+// that are only correcting the badge to reflect a save that already failed
+// or is still in flight pass `false` so they don't re-trigger the very
+// timer that got them here (see startAutoSave/performAutoSave).
+function setDirty(v, schedule = true) {
   dirty = v;
   const el = document.getElementById("sv-badge");
   el.innerHTML = v
@@ -269,7 +273,7 @@ function setDirty(v) {
   if (saveBtn) {
     saveBtn.classList.toggle("dirty-pulse", v);
   }
-  if (v) startAutoSave();
+  if (v && schedule) startAutoSave();
 }
 
 // ════════════════════════════════════════════════════
@@ -437,6 +441,14 @@ function loadFromFirebase(callback) {
     });
 }
 
+// Guards against a manual Save and an autosave firing PUTs concurrently
+// against the same cloudBaseSha (which would otherwise trip the Worker's
+// own 409 overwrite-protection against each other). performAutoSave()
+// checks this before starting; doSave() doesn't need to, since a second
+// click while one is in flight just re-sends the same already-in-flight
+// request's data.
+let saveInFlight = false;
+
 function saveToFirebase() {
   if (!firebaseDb || !isLoggedIn) return Promise.resolve(false);
 
@@ -448,6 +460,7 @@ function saveToFirebase() {
     adminHash: ADMIN_HASH,
   };
 
+  saveInFlight = true;
   // Send to the Worker, which fetches the current SHA and commits to the
   // private repo. The write key proves we know the admin password.
   return fetch(GITHUB_CONFIG.workerUrl, {
@@ -480,6 +493,9 @@ function saveToFirebase() {
     .catch((e) => {
       console.error("Cloud save failed:", e);
       return false;
+    })
+    .finally(() => {
+      saveInFlight = false;
     });
 }
 
@@ -582,8 +598,13 @@ async function restoreVersion(sha) {
     if (ok) {
       showSuccess("Restored to selected version!");
       saveLS();
+      setDirty(false);
       loadCloudHistory(true);
     } else {
+      // Neither the cloud save nor a local save happened — the restored
+      // data exists only in memory, so say so honestly instead of leaving
+      // whatever "Saved"/"Unsaved" state predates this restore attempt.
+      setDirty(true, false);
       showError("Restore loaded locally but cloud save failed", "warning");
     }
   } catch (e) {
@@ -592,6 +613,10 @@ async function restoreVersion(sha) {
   }
 }
 
+// Persists to localStorage only — does NOT touch the dirty badge. Every
+// caller decides for itself what the badge should say once it also knows
+// whether a cloud save happened (see doSave/performAutoSave), so a lone
+// saveLS() success no longer means "Saved" is honest.
 function saveLS() {
   if (!isLoggedIn) return false;
 
@@ -600,7 +625,6 @@ function saveLS() {
     db[k] = DB[k];
   });
   localStorage.setItem(LS, JSON.stringify({ db, sett, users, loggedIn }));
-  setDirty(false);
   return true;
 }
 
@@ -619,13 +643,13 @@ function doSave() {
 
   // Save to Firebase
   if (firebaseDb) {
-    // Keep badge unsaved until cloud sync succeeds
-    setDirty(true);
+    // Keep badge unsaved until cloud sync succeeds. schedule:false — this
+    // isn't a new edit, just marking the pending state, so it shouldn't
+    // arm another autosave timer on top of the save already in flight.
+    setDirty(true, false);
     saveToFirebase()
       .then((fbSuccess) => {
-        if (fbSuccess) {
-          setDirty(false);
-        }
+        setDirty(!fbSuccess, false);
         restoreButton();
         showSuccess(
           fbSuccess
@@ -640,7 +664,8 @@ function doSave() {
       })
       .catch((err) => {
         restoreButton();
-        // Keep dirty=true on error so user sees unsaved state
+        // Already dirty=true from the pre-call setDirty above; nothing to
+        // flip back, this just surfaces the error.
         showError("Failed to save: " + err.message);
       });
   } else {
@@ -745,8 +770,15 @@ function startAutoSave() {
   }, AUTO_SAVE_DELAY);
 }
 
+// Tracks the last autosave's cloud outcome so a persistent outage warns
+// once (on the ok -> failed transition) instead of every 3 seconds.
+let lastAutoSaveOk = true;
+
 function performAutoSave() {
   if (!isLoggedIn || !dirty) return;
+  // A manual Save (or a previous autosave) is still in flight against the
+  // same cloudBaseSha — retry on the next real edit instead of racing it.
+  if (saveInFlight) return;
 
   // Show subtle auto-save indicator
   showAutoSaveIndicator();
@@ -762,19 +794,24 @@ function performAutoSave() {
   if (firebaseDb) {
     saveToFirebase()
       .then((fbSuccess) => {
-        if (fbSuccess) {
-          setDirty(false); // Only mark as saved if Firebase succeeded
-        } else {
+        // schedule:false — a failure here shouldn't immediately re-arm the
+        // timer; the next real edit (setDirty(true) from an edit handler)
+        // is what should trigger the next attempt.
+        setDirty(!fbSuccess, false);
+        if (!fbSuccess) {
           console.warn("Auto-save to Firebase failed");
-          // Keep dirty=true so user knows data not synced
+          if (lastAutoSaveOk) showError("Saved to device only!", "warning");
         }
+        lastAutoSaveOk = fbSuccess;
         setTimeout(() => {
           hideAutoSaveIndicator();
         }, 2000);
       })
       .catch((err) => {
         console.error("Auto-save error:", err);
-        // Keep dirty=true on error
+        setDirty(true, false);
+        if (lastAutoSaveOk) showError("Saved to device only!", "warning");
+        lastAutoSaveOk = false;
         setTimeout(() => {
           hideAutoSaveIndicator();
         }, 2000);
@@ -1642,6 +1679,9 @@ async function addUser() {
   document.getElementById("s-pass").value = "";
   document.getElementById("s-pass2").value = "";
   saveLS();
+  // Persisted locally only — the change hasn't reached the cloud yet, so
+  // say so honestly (autosave will pick it up like any other edit).
+  setDirty(true);
   renderSettings();
   showSuccess(`User "${u}" added successfully.`);
 }
@@ -1892,6 +1932,7 @@ function delUser(u) {
   }
   delete users[u];
   saveLS();
+  setDirty(true); // local-only so far; autosave picks it up
   renderSettings();
 }
 
