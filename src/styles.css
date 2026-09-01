@@ -269,6 +269,36 @@
   color: var(--blue-600);
 }
 
+@media (max-width: 700px) {
+  /* Near-full-height search sheet instead of a floating card, so the
+     palette reads as a real mobile search UI (opened via the FAB, see
+     .cmdk-fab) rather than a shrunk desktop dropdown. */
+  #cmdk-overlay {
+    padding-top: 0;
+    align-items: stretch;
+  }
+
+  .cmdk-box {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .cmdk-input-row {
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  }
+
+  .cmdk-list {
+    flex: 1;
+  }
+
+  .cmdk-item {
+    padding: 12px 10px;
+  }
+}
+
 .cmdk-empty {
   padding: 24px;
   text-align: center;
@@ -2111,6 +2141,32 @@ select {
   white-space: nowrap;
 }
 
+/* Floating action button -- mobile-only shortcut to the command palette
+   (Ctrl+K's equivalent for touch, which has no keyboard to press it on).
+   Sits above .bnav rather than overlapping it. Same display:none-first
+   ordering as .bnav above, for the same reason. */
+.cmdk-fab {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 850;
+  width: 52px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--navy-500);
+  color: var(--white);
+  box-shadow: var(--sh-lg);
+  cursor: pointer;
+}
+
+.cmdk-fab:active {
+  background: var(--navy-600);
+}
+
 @media (max-width: 700px) {
   .tbl-wrap {
     display: none;
@@ -2131,8 +2187,15 @@ select {
     display: flex;
   }
 
+  .cmdk-fab {
+    display: flex;
+  }
+
+  /* Clearance for both the fixed bar and the FAB floating above it, so
+     the last day-card (or any scrolled-to-bottom content) is never
+     covered by either. */
   .page.on {
-    padding-bottom: calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px) + 12px);
+    padding-bottom: calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px) + 84px);
   }
 }
 

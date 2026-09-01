@@ -756,6 +756,55 @@ function initializeVisualFeedback() {
   });
 }
 
+// Swipe left/right on the mobile day-card list to move between months
+// (navigateMonth() is the same function the desktop keyboard shortcuts
+// and month-bar arrows already call). Bound once, on the #day-cards
+// container itself, which persists across renderDayCards() rebuilds --
+// only its innerHTML is replaced, not the container. Scoped to this one
+// element rather than the whole page so it's only ever live in the
+// mobile card view (the desktop table has its own horizontal scroll to
+// not interfere with), and { passive: true } throughout means it never
+// blocks the page's normal vertical scroll.
+function initDayCardSwipe() {
+  const container = document.getElementById("day-cards");
+  if (!container) return;
+  const SWIPE_THRESHOLD = 60;
+  let startX = 0,
+    startY = 0,
+    tracking = false;
+
+  container.addEventListener(
+    "touchstart",
+    (e) => {
+      // A touch that starts on a number input is the user editing a
+      // delivery/import field, not swiping -- never treat it as one.
+      if (e.target.tagName === "INPUT" || e.touches.length !== 1) {
+        tracking = false;
+        return;
+      }
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+    },
+    { passive: true },
+  );
+
+  container.addEventListener(
+    "touchend",
+    (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
+        navigateMonth(dx < 0 ? 1 : -1);
+      }
+    },
+    { passive: true },
+  );
+}
+
 // ════════════════════════════════════════════════════
 //  AUTO-SAVE FUNCTIONALITY
 // ════════════════════════════════════════════════════
@@ -4470,6 +4519,7 @@ function init() {
 
     // Initialize visual feedback
     initializeVisualFeedback();
+    initDayCardSwipe();
     // Also run directly (not just via renderTable(), which skips this on
     // an empty month) so sticky offsets are correct from first paint.
     updateStickyHeaderOffsets();
