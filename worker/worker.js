@@ -114,12 +114,23 @@ export default {
 
     // ---- WRITE ------------------------------------------------------------
     if (request.method === "PUT") {
-      // Authorize: caller must prove they know the admin password.
-      if (env.WRITE_PASSWORD) {
-        const expected = await sha256("carview-write:" + env.WRITE_PASSWORD);
-        if (request.headers.get("X-Write-Key") !== expected) {
-          return json({ error: "unauthorized" }, 401);
-        }
+      // Authorize: caller must prove they know the admin password. Fail
+      // CLOSED — if WRITE_PASSWORD is unset (missing/misconfigured secret),
+      // every write used to be silently accepted with no auth at all.
+      if (!env.WRITE_PASSWORD) {
+        return json({ error: "server misconfigured: WRITE_PASSWORD not set" }, 401);
+      }
+      const expected = await sha256("carview-write:" + env.WRITE_PASSWORD);
+      if (request.headers.get("X-Write-Key") !== expected) {
+        return json({ error: "unauthorized" }, 401);
+      }
+
+      // Reject oversized bodies before parsing (the app's data.json is a
+      // few KB to a few hundred KB; 5MB is a generous ceiling).
+      const MAX_BODY_BYTES = 5 * 1024 * 1024;
+      const contentLength = Number(request.headers.get("content-length") || 0);
+      if (contentLength > MAX_BODY_BYTES) {
+        return json({ error: "payload too large" }, 413);
       }
 
       let body;
@@ -127,6 +138,15 @@ export default {
         body = await request.json();
       } catch {
         return json({ error: "bad json" }, 400);
+      }
+
+      // Require a real payload — either a data object (the normal save
+      // path) or a pre-encoded content string. Previously an empty/missing
+      // body would silently commit `undefined` as the file content.
+      const hasData = body && body.data && typeof body.data === "object";
+      const hasContent = body && typeof body.content === "string";
+      if (!hasData && !hasContent) {
+        return json({ error: "missing data" }, 400);
       }
 
       // Current SHA of the file (needed by GitHub to update it).

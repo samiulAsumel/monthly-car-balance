@@ -3624,6 +3624,71 @@ async function sha256(message) {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+// ── Password storage (login only — see computeWriteAuth for the separate,
+// unsalted cloud write-key derivation, which intentionally stays cheap
+// since the Worker recomputes it on every save). ──
+//
+// Stored account passwords go through salted PBKDF2 instead of a single
+// SHA-256 pass, which is fast enough to brute-force offline if the hash
+// ever leaks (and it does leave the device — adminHash/users sync into
+// data.json, which the Worker serves unauthenticated by design so viewers
+// can load the app without logging in). Three formats can be found in
+// ADMIN_HASH/users[u], oldest first: the 32-bit legacy hash() below, a
+// bare SHA-256 hex string, and "pbkdf2:<iterations>:<saltHex>:<hashHex>".
+// verifyAgainstStoredHash() accepts all three; checkCred() upgrades to
+// the PBKDF2 format on any successful login that wasn't already using it.
+const PBKDF2_ITERATIONS = 150000;
+
+function bytesToHex(bytes) {
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function hexToBytes(hex) {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return bytes;
+}
+async function pbkdf2DeriveHex(password, saltBytes, iterations) {
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: saltBytes, iterations, hash: "SHA-256" },
+    keyMaterial,
+    256,
+  );
+  return bytesToHex(new Uint8Array(bits));
+}
+// Creates a new salted hash for storage.
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const hashHex = await pbkdf2DeriveHex(password, salt, PBKDF2_ITERATIONS);
+  return `pbkdf2:${PBKDF2_ITERATIONS}:${bytesToHex(salt)}:${hashHex}`;
+}
+function isPBKDF2Hash(stored) {
+  return typeof stored === "string" && stored.startsWith("pbkdf2:");
+}
+// Verifies `password` against `stored` in whichever of the three formats
+// it's in. Does not upgrade the stored value — callers that persist do so.
+async function verifyAgainstStoredHash(password, stored) {
+  if (!stored) return false;
+  if (isPBKDF2Hash(stored)) {
+    const parts = stored.split(":");
+    if (parts.length !== 4) return false;
+    const iterations = parseInt(parts[1], 10);
+    const salt = hexToBytes(parts[2]);
+    const expectedHex = parts[3];
+    const actualHex = await pbkdf2DeriveHex(password, salt, iterations);
+    return actualHex === expectedHex;
+  }
+  if ((await sha256(password)) === stored) return true;
+  if (hash(password) === stored) return true;
+  return false;
+}
+
 
 function isRed(s) {
   if (sett.excs.includes(s)) return false;
@@ -4999,8 +5064,18 @@ function updateLoginUI() {
   }
 }
 
-function warnIfDefaultPassword() {
-  if (isLoggedIn && currentUser === ADMIN_USER && ADMIN_HASH === ADMIN_DEFAULT_SHA256) {
+async function warnIfDefaultPassword() {
+  // Checked by verifying "admin" against whatever format ADMIN_HASH is
+  // currently in, rather than comparing to the bare-SHA-256
+  // ADMIN_DEFAULT_SHA256 constant directly — checkCred() upgrades the
+  // stored hash to the PBKDF2 format on login, so a string-equality check
+  // against one specific old format would stop firing after the first
+  // login, even though the password itself is still "admin".
+  if (
+    isLoggedIn &&
+    currentUser === ADMIN_USER &&
+    (await verifyAgainstStoredHash("admin", ADMIN_HASH))
+  ) {
     showError(
       "You are using the default admin password. Change it now in Settings → Admin Password.",
       "warning",
@@ -5045,9 +5120,7 @@ async function changeAdminPassword() {
   const newPass = document.getElementById("new-password").value;
   const confirmPass = document.getElementById("confirm-password").value;
 
-  const shaCurrent = await sha256(currentPass);
-  const legacyCurrent = hash(currentPass);
-  if (shaCurrent !== ADMIN_HASH && legacyCurrent !== ADMIN_HASH) {
+  if (!(await verifyAgainstStoredHash(currentPass, ADMIN_HASH))) {
     showError("Current password is incorrect");
     return;
   }
@@ -5062,7 +5135,7 @@ async function changeAdminPassword() {
     return;
   }
 
-  ADMIN_HASH = await sha256(newPass);
+  ADMIN_HASH = await hashPassword(newPass);
   localStorage.setItem("adminHash", ADMIN_HASH);
 
   // Rotate the cloud write key to the new password and push the change.
@@ -5096,20 +5169,24 @@ function isAdmin(u) {
   return u === ADMIN_USER;
 }
 async function checkCred(u, p) {
-  const shaHash = await sha256(p);
-  if (u === ADMIN_USER && shaHash === ADMIN_HASH) return true;
-  if (users[u] && users[u] === shaHash) return true;
-  if (u === ADMIN_USER && hash(p) === ADMIN_HASH) {
-    ADMIN_HASH = shaHash;
-    localStorage.setItem("adminHash", ADMIN_HASH);
-    return true;
+  const stored = u === ADMIN_USER ? ADMIN_HASH : users[u];
+  if (!stored) return false;
+  if (!(await verifyAgainstStoredHash(p, stored))) return false;
+
+  // Lazily upgrade to the strongest stored format on any successful login
+  // that wasn't already using it (mirrors the pre-existing legacy→SHA-256
+  // upgrade this replaces, just one tier stronger).
+  if (!isPBKDF2Hash(stored)) {
+    const upgraded = await hashPassword(p);
+    if (u === ADMIN_USER) {
+      ADMIN_HASH = upgraded;
+      localStorage.setItem("adminHash", ADMIN_HASH);
+    } else {
+      users[u] = upgraded;
+      saveLS();
+    }
   }
-  if (users[u] && users[u] === hash(p)) {
-    users[u] = shaHash;
-    saveLS();
-    return true;
-  }
-  return false;
+  return true;
 }
 
 function requireLogin(cb) {
@@ -5161,7 +5238,7 @@ async function addUser() {
     return;
   }
   err.style.display = "none";
-  users[u] = await sha256(p);
+  users[u] = await hashPassword(p);
   document.getElementById("ov-setup").classList.remove("on");
   document.getElementById("s-user").value = "";
   document.getElementById("s-pass").value = "";
