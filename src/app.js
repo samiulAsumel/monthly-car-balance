@@ -3455,6 +3455,24 @@ const GRP_SEC = [
   { lbl: "Shed", lis: [4, 5, 6, 7], bg: "#7c3c1a" },
 ];
 
+// Per-device daily-table location visibility filter — deliberately NOT part
+// of `sett` (which syncs to the cloud): this is a view preference, not data.
+const LOC_FILTER_LS = "carbal_locfilter_v1";
+function loadLocFilter() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOC_FILTER_LS));
+    if (Array.isArray(saved) && saved.length === LOCS.length) return saved;
+  } catch {}
+  return LOCS.map(() => true);
+}
+let locFilter = loadLocFilter();
+function toggleLocFilter(li) {
+  locFilter[li] = !locFilter[li];
+  if (!locFilter.some(Boolean)) locFilter[li] = true; // never hide every location
+  localStorage.setItem(LOC_FILTER_LS, JSON.stringify(locFilter));
+  renderTable();
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 //  FIREBASE CONFIG
 // ═══════════════════════════════════════════════════════════════════════
@@ -5631,63 +5649,52 @@ function delUser(u) {
 // ════════════════════════════════════════════════════
 //  MONTH BAR
 // ═══════════════════════════════════════════════════════════════════════
-let showAllMonths = false;
+function jumpToToday() {
+  const n = new Date();
+  ensureMonth(n.getFullYear(), n.getMonth() + 1);
+  cur = mk(n.getFullYear(), n.getMonth() + 1);
+  renderAll();
+}
+
+function onMbarSelect(val) {
+  cur = val;
+  renderAll();
+}
 
 function renderMbar() {
   const ms = months();
   const el = document.getElementById("mbar");
-  el.innerHTML = "";
+  const idx = ms.indexOf(cur);
 
-  // Show last 12 months or all if user expanded
-  const displayMonths = showAllMonths ? ms : ms.slice(-12);
-
-  displayMonths.forEach((k) => {
-    const [y, m] = k.split("-").map(Number);
-    const t = document.createElement("div");
-    t.className = "mtab" + (k === cur ? " on" : "");
-    t.style.fontWeight = k === cur ? "700" : "600";
-    t.textContent = MO[m - 1] + " " + y;
-    t.onclick = () => {
-      cur = k;
-      renderAll();
-    };
-    el.appendChild(t);
+  // Group months by year for the <optgroup>s
+  const byYear = {};
+  ms.forEach((k) => {
+    const y = k.slice(0, 4);
+    (byYear[y] = byYear[y] || []).push(k);
   });
+  const optionsHtml = Object.keys(byYear)
+    .sort()
+    .map((y) => {
+      const opts = byYear[y]
+        .map((k) => {
+          const m = Number(k.slice(5, 7));
+          return `<option value="${k}"${k === cur ? " selected" : ""}>${MO[m - 1]} ${y}</option>`;
+        })
+        .join("");
+      return `<optgroup label="${y}">${opts}</optgroup>`;
+    })
+    .join("");
 
-  // Add "Previous" button on the far left if there are more than 12 months
-  if (ms.length > 12 && !showAllMonths) {
-    const btn = document.createElement("button");
-    btn.className = "mtab";
-    btn.style.background = "#1a3a5c";
-    btn.style.color = "#fff";
-    btn.style.marginRight = "8px";
-    btn.style.border = "none";
-    btn.textContent = "←";
-    btn.title = "Show Previous Months";
-    btn.onclick = () => {
-      showAllMonths = true;
-      renderMbar();
-    };
-    // Insert at beginning
-    el.insertBefore(btn, el.firstChild);
-  }
-
-  // Add "Collapse" button on the far right if showing all
-  if (showAllMonths) {
-    const btn = document.createElement("button");
-    btn.className = "mtab";
-    btn.style.background = "#1a3a5c";
-    btn.style.color = "#fff";
-    btn.style.marginLeft = "8px";
-    btn.style.border = "none";
-    btn.textContent = "→";
-    btn.title = "Show Last 12 Months";
-    btn.onclick = () => {
-      showAllMonths = false;
-      renderMbar();
-    };
-    el.appendChild(btn);
-  }
+  el.innerHTML = `
+    <button class="mnav-btn" id="mbar-prev" type="button" title="Previous month" aria-label="Previous month"${idx <= 0 ? " disabled" : ""}>${icon("chevron-left", 16)}</button>
+    <select class="mnav-select" id="mbar-select" aria-label="Jump to month">${optionsHtml}</select>
+    <button class="mnav-btn" id="mbar-next" type="button" title="Next month" aria-label="Next month"${idx < 0 || idx >= ms.length - 1 ? " disabled" : ""}>${icon("chevron-right", 16)}</button>
+    <button class="mnav-btn mnav-today" id="mbar-today" type="button" title="Jump to current month" aria-label="Jump to current month">${icon("calendar-clock", 14)} Today</button>
+  `;
+  document.getElementById("mbar-prev").onclick = () => navigateMonth(-1);
+  document.getElementById("mbar-next").onclick = () => navigateMonth(1);
+  document.getElementById("mbar-today").onclick = () => jumpToToday();
+  document.getElementById("mbar-select").onchange = (e) => onMbarSelect(e.target.value);
 
   // Update login status
   document.getElementById("lock-info").textContent = isLoggedIn
@@ -5882,8 +5889,34 @@ function renderGrpCards() {
 // ════════════════════════════════════════════════════
 //  MAIN TABLE  — no horizontal scroll, tight fit
 // ════════════════════════════════════════════════════
+function renderLocFilterChips() {
+  const el = document.getElementById("loc-filter-row");
+  if (!el) return;
+  let h = `<span class="loc-filter-lbl">Show:</span>`;
+  LOCS.forEach((loc, li) => {
+    const cfg = LOC_CFG[loc];
+    const on = locFilter[li] !== false;
+    h += `<span class="loc-chip${on ? "" : " off"}" style="${on ? `background:${cfg.lt};color:${cfg.bg};border-color:${cfg.bg}` : ""}" onclick="toggleLocFilter(${li})" role="checkbox" aria-checked="${on}" tabindex="0" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleLocFilter(${li})}"><span class="dot" style="background:${cfg.bg}"></span>${loc}</span>`;
+  });
+  el.innerHTML = h;
+}
+
+// Recomputes the sticky top offsets for the two-row table header from the
+// actual rendered height of the chrome above it (topbar+nav+mbar are also
+// sticky, and their heights vary across breakpoints, so this can't be a
+// fixed CSS constant).
+function updateStickyTableOffsets() {
+  const dailyPage = document.getElementById("page-daily");
+  if (!dailyPage || !dailyPage.offsetParent) return; // hidden pages report 0 height
+  const row1 = document.querySelector("#main-tbl thead tr:first-child");
+  if (!row1) return;
+  const row1H = row1.getBoundingClientRect().height;
+  document.documentElement.style.setProperty("--tbl-row2-top", row1H + "px");
+}
+
 function renderTable() {
   const rows = DB[cur] || [];
+  renderLocFilterChips();
 
   // Empty state check
   if (!rows || rows.length === 0) {
@@ -5892,6 +5925,23 @@ function renderTable() {
       icon("clipboard-list", 48) +
       '</div><p style="font-size:16px;font-weight:600;margin-bottom:8px;">No data for this month</p><p style="font-size:13px;">Click "Generate Next Month" button or switch to another month</p></div>';
     return;
+  }
+
+  // Preserve keyboard focus across the thead/tbody rebuild below — every
+  // edit re-renders the whole table, which otherwise drops focus.
+  const active = document.activeElement;
+  let focusRestore = null;
+  if (active && active.matches && active.matches("#main-tbl tbody input.ci")) {
+    const tr = active.closest("tr");
+    const tbody = tr && tr.parentElement;
+    if (tbody) {
+      focusRestore = {
+        rowIndex: Array.from(tbody.children).indexOf(tr),
+        col: active.dataset.col,
+        selStart: active.selectionStart,
+        selEnd: active.selectionEnd,
+      };
+    }
   }
 
   // ── Header ──────────────────────────────────────
@@ -5904,7 +5954,8 @@ function renderTable() {
     const cfg = LOC_CFG[loc];
     // Left border only at group start (WH-A, Yard-1, Shed-5)
     const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
-    h1 += `<th class="${cfg.cls} ${gsp} no-gap" colspan="3" scope="colgroup" style="border-bottom:none">${loc}</th>`;
+    const hide = locFilter[li] === false ? " loc-hidden" : "";
+    h1 += `<th class="${cfg.cls} ${gsp} no-gap${hide}" colspan="3" scope="colgroup" style="border-bottom:none">${loc}</th>`;
   });
   h1 += `<th class="thd gsp" rowspan="2" scope="col">Total<br>Delivery</th>
               <th class="tha"     rowspan="2" scope="col">Auction<br>Delivery</th>
@@ -5917,10 +5968,11 @@ function renderTable() {
   LOCS.forEach((loc, li) => {
     const cfg = LOC_CFG[loc];
     const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
+    const hide = locFilter[li] === false ? " loc-hidden" : "";
     // Balance col: same bg, no-gap (connects seamlessly to row 1)
-    h2 += `<th class="hsub ${cfg.cls} ${gsp} no-gap" scope="col" style="border-top:1px solid transparent">Balance</th>`;
-    h2 += `<th class="hsub ${cfg.cls}" scope="col" style="border-top:1px solid transparent">Delivery</th>`;
-    h2 += `<th class="hsub ${cfg.cls} col-sep" scope="col" style="border-top:1px solid transparent">Import</th>`;
+    h2 += `<th class="hsub ${cfg.cls} ${gsp} no-gap${hide}" scope="col" style="border-top:1px solid transparent">Balance</th>`;
+    h2 += `<th class="hsub ${cfg.cls}${hide}" scope="col" style="border-top:1px solid transparent">Delivery</th>`;
+    h2 += `<th class="hsub ${cfg.cls} col-sep${hide}" scope="col" style="border-top:1px solid transparent">Import</th>`;
   });
   h2 += "</tr>";
 
@@ -5939,25 +5991,30 @@ function renderTable() {
     const tImp = row.imp.reduce((a, b) => a + b, 0);
     const closing = getClosing(row);
     const aucVal = row.av ? parseInt(row.av) : 0;
+    const prev = ri > 0 ? rows[ri - 1] : null;
     fa += aucVal;
     row.del.forEach((v, i) => (fd[i] += v));
     row.imp.forEach((v, i) => (fi[i] += v));
 
-    let tr = `<tr class="${cls}">
+    let tr = `<tr class="${cls}" data-date="${row.date}">
             <td class="ddate">${fmtDMY(row.date)}</td>
             <td class="dday col-sep">${dw.slice(0, 3)}</td>`;
 
+    let col = 0;
     LOCS.forEach((loc, li) => {
       const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
+      const hide = locFilter[li] === false ? " loc-hidden" : "";
+      const delChg = prev && prev.del[li] !== row.del[li] ? " chg" : "";
+      const impChg = prev && prev.imp[li] !== row.imp[li] ? " chg" : "";
       // Opening balance (day 1) or calculated balance: same as regular days
-      tr += `<td class="dbal ${gsp}">${row.bal[li]}</td>`;
+      tr += `<td class="dbal ${gsp}${hide}">${row.bal[li]}</td>`;
       // Delivery and Import: always editable (require login on change)
-      tr += `<td><input class="ci del" type="number" min="0" value="${row.del[li]}" onchange="onDel('${cur}',${ri},${li},this.value)"></td>`;
-      tr += `<td class="col-sep"><input class="ci imp" type="number" min="0" value="${row.imp[li]}" onchange="onImp('${cur}',${ri},${li},this.value)"></td>`;
+      tr += `<td class="${hide.trim()}${delChg}"><input class="ci del" type="number" min="0" value="${row.del[li]}" data-col="${col++}" onchange="onDel('${cur}',${ri},${li},this.value)"></td>`;
+      tr += `<td class="col-sep${hide}${impChg}"><input class="ci imp" type="number" min="0" value="${row.imp[li]}" data-col="${col++}" onchange="onImp('${cur}',${ri},${li},this.value)"></td>`;
     });
 
     tr += `<td class="tdel gsp">${tDel || "—"}</td>`;
-    tr += `<td class="col-sep"><input class="ci auc" type="number" min="0" value="${row.av || 0}" onchange="onAuc('${cur}',${ri},'av',this.value)" style="width:100%"></td>`;
+    tr += `<td class="col-sep"><input class="ci auc" type="number" min="0" value="${row.av || 0}" data-col="${col++}" onchange="onAuc('${cur}',${ri},'av',this.value)" style="width:100%"></td>`;
     tr += `<td class="tcb gsp">${closing}</td>`;
     tr += `<td class="timp gsp">${tImp || "—"}</td>`;
     const rnVal = row.rn || "";
@@ -5978,9 +6035,10 @@ function renderTable() {
   LOCS.forEach((loc, li) => {
     const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
     const csep = "col-sep";
-    foot += `<td class="${gsp}" style="color:#1a3a5c;font-weight:700;font-size:10px">${lastLocClosing[li]}</td>`;
-    foot += `<td style="color:#1d4ed8;font-size:10px">${fd[li]}</td>`;
-    foot += `<td class="${csep}" style="color:#92400e;font-size:10px">${fi[li]}</td>`;
+    const hide = locFilter[li] === false ? " loc-hidden" : "";
+    foot += `<td class="${gsp}${hide}" style="color:#1a3a5c;font-weight:700;font-size:10px">${lastLocClosing[li]}</td>`;
+    foot += `<td class="${hide.trim()}" style="color:#1d4ed8;font-size:10px">${fd[li]}</td>`;
+    foot += `<td class="${csep}${hide}" style="color:#92400e;font-size:10px">${fi[li]}</td>`;
   });
   const td2 = fd.reduce((a, b) => a + b, 0),
     ti2 = fi.reduce((a, b) => a + b, 0);
@@ -5998,7 +6056,68 @@ function renderTable() {
   while (tbl.querySelector("thead")) tbl.querySelector("thead").remove();
   while (tbl.querySelector("tbody")) tbl.querySelector("tbody").remove();
   tbl.insertAdjacentHTML("beforeend", `<thead>${h1}${h2}</thead>${body}`);
+
+  if (focusRestore) {
+    const newTbody = tbl.querySelector("tbody");
+    const newTr = newTbody && newTbody.children[focusRestore.rowIndex];
+    const newInput =
+      newTr && newTr.querySelector(`input.ci[data-col="${focusRestore.col}"]`);
+    if (newInput) {
+      newInput.focus();
+      try {
+        newInput.setSelectionRange(focusRestore.selStart, focusRestore.selEnd);
+      } catch {}
+    }
+  }
+
+  updateStickyTableOffsets();
 }
+
+// Arrow-key navigation between editable cells in the daily table (Enter
+// commits and moves down, like a spreadsheet). Delegated on #main-tbl so
+// it survives renderTable()'s full thead/tbody rebuild.
+function tableKeyNav(e) {
+  const input = e.target;
+  if (!input.classList || !input.classList.contains("ci")) return;
+  const key = e.key;
+  if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(key))
+    return;
+
+  const isVisible = (el) => !!el && !!el.offsetParent;
+  const tr = input.closest("tr");
+  if (!tr) return;
+
+  if (key === "ArrowLeft" || key === "ArrowRight") {
+    const all = Array.from(
+      document.querySelectorAll("#main-tbl tbody input.ci"),
+    ).filter(isVisible);
+    const idx = all.indexOf(input);
+    const next = key === "ArrowLeft" ? all[idx - 1] : all[idx + 1];
+    if (next) {
+      e.preventDefault();
+      next.focus();
+      next.select();
+    }
+    return;
+  }
+
+  // ArrowUp / ArrowDown / Enter — move to the same column in the row above/below
+  const col = input.dataset.col;
+  const dir = key === "ArrowUp" ? -1 : 1;
+  let targetRow = dir === -1 ? tr.previousElementSibling : tr.nextElementSibling;
+  while (targetRow && !targetRow.querySelector(`input.ci[data-col="${col}"]`)) {
+    targetRow = dir === -1 ? targetRow.previousElementSibling : targetRow.nextElementSibling;
+  }
+  const targetInput =
+    targetRow && targetRow.querySelector(`input.ci[data-col="${col}"]`);
+  if (isVisible(targetInput)) {
+    e.preventDefault();
+    targetInput.focus();
+    targetInput.select();
+  }
+}
+document.getElementById("main-tbl").addEventListener("keydown", tableKeyNav);
+window.addEventListener("resize", updateStickyTableOffsets);
 
 // ════════════════════════════════════════════════════
 //  CHARTS
@@ -6235,6 +6354,34 @@ function safeChart(canvasId, config) {
   }
 }
 
+// Shows a "no activity" placeholder instead of an empty axis + dangling
+// legend when a chart has nothing to plot. Returns true when the caller
+// should skip building the chart.
+function chartEmpty(canvasId, hasData, message) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return !hasData;
+  const card = canvas.closest(".ch-card");
+  let placeholder = card && card.querySelector(".ch-empty");
+  if (hasData) {
+    canvas.style.display = "";
+    if (placeholder) placeholder.style.display = "none";
+    return false;
+  }
+  canvas.style.display = "none";
+  if (!placeholder && card) {
+    placeholder = document.createElement("div");
+    placeholder.className = "ch-empty";
+    card.appendChild(placeholder);
+  }
+  if (placeholder) {
+    placeholder.style.display = "flex";
+    placeholder.innerHTML =
+      `<div class="ch-empty-icon">${icon("bar-chart-3", 32)}</div>` +
+      `<div class="ch-empty-msg">${esc(message)}</div>`;
+  }
+  return true;
+}
+
 function renderCharts() {
   showLoading("Generating charts...");
 
@@ -6304,7 +6451,13 @@ function renderCharts() {
     const curB = cr.map((r) => getClosing(r));
 
     // 1. Current Month: Daily Receive vs Delivery
-    CH["c-cm-di"] = safeChart("c-cm-di", {
+    CH["c-cm-di"] = chartEmpty(
+      "c-cm-di",
+      curD.some((v) => v > 0) || curI.some((v) => v > 0),
+      "No delivery/receive activity this month",
+    )
+      ? null
+      : safeChart("c-cm-di", {
       type: "bar",
       data: {
         labels: curM.map((d) => String(d)),
@@ -6328,7 +6481,9 @@ function renderCharts() {
     });
 
     // 2. Current Month: Daily Closing Balance
-    CH["c-cm-bal"] = safeChart("c-cm-bal", {
+    CH["c-cm-bal"] = chartEmpty("c-cm-bal", cr.length > 0, "No data recorded for this month yet")
+      ? null
+      : safeChart("c-cm-bal", {
       type: "line",
       data: {
         labels: curM.map((d) => String(d)),
@@ -6404,7 +6559,9 @@ function renderCharts() {
       const last = cr.slice(-1)[0] || { bal: LOCS.map(() => 0) };
       return last.bal[li];
     });
-    CH["c-loc"] = safeChart("c-loc", {
+    CH["c-loc"] = chartEmpty("c-loc", locBals.some((v) => v !== 0), "No location balances to show")
+      ? null
+      : safeChart("c-loc", {
       type: "bar",
       data: {
         labels: LOCS,
@@ -6423,7 +6580,13 @@ function renderCharts() {
     // 5. Location Receive vs Delivery grouped bar
     const locDels = LOCS.map((_, li) => cr.reduce((s, r) => s + r.del[li], 0));
     const locImps = LOCS.map((_, li) => cr.reduce((s, r) => s + r.imp[li], 0));
-    CH["c-loc-di"] = safeChart("c-loc-di", {
+    CH["c-loc-di"] = chartEmpty(
+      "c-loc-di",
+      locDels.some((v) => v > 0) || locImps.some((v) => v > 0),
+      "No delivery/receive activity by location this month",
+    )
+      ? null
+      : safeChart("c-loc-di", {
       type: "bar",
       data: {
         labels: LOCS,

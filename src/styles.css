@@ -588,6 +588,65 @@ select {
   height: 100%;
 }
 
+/* ── MONTH NAV (prev/select/next/today, replaces the old .mtab button row) ── */
+.mnav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--r-md);
+  background: #fff;
+  color: var(--navy-500);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mnav-btn:hover:not(:disabled) {
+  background: var(--gray-100);
+  border-color: var(--navy-500);
+}
+
+.mnav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mnav-today {
+  background: var(--navy-500);
+  color: #fff;
+  border-color: var(--navy-500);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.mnav-today:hover {
+  background: #142d49;
+}
+
+.mnav-select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--r-md);
+  background: #fff;
+  color: var(--navy-500);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  max-width: 160px;
+}
+
+.mnav-select:focus,
+.mnav-btn:focus-visible {
+  outline: 2px solid var(--blue-500);
+  outline-offset: 1px;
+}
+
 /* ── PAGE ── */
 .page {
   display: none;
@@ -1551,6 +1610,54 @@ select {
   display: block;
 }
 
+/* ── LOCATION FILTER CHIPS ── */
+.loc-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.loc-filter-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-right: 4px;
+}
+
+.loc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: opacity 0.15s ease;
+}
+
+.loc-chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.loc-chip.off {
+  opacity: 0.4;
+  background: var(--gray-100) !important;
+  border-color: var(--gray-200);
+}
+
+.loc-chip.off .dot {
+  background: var(--gray-400) !important;
+}
+
 /* ── TABLE (no horizontal scroll — fit page) ── */
 .tbl-wrap {
   border: none;
@@ -1595,9 +1702,14 @@ select {
 }
 
 .tbl-scroll {
-  overflow-y: visible;
-  overflow-x: auto;
-  max-height: none;
+  /* A bounded, independently-scrolling pane (both axes) — this is what
+     makes the sticky thead/date-column below actually stick: sticky
+     offsets are relative to the nearest scrolling ancestor, and since
+     overflow-x:auto is required for narrow screens, that ancestor is
+     this element, not the page (overflow-y:visible would only fight
+     that, per the CSS overflow computed-value rule, not prevent it). */
+  overflow: auto;
+  max-height: 65vh;
   border-radius: 16px;
   position: relative;
   z-index: 2;
@@ -1610,21 +1722,64 @@ table.dt {
   border: none;
   box-shadow: none;
   border-radius: 16px;
-  overflow: hidden;
+  /* NOT overflow:hidden — that would make this <table> (rather than
+     #tbl-scroll) the nearest non-visible-overflow ancestor, which
+     silently breaks position:sticky on the thead/date-column cells
+     below (they'd stick relative to a container that never scrolls).
+     .tbl-wrap already clips the card's rounded corners. */
   border-collapse: separate;
   border-spacing: 0;
+  font-variant-numeric: tabular-nums;
 }
 
+/* Location show/hide filter (see toggleLocFilter in app.js) */
+.loc-hidden {
+  display: none !important;
+}
+
+/* Diff-from-yesterday marker */
+td.chg {
+  box-shadow: inset 3px 0 0 var(--gold-500);
+}
+
+/* Sticky header, relative to .tbl-scroll's own scrollport (see its
+   comment above). Row 2's --tbl-row2-top is computed at render time in
+   JS (updateStickyTableOffsets) from row 1's actual rendered height. */
 table.dt thead th {
-  position: relative;
-  top: auto;
+  position: sticky;
+  top: 0;
   z-index: 20;
 }
 
 table.dt thead tr:nth-child(2) th {
-  position: relative;
-  top: auto;
+  position: sticky;
+  top: var(--tbl-row2-top, 0px);
   z-index: 19;
+}
+
+/* Sticky Date/Day columns */
+td.ddate,
+th.hdate {
+  position: sticky;
+  left: 0;
+  z-index: 6;
+}
+
+td.dday,
+th.hday {
+  position: sticky;
+  left: 65px;
+  z-index: 6;
+}
+
+th.hdate,
+th.hday {
+  z-index: 30;
+}
+
+table.dt tbody tr:hover td.ddate,
+table.dt tbody tr:hover td.dday {
+  z-index: 7;
 }
 
 /* ── COLUMN WIDTHS (fit in page) ── */
@@ -1849,7 +2004,10 @@ table.dt thead th.no-gap {
   color: #ffffff !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   border-bottom: 2px solid #475569 !important;
-  position: relative;
+  /* was position:relative — these cells must stay position:sticky
+     (set by table.dt thead th above) for the sticky header to work;
+     sticky still establishes a positioning context for the ::before
+     shimmer below. */
   overflow: hidden;
 }
 
@@ -2319,6 +2477,28 @@ input.ci.auc {
 .ch-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Chart empty state — shown instead of a canvas with no activity to plot */
+.ch-empty {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 200px;
+  color: var(--gray-400);
+  text-align: center;
+}
+
+.ch-empty-icon {
+  color: var(--gray-300);
+}
+
+.ch-empty-msg {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
 }
 
 .ch-card canvas {
@@ -3155,28 +3335,55 @@ input.ci.auc {
 
 .rpt-compare-group {
   display: flex;
-  gap: 20px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
+/* Segmented control matching .rpt-preset — the native radio stays in the
+   DOM (just visually hidden) so keyboard/arrow-key and screen-reader
+   semantics keep working for free. */
 .rpt-radio-lbl {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #334155;
+  background: transparent;
   color: #64748b;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: color 0.15s;
+  letter-spacing: 0.3px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
-.rpt-radio-lbl:hover { color: #cbd5e1; }
+.rpt-radio-lbl:hover {
+  border-color: #475569;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.rpt-radio-lbl:has(input:checked) {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.45);
+}
 
 .rpt-radio-lbl input[type="radio"] {
-  accent-color: #3b82f6;
-  width: 14px;
-  height: 14px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
   cursor: pointer;
+}
+
+.rpt-radio-lbl:has(input:focus-visible) {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 .rpt-filter-status {
