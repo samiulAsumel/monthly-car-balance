@@ -4185,78 +4185,7 @@ function doSave() {
 }
 
 function showSuccess(message, iconName) {
-  const successDiv = document.createElement("div");
-  successDiv.className = "success-notification";
-  successDiv.innerHTML = `
-                <div class="success-content">
-                  <span class="success-icon">${icon(iconName || "check-circle", 16)}</span>
-                  <span class="success-message"></span>
-                  <button class="success-close" onclick="this.parentElement.parentElement.remove()">${icon("x", 12)}</button>
-                </div>
-              `;
-  successDiv.querySelector(".success-message").textContent = message;
-
-  // Add styles for success notification
-  if (!document.querySelector("#success-styles")) {
-    const style = document.createElement("style");
-    style.id = "success-styles";
-    style.textContent = `
-                  .success-notification {
-                    position: fixed;
-                    top: 60px;
-                    right: 20px;
-                    background: #16a34a;
-                    color: white;
-                    padding: 12px 16px;
-                    border-radius: 6px;
-                    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
-                    z-index: 10001;
-                    max-width: 300px;
-                    animation: slideIn 0.3s ease-out;
-                  }
-                  .success-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                  }
-                  .success-icon {
-                    font-size: 16px;
-                  }
-                  .success-message {
-                    flex: 1;
-                    font-size: 12px;
-                    font-weight: 500;
-                  }
-                  .success-close {
-                    background: none;
-                    border: none;
-                    color: white;
-                    cursor: pointer;
-                    font-size: 14px;
-                    padding: 0;
-                    width: 20px;
-                    height: 20px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 50%;
-                    transition: background 0.2s ease;
-                  }
-                  .success-close:hover {
-                    background: rgba(255,255,255,0.2);
-                  }
-                `;
-    document.head.appendChild(style);
-  }
-
-  document.body.appendChild(successDiv);
-
-  // Auto-remove after 3 seconds
-  setTimeout(() => {
-    if (successDiv.parentElement) {
-      successDiv.remove();
-    }
-  }, 3000);
+  toast(message, "success", { icon: iconName });
 }
 
 function addClickFeedback(element) {
@@ -4391,27 +4320,17 @@ function showAutoSaveIndicator() {
   const badge = document.getElementById("sv-badge");
   badge.innerHTML = '<span class="mini-spinner"></span>Saving...';
   badge.className = "sv dirty";
-  badge.style.background = "rgba(251, 146, 60, 0.2)";
-  badge.style.color = "#fdba74";
-  badge.style.borderColor = "rgba(251, 146, 60, 0.3)";
 }
 
 function hideAutoSaveIndicator() {
   const badge = document.getElementById("sv-badge");
-
   // Show the actual state based on dirty flag
   if (dirty) {
     badge.innerHTML = icon("alert-triangle", 12) + " Unsaved";
     badge.className = "sv dirty";
-    badge.style.background = "rgba(251, 146, 60, 0.2)";
-    badge.style.color = "#fdba74";
-    badge.style.borderColor = "rgba(251, 146, 60, 0.3)";
   } else {
     badge.innerHTML = icon("check-circle", 12) + " Saved";
     badge.className = "sv ok";
-    badge.style.background = "rgba(34, 197, 94, 0.2)";
-    badge.style.color = "#86efac";
-    badge.style.borderColor = "rgba(34, 197, 94, 0.3)";
   }
 }
 
@@ -4425,7 +4344,7 @@ function showSaveFeedback(message) {
   badge.style.transform = "scale(1.1)";
 
   setTimeout(() => {
-    badge.style.transform = "scale(1)";
+    badge.style.transform = "";
     badge.innerHTML = originalContent;
     badge.className = originalClass;
   }, 2000);
@@ -5338,78 +5257,7 @@ function validateDate(dateString) {
 }
 
 function showError(message, type = "error") {
-  const errorDiv = document.createElement("div");
-  errorDiv.className = `error-notification ${type}`;
-  errorDiv.innerHTML = `
-                <div class="error-content">
-                  <span class="error-icon">${type === "error" ? icon("alert-triangle", 16) : icon("info", 16)}</span>
-                  <span class="error-message"></span>
-                  <button class="error-close" onclick="this.parentElement.parentElement.remove()">${icon("x", 12)}</button>
-                </div>
-              `;
-  errorDiv.querySelector(".error-message").textContent = message;
-
-  // Add styles for error notification
-  if (!document.querySelector("#error-styles")) {
-    const style = document.createElement("style");
-    style.id = "error-styles";
-    style.textContent = `
-                  .error-notification {
-                    position: fixed;
-                    top: 60px;
-                    right: 20px;
-                    background: ${type === "error" ? "#dc2626" : "#1a3a5c"};
-                    color: white;
-                    padding: 12px 16px;
-                    border-radius: 6px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    z-index: 10001;
-                    max-width: 300px;
-                    animation: slideIn 0.3s ease-out;
-                  }
-                  .error-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                  }
-                  .error-icon {
-                    font-size: 16px;
-                  }
-                  .error-message {
-                    flex: 1;
-                    font-size: 12px;
-                    font-weight: 500;
-                  }
-                  .error-close {
-                    background: none;
-                    border: none;
-                    color: white;
-                    cursor: pointer;
-                    font-size: 14px;
-                    padding: 0;
-                    width: 20px;
-                    height: 20px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 50%;
-                    transition: background 0.2s ease;
-                  }
-                  .error-close:hover {
-                    background: rgba(255,255,255,0.2);
-                  }
-                `;
-    document.head.appendChild(style);
-  }
-
-  document.body.appendChild(errorDiv);
-
-  // Auto-remove after 5 seconds
-  setTimeout(() => {
-    if (errorDiv.parentElement) {
-      errorDiv.remove();
-    }
-  }, 5000);
+  toast(message, type === "error" ? "error" : "warning");
 }
 
 function validateAndShowError(input, fieldName, min = 0, max = 99999) {
@@ -5924,6 +5772,7 @@ function renderTable() {
       '<div style="text-align:center;padding:60px 20px;color:#64748b;background:#f8fafc;border-radius:12px;margin:20px;"><div style="margin-bottom:16px;display:flex;justify-content:center;color:#94a3b8">' +
       icon("clipboard-list", 48) +
       '</div><p style="font-size:16px;font-weight:600;margin-bottom:8px;">No data for this month</p><p style="font-size:13px;">Click "Generate Next Month" button or switch to another month</p></div>';
+    renderDayCards();
     return;
   }
 
@@ -6071,6 +5920,69 @@ function renderTable() {
   }
 
   updateStickyTableOffsets();
+  renderDayCards();
+}
+
+// Mobile stacked-card view of the same rows renderTable() draws — shown
+// instead of the 31-column table below the .day-cards-bp breakpoint (see
+// CSS). Reuses onDel/onImp/onAuc directly, so there is one write path for
+// both views, not two.
+function renderDayCards() {
+  const container = document.getElementById("day-cards");
+  if (!container) return;
+  const rows = DB[cur] || [];
+
+  if (!rows.length) {
+    container.innerHTML =
+      '<div class="day-cards-empty">' +
+      icon("clipboard-list", 40) +
+      "<p>No data for this month</p></div>";
+    return;
+  }
+
+  let h = "";
+  rows.forEach((row, ri) => {
+    const red = isRed(row.date);
+    const it = row.date === TODAY;
+    const dw = DAYS[new Date(row.date + "T00:00:00").getDay()];
+    const closing = getClosing(row);
+    const tDel = row.del.reduce((a, b) => a + b, 0);
+    const tImp = row.imp.reduce((a, b) => a + b, 0);
+
+    h += `<div class="day-card${red ? " red" : ""}${it ? " tod" : ""}">
+      <button type="button" class="day-card-hdr" onclick="this.closest('.day-card').classList.toggle('open')">
+        <span class="day-card-date">${fmtDMY(row.date)} <span class="day-card-dow">${dw}</span></span>
+        <span class="day-card-bal">${closing}</span>
+        ${icon("chevron-down", 16, "day-card-chevron")}
+      </button>
+      <div class="day-card-body">
+        <div class="day-card-summary">
+          <div><span>Total Delivery</span><b>${tDel || "—"}</b></div>
+          <div><span>Total Import</span><b>${tImp || "—"}</b></div>
+          <div><span>Auction</span><b>${row.av || "—"}</b></div>
+        </div>
+        ${LOCS.map((loc, li) => {
+          if (locFilter[li] === false) return "";
+          const cfg = LOC_CFG[loc];
+          return `<div class="day-card-loc" style="border-left-color:${cfg.bg}">
+            <div class="day-card-loc-name" style="color:${cfg.bg}">${loc}</div>
+            <div class="day-card-loc-row">
+              <label>Balance<span class="day-card-static">${row.bal[li]}</span></label>
+              <label>Delivery<input class="ci del" type="number" min="0" value="${row.del[li]}" onchange="onDel('${cur}',${ri},${li},this.value)"></label>
+              <label>Import<input class="ci imp" type="number" min="0" value="${row.imp[li]}" onchange="onImp('${cur}',${ri},${li},this.value)"></label>
+            </div>
+          </div>`;
+        }).join("")}
+        <div class="day-card-loc" style="border-left-color:#7c3aed">
+          <div class="day-card-loc-name" style="color:#7c3aed">Auction Delivery</div>
+          <div class="day-card-loc-row">
+            <label>Value<input class="ci auc" type="number" min="0" value="${row.av || 0}" onchange="onAuc('${cur}',${ri},'av',this.value)"></label>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = h;
 }
 
 // Arrow-key navigation between editable cells in the daily table (Enter
@@ -6382,8 +6294,8 @@ function chartEmpty(canvasId, hasData, message) {
   return true;
 }
 
-function renderCharts() {
-  showLoading("Generating charts...");
+function renderCharts(quiet) {
+  if (!quiet) showLoading("Generating charts...");
 
   setTimeout(() => {
     try {
@@ -6658,13 +6570,15 @@ function renderCharts() {
       pl.textContent = lbls.length + " months loaded";
     }
 
-    hideLoading();
+    if (quiet) hideSkeleton("page-chart");
+    else hideLoading();
     } catch (e) {
       console.error("renderCharts error:", e);
-      hideLoading();
+      if (quiet) hideSkeleton("page-chart");
+      else hideLoading();
       showErrorOverlay("Charts failed to render: " + e.message);
     }
-  }, 300);
+  }, quiet ? 0 : 300);
 }
 
 function renderChartQuickStats(ms, cs) {
@@ -6877,8 +6791,8 @@ function onCustomRangeChange() {
   applyReportCustomRange();
 }
 
-function renderReport() {
-  showLoading("Generating reports...");
+function renderReport(quiet) {
+  if (!quiet) showLoading("Generating reports...");
 
   setTimeout(() => {
     try {
@@ -7032,13 +6946,15 @@ function renderReport() {
     syncAuctionFilterUI();
 
     updateFilterStatus();
-    hideLoading();
+    if (quiet) hideSkeleton("page-report");
+    else hideLoading();
     } catch (e) {
       console.error("renderReport error:", e);
-      hideLoading();
+      if (quiet) hideSkeleton("page-report");
+      else hideLoading();
       showErrorOverlay("Report generation failed: " + e.message);
     }
-  }, 300);
+  }, quiet ? 0 : 300);
 }
 
 function toggleRptSection(id) {
@@ -8271,6 +8187,28 @@ function doExport() {
 //  PAGE NAV
 // ════════════════════════════════════════════════════
 let curPage = "daily";
+// Lightweight tab-switch loading state — a skeleton instead of the
+// full-screen blocking overlay, which is reserved for save/load/cloud
+// operations where blocking input is actually correct.
+function showSkeleton(pageId) {
+  const page = document.getElementById(pageId);
+  if (!page || page.querySelector(".skeleton-overlay")) return;
+  const el = document.createElement("div");
+  el.className = "skeleton-overlay";
+  el.innerHTML =
+    '<div class="skeleton-row">' +
+    Array(6).fill('<div class="skeleton-box skeleton-card"></div>').join("") +
+    "</div>" +
+    '<div class="skeleton-box skeleton-block"></div>' +
+    '<div class="skeleton-box skeleton-block"></div>';
+  page.appendChild(el);
+}
+function hideSkeleton(pageId) {
+  const page = document.getElementById(pageId);
+  const el = page && page.querySelector(".skeleton-overlay");
+  if (el) el.remove();
+}
+
 function showPage(p, el) {
   curPage = p;
   document.querySelectorAll(".page").forEach((x) => x.classList.remove("on"));
@@ -8279,9 +8217,13 @@ function showPage(p, el) {
   el.classList.add("on");
   if (p === "chart") {
     killCharts();
-    setTimeout(renderCharts, 60);
+    showSkeleton("page-chart");
+    setTimeout(() => renderCharts(true), 60);
   }
-  if (p === "report") renderReport();
+  if (p === "report") {
+    showSkeleton("page-report");
+    renderReport(true);
+  }
   if (p === "settings") renderSettings();
   if (p === "transfer") renderTransferPage();
 }
@@ -8324,6 +8266,10 @@ function showShortcutsHelp() {
     </div>
     <div style="padding:24px;">
       <div style="display:grid;gap:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8fafc;border-radius:8px;">
+          <span style="color:#475569;">Command palette</span>
+          <kbd style="background:#e2e8f0;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:13px;border:1px solid #cbd5e1;">Ctrl+K</kbd>
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8fafc;border-radius:8px;">
           <span style="color:#475569;">Save data</span>
           <kbd style="background:#e2e8f0;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:13px;border:1px solid #cbd5e1;">Ctrl+S</kbd>
@@ -8378,6 +8324,14 @@ function navigateMonth(direction) {
 }
 
 document.addEventListener("keydown", (e) => {
+  // Command palette works even while a table cell is focused — checked
+  // before the INPUT/TEXTAREA bail-out below.
+  if (e.ctrlKey && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    openCommandPalette();
+    return;
+  }
+
   // Don't trigger shortcuts when typing in inputs
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
     return;
