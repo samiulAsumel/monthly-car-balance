@@ -16,7 +16,7 @@ A zero-dependency, offline-first vehicle tracking system for managing daily car 
 6. Track inter-location movements on the **Car Transfer** tab
 7. Export data as Excel via the top bar (current month or all months)
 
-**No server required.** The app runs entirely from local files and syncs to the cloud (Cloudflare Worker → private GitHub repo) when online. All dates are shown as `dd-mm-yyyy`.
+**No server required.** The app runs entirely from local files and syncs to the cloud (Cloudflare Worker → private GitHub repo) when online. All dates are shown as `dd-mm-yyyy`. Press **Ctrl+K** anywhere to jump to a tab, month, location, or report section without the mouse; below 700px width the daily table becomes one expandable card per date.
 
 ---
 
@@ -74,17 +74,21 @@ Each date is evaluated in this order:
 - **Save feedback** — distinguishes "✓ Saved to cloud!" from "⚠ Saved to device only!" (the latter signals the cloud write failed, e.g. expired token)
 - Excel export (current month or all months)
 - All dates display as **dd-mm-yyyy**; manual date-entry fields use **dd/mm/yyyy** with auto-formatting (stored internally as `YYYY-MM-DD`)
-- SHA-256 password hashing for admin access
-- Role-based user authentication (admin + up to 3 users)
+- Salted PBKDF2 password hashing for admin and named-user accounts
+- Role-based user authentication (admin + up to 3 users, managed from
+  Settings → User Management)
 - Auto-save with dirty-state tracking
 
 ### Security
 - HTML escaping on all user-supplied data before rendering (XSS protection)
 - Strict Content-Security-Policy (allowlisted CDN sources only)
 - Subresource Integrity (SRI) hashes on all CDN scripts
-- SHA-256 password hashing via the Web Crypto API (no plaintext)
+- Salted PBKDF2 password hashing via the Web Crypto API (no plaintext);
+  two older stored formats are still accepted and lazily upgraded on login
 - Minimum 8-character password requirement
 - Warning banner when the default admin password is still in use
+- Cloudflare Worker write endpoint fails closed if misconfigured, and
+  validates/size-caps the request body before committing to GitHub
 
 ---
 
@@ -98,8 +102,16 @@ Each date is evaluated in this order:
 ├── README.md
 ├── CLAUDE.md               # guidance for Claude Code
 ├── src/
-│   ├── app.js              # all application logic (~8,800 lines)
+│   ├── app.js              # rendering, auth, cloud sync, charts/reports UI (~4,650 lines)
+│   ├── formula.js          # constants, date/format/esc utils, password hashing,
+│   │                       #   the pure balance-calculation core (tested by tests/)
+│   ├── hist-data.js        # seed data for a fresh install
+│   ├── icons.js            # self-hosted inline SVG icon set
+│   ├── toast.js            # unified toast notifications
+│   ├── command-palette.js  # Ctrl+K command palette
 │   └── styles.css          # responsive + print CSS (~4,000 lines)
+├── tests/
+│   └── formula.test.js     # node --test (see Testing, below)
 ├── assets/
 │   └── car.png             # app logo
 ├── worker/
@@ -108,7 +120,17 @@ Each date is evaluated in this order:
     └── SETUP-GITHUB-SYNC.md  # one-time cloud sync setup guide
 ```
 
-> `index.html`, `manifest.json`, and `service-worker.js` must stay at the repo root: the service worker can only control pages at or below its own path, and the entry/manifest are referenced from root. Everything `index.html` loads (`src/app.js`, `src/styles.css`, `assets/car.png`) and the SW cache list use matching paths.
+> `index.html`, `manifest.json`, and `service-worker.js` must stay at the repo root: the service worker can only control pages at or below its own path, and the entry/manifest are referenced from root. All six `src/*.js` files are classic scripts loaded in dependency order by `index.html` (`icons.js`/`toast.js`/`command-palette.js`/`hist-data.js`/`formula.js` before `app.js`, which is the only one that depends on the others) — every file `index.html` loads and the SW cache list use matching paths.
+
+## Testing
+
+No test framework or `package.json` — just Node's built-in test runner against `src/formula.js`, the DOM-free layer (constants, date/format utilities, password hashing, and the balance-calculation core):
+
+```bash
+node --test
+```
+
+(`node --test tests/` resolves the directory as a module path and fails on some Node versions — the bare form above auto-discovers `tests/formula.test.js` by convention.) This covers balance math, leap-year date edge cases, date-format round-tripping, the red-day precedence rules, and the PBKDF2 password hashing — not the DOM-heavy rendering/auth/sync layer in `app.js`, which has no automated coverage and is verified by hand in a browser.
 
 ---
 
@@ -169,29 +191,43 @@ Without the Worker configured, all data stays in `localStorage`.
 
 ### Location Configuration
 
-Edit the `LOCS` array and `LOC_CFG` object in `src/app.js` to customize location names and colors. The number of locations (currently 8) drives the per-row `del`/`imp`/`bal`/`ob` array lengths.
+Edit the `LOCS` array and `LOC_CFG` object in `src/formula.js` to customize location names and colors. The number of locations (currently 8) drives the per-row `del`/`imp`/`bal`/`ob` array lengths.
 
 ---
 
 ## Production Checklist
 
-- [x] Error boundaries on all render functions
-- [x] Null guards on DOM element lookups
 - [x] Database validation on load (corruption detection)
 - [x] Memory leak prevention (chart destruction)
 - [x] `prefers-reduced-motion` accessibility support
 - [x] User-facing error overlay with recovery
 - [x] Strict CSP with SRI hashes on all CDN scripts
 - [x] HTML escaping of user data (XSS protection)
-- [x] Default-password warning at startup
+- [x] Default-password warning at startup (format-independent — keeps firing
+      across a password-hash migration, not just a literal string match)
 - [x] Minimum 8-character passwords
 - [x] Print-optimized CSS
-- [x] Responsive design (mobile-first breakpoints)
+- [x] Responsive design (mobile-first breakpoints), incl. a mobile
+      stacked-card view for the daily table below 700px
 - [x] Service worker for offline caching
-- [x] SHA-256 password hashing (no plaintext)
-- [x] Session timeout for authenticated users
+- [x] Salted PBKDF2 password hashing (150k iterations, no plaintext) —
+      lazily upgrades two older stored formats on login
+- [x] Cloudflare Worker write endpoint fails closed on misconfiguration and
+      validates/size-caps the request body before committing
+- [x] Session persistence for authenticated users (admin and named users
+      alike; 1-hour window)
 - [x] Auto-save with dirty-state tracking
 - [x] Input sanitization on all data entry
+- [x] Automated test suite for the balance-calculation core (`node --test`)
+
+Two checklist items from earlier versions of this file — "error boundaries
+on all render functions" and "null guards on DOM element lookups" — were
+removed rather than kept as unverifiable blanket claims: a systematic
+dead-code audit found and fixed a real instance where a missing null guard
+crashed `renderSettings()` on every visit to the Settings tab, which is
+exactly the class of bug those two claims asserted didn't exist. Individual
+render functions do have guards where it matters (see the error-overlay
+and database-validation items above); "on all" was never true.
 
 ---
 
@@ -231,6 +267,15 @@ The Cloudflare Worker (`worker/worker.js`) is deployed separately from the app �
 ---
 
 ## Version
+
+**1.5.0** — UI polish pass (self-hosted SVG icons replacing emoji, design
+tokens, sticky/keyboard-navigable daily table with a location filter and
+mobile card view, Ctrl+K command palette, unified toasts), plus a
+production-readiness pass: fixed a Settings-tab crash and ~25 other
+dead-code bugs found via full audit, salted PBKDF2 password hashing with
+migration from two older formats, a fail-closed/validated Cloudflare
+Worker write endpoint, split `app.js` into `formula.js`/`hist-data.js`,
+and a `node --test` suite for the balance-calculation core (September 2026)
 
 **1.4.0** — `dd-mm-yyyy` dates everywhere (manual fields use `dd/mm/yyyy` inputs); Bangladesh Government Holiday Calendar loader with auto-generated fixed national holidays (June 2026)
 

@@ -12,19 +12,36 @@ A **Daily Car Balance Tracker** for Mongla Port Authority's Traffic Department �
 # "Run" the app — just open it
 xdg-open index.html        # or open in any browser
 
-# Syntax-check before committing (there are no tests; this is the safety net)
+# Syntax-check before committing
 node --check src/app.js
+node --check src/formula.js
+node --check src/hist-data.js
+node --check src/icons.js
+node --check src/toast.js
+node --check src/command-palette.js
 node --check worker/worker.js
 node --check service-worker.js
+
+# Run the formula-engine test suite (node:test, no framework/package.json —
+# `node --test tests/` resolves the directory as a module path and fails on
+# some Node versions; the bare form below auto-discovers tests/*.test.js)
+node --test
 ```
 
-There is nothing to install or compile. Edits to `src/app.js` / `index.html` / `src/styles.css` take effect on a browser reload.
+There is nothing to install or compile. Edits to any `src/*.js` / `index.html` / `src/styles.css` take effect on a browser reload.
 
 ## Layout
 
 ```
 index.html  manifest.json  service-worker.js   # must stay at repo root
-src/      → app.js, styles.css                 # everything index.html loads
+src/      → app.js (rendering/auth/sync/UI — everything else),
+            formula.js (constants, date/format/esc utils, password
+              hashing, the pure balance-calc core — tested by tests/),
+            hist-data.js (seed data), icons.js (inline SVG set),
+            toast.js, command-palette.js, styles.css
+            — all loaded by index.html as classic <script> globals, in
+            that dependency order (formula.js before app.js, etc.)
+tests/    → formula.test.js                    # node --test, see above
 assets/   → car.png
 worker/   → worker.js                          # separate Cloudflare deploy
 docs/     → SETUP-GITHUB-SYNC.md
@@ -34,7 +51,7 @@ If you move an asset, update **both** its `index.html` reference and the `STATIC
 
 ## Critical conventions (these cause real bugs if missed)
 
-- **Bump the service worker cache on every code change.** `service-worker.js` is cache-first for `src/app.js`, `index.html`, `src/styles.css`. If you change any of them without incrementing `CACHE_NAME` (`car-balance-vN`), installed PWAs keep serving stale code. Always bump it and tell the user to hard-reload (Ctrl+Shift+R).
+- **Bump the service worker cache on every code change.** `service-worker.js` is cache-first for every file in its `STATIC_ASSETS` list (`index.html`, `src/styles.css`, and all of `src/*.js`). If you change any of them — or add a new one — without also adding it to `STATIC_ASSETS` and incrementing `CACHE_NAME` (`car-balance-vN`), installed PWAs keep serving stale code. Always bump it and tell the user to hard-reload (Ctrl+Shift+R). When testing in a browser, a stale service worker from a *previous* test session can also silently serve old code even after a hard reload — clear it first with `(await navigator.serviceWorker.getRegistrations()).forEach(r => r.unregister())` and `(await caches.keys()).forEach(k => caches.delete(k))` in devtools before trusting what you see.
 - **Date storage vs display are separate.** Dates are stored and used as lookup/sort keys in `YYYY-MM-DD` form (produced via `toLocaleDateString("en-CA", …)`). **Never** change those to another format — DB keys, `sett.hols`, `sett.transfers`, and `isRed()` all depend on it. For anything the user *sees*, format with `fmtDMY()` → `dd-mm-yyyy`. Manual date entry fields use `dd/mm/yyyy` text inputs backed by helpers `dmyToISO` / `isoToDMY` / `dmyMask` / `dmyPick` (native `<input type=date>` can't be forced to a locale, hence the text-input approach).
 - **Treat all stored data as untrusted.** Cloud data can arrive from other devices, so run user-supplied strings through `esc()` before inserting into HTML. Load paths also self-heal known corruption (duplicate dates, numeric-keyed objects coerced back to arrays).
 - **`saveToFirebase` / `loadFromFirebase` are misnomers.** Firebase was removed; these now talk to the Cloudflare Worker. Don't reintroduce Firebase.
@@ -63,14 +80,14 @@ Client side:
   - `sett.transfers["YYYY-MM-DD"] = [{from, to, qty, note}]` — inter-location car moves; balances are recomputed by `applyTransfersToRow()` and `recalcTransferCascade()`, which **cascade opening balances across subsequent months**.
   - `isRed(date)` decides "red"/off days with strict precedence: **`excs` (force working day, always wins) → weekly toggle (`fri`/`sat`/`sun`) → `hols`**.
   - `BD_HOLIDAYS` (per-year bundled holidays) + `BD_FIXED` (auto-generated fixed-date national holidays) feed the Bangladesh holiday loader (`loadBDHolidays`).
-- `users` = `{ username: passHash }` (max 3 + admin); `ADMIN_USER`/`ADMIN_HASH`; auth uses SHA-256 via Web Crypto. `writeAuth` (in `localStorage`) is the key the Worker checks for PUTs.
+- `users` = `{ username: passHash }` (max 3 + admin); `ADMIN_USER`/`ADMIN_HASH`. Stored password hashes are salted PBKDF2 (`hashPassword()`/`verifyAgainstStoredHash()` in `src/formula.js`, 150k iterations via Web Crypto) — `checkCred()` in app.js also accepts the two older stored formats (bare SHA-256, and the original 32-bit hash) and lazily upgrades to PBKDF2 on a successful login, so existing passwords keep working. `writeAuth` (in `localStorage`) is a *separate*, unsalted `sha256("carview-write:"+password)` the Worker checks for PUTs — deliberately not PBKDF2'd, since the Worker recomputes it fresh on every save and 150k iterations there would add real latency to every autosave.
 
 ## UI / rendering flow
 
 - Single page with tabs switched by `showPage(p, el)` → `daily | chart | report | settings | transfer`; each tab lazily calls its render function (`renderTable`, `renderCharts`, `renderReport`, `renderSettings`, `renderTransferPage`).
 - Charts use **Chart.js** (CDN, SRI-pinned); always create them through `safeChart()` and tear down with `killCharts()` to avoid leaks. Excel export uses **SheetJS / XLSX** (CDN). The app degrades gracefully if CDNs are unreachable.
 - `setDirty(true)` after any data mutation triggers auto-save; `requireLogin(cb)` gates edits; `showError` / `showSuccess` / overlays handle user feedback.
-- Keyboard shortcuts are defined in `SHORTCUTS` (Ctrl+S save, Ctrl+Z undo, 1–4 tabs, etc.).
+- Keyboard shortcuts are defined in `SHORTCUTS` (Ctrl+S save, Ctrl+Z undo, 1–5 tabs, F1 help, etc.); Ctrl+K opens the command palette (`src/command-palette.js`) — checked before `SHORTCUTS`' own INPUT/TEXTAREA bail-out, so it opens even from a focused table cell.
 
 ## Language for user-facing text
 
