@@ -1,8 +1,9 @@
-const CACHE_NAME = 'car-balance-v11';
+const CACHE_NAME = 'car-balance-v12';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/src/styles.css',
+  '/src/icons.js',
   '/src/app.js',
   '/assets/car.png',
   '/manifest.json'

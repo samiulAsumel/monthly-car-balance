@@ -44,6 +44,8 @@
     <link rel="stylesheet" href="src/styles.css" />
   </head>
   <body>
+    <h1 class="sr-only">Mongla Port Authority — Daily Car Balance Tracker</h1>
+
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
       <div class="loading-spinner"></div>
@@ -149,7 +151,7 @@
         "
       >Loading...</div>
       <div class="t-right">
-        <span class="sv ok" id="sv-badge">✓ Saved</span>
+        <span class="sv ok" id="sv-badge"><span data-icon="check-circle" data-icon-size="12"></span> Saved</span>
         <span id="conn-status" style="font-size:11px;color:#94a3b8;padding:4px 8px;border-radius:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);">Checking connection...</span>
         <button
           class="tbtn"
@@ -158,7 +160,7 @@
           title="Undo Last Action"
           aria-label="Undo Last Action"
         >
-          ↶ Undo
+          <span data-icon="undo"></span> Undo
         </button>
         <button
           class="tbtn gold"
@@ -167,7 +169,7 @@
           title="Save Current Data"
           aria-label="Save Current Data"
         >
-          💾 Save
+          <span data-icon="save"></span> Save
         </button>
         <button
           class="tbtn blue"
@@ -176,7 +178,7 @@
           title="Generate Next Months"
           aria-label="Generate Next Month"
         >
-          ➕ Next Month
+          <span data-icon="plus"></span> Next Month
         </button>
         <button
           class="tbtn purple"
@@ -185,7 +187,7 @@
           title="Fix Month Transitions"
           aria-label="Fix Month Transitions"
         >
-          🔄 Fix Balances
+          <span data-icon="refresh-cw"></span> Fix Balances
         </button>
         <button
           class="tbtn green"
@@ -194,7 +196,7 @@
           title="Login"
           aria-label="Login"
         >
-          🔐 Login
+          <span data-icon="lock"></span> Login
         </button>
         <button
           class="tbtn red"
@@ -204,7 +206,7 @@
           title="Logout"
           aria-label="Logout"
         >
-          🚪 Logout
+          <span data-icon="log-out"></span> Logout
         </button>
         <button
           class="tbtn"
@@ -212,7 +214,7 @@
           title="Export Data"
           aria-label="Export Data"
         >
-          ⬇ Export
+          <span data-icon="download"></span> Export
         </button>
       </div>
     </div>
@@ -220,17 +222,17 @@
     <!-- NAV -->
     <div class="nav" role="tablist" aria-label="Main navigation">
       <div class="ntab on" onclick="showPage('daily', this)" role="tab" aria-selected="true" aria-controls="page-daily" id="tab-daily" tabindex="0">
-        &#128197; Daily Entry
+        <span data-icon="calendar"></span> Daily Entry
       </div>
-      <div class="ntab" onclick="showPage('chart', this)" role="tab" aria-selected="false" aria-controls="page-chart" id="tab-chart" tabindex="0">&#128200; Charts</div>
+      <div class="ntab" onclick="showPage('chart', this)" role="tab" aria-selected="false" aria-controls="page-chart" id="tab-chart" tabindex="0"><span data-icon="bar-chart-3"></span> Charts</div>
       <div class="ntab" onclick="showPage('report', this)" role="tab" aria-selected="false" aria-controls="page-report" id="tab-report" tabindex="0">
-        &#128203; Reports
+        <span data-icon="clipboard-list"></span> Reports
       </div>
       <div class="ntab" onclick="showPage('transfer', this)" role="tab" aria-selected="false" aria-controls="page-transfer" id="tab-transfer" tabindex="0">
-        &#128661; Car Transfer
+        <span data-icon="arrow-left-right"></span> Car Transfer
       </div>
       <div class="ntab" onclick="showPage('settings', this)" role="tab" aria-selected="false" aria-controls="page-settings" id="tab-settings" tabindex="0">
-        &#9881; Settings
+        <span data-icon="settings"></span> Settings
       </div>
     </div>
 
@@ -358,11 +360,11 @@
           </div>
           <div class="ch-grid-2">
             <div class="ch-card">
-              <div class="ch-ttl"><span>📥 Receive vs Delivery by Day</span></div>
+              <div class="ch-ttl"><span data-icon="arrow-down"></span><span>Receive vs Delivery by Day</span></div>
               <canvas id="c-cm-di" height="120"></canvas>
             </div>
             <div class="ch-card">
-              <div class="ch-ttl"><span>📊 Daily Closing Balance</span></div>
+              <div class="ch-ttl"><span data-icon="bar-chart-3"></span><span>Daily Closing Balance</span></div>
               <canvas id="c-cm-bal" height="120"></canvas>
             </div>
           </div>
@@ -387,11 +389,11 @@
           </div>
           <div class="ch-grid-uneven">
             <div class="ch-card">
-              <div class="ch-ttl"><span>🏭 Closing Balance by Location</span></div>
+              <div class="ch-ttl"><span data-icon="factory"></span><span>Closing Balance by Location</span></div>
               <canvas id="c-loc" height="120"></canvas>
             </div>
             <div class="ch-card">
-              <div class="ch-ttl"><span>📋 Location Summary</span></div>
+              <div class="ch-ttl"><span data-icon="clipboard"></span><span>Location Summary</span></div>
               <div id="loc-summary-table"></div>
             </div>
           </div>
@@ -404,7 +406,7 @@
             <span style="font-size:14px;font-weight:700;color:#1f2937">Receive & Delivery Breakdown by Location</span>
           </div>
           <div class="ch-card">
-            <div class="ch-ttl"><span>📤 Delivery vs Receive per Location</span></div>
+            <div class="ch-ttl"><span data-icon="arrow-up-down"></span><span>Delivery vs Receive per Location</span></div>
             <canvas id="c-loc-di" height="120"></canvas>
           </div>
         </div>
@@ -417,11 +419,11 @@
           </div>
           <div class="ch-grid-trend">
             <div class="ch-card">
-              <div class="ch-ttl"><span>📈 Balance Trend (All Months)</span></div>
+              <div class="ch-ttl"><span data-icon="trending-up"></span><span>Balance Trend (All Months)</span></div>
               <canvas id="c-trend" height="100"></canvas>
             </div>
             <div class="ch-card">
-              <div class="ch-ttl"><span>🔄 Net Flow per Month</span></div>
+              <div class="ch-ttl"><span data-icon="shuffle"></span><span>Net Flow per Month</span></div>
               <canvas id="c-net" height="100"></canvas>
             </div>
           </div>
@@ -476,7 +478,7 @@
         <!-- Collapsible Sections -->
         <div class="rpt-sec" id="rpt-sec-executive">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-executive')">
-            <div class="rpt-sec-hdr-l">📋 Executive Summary</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="clipboard-list"></span> Executive Summary</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-executive"></div>
@@ -484,7 +486,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-monthly">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-monthly')">
-            <div class="rpt-sec-hdr-l">📅 Monthly Trend Analysis</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="calendar"></span> Monthly Trend Analysis</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-monthly"></div>
@@ -492,7 +494,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-location">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-location')">
-            <div class="rpt-sec-hdr-l">🏭 Location Performance</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="factory"></span> Location Performance</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-location"></div>
@@ -500,7 +502,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-loccompare">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-loccompare')">
-            <div class="rpt-sec-hdr-l">📊 Location vs Previous Month</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="bar-chart-3"></span> Location vs Previous Month</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-loccompare"></div>
@@ -508,7 +510,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-group">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-group')">
-            <div class="rpt-sec-hdr-l">🏗️ Group Performance (Warehouse / Yard / Shed)</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="building-2"></span> Group Performance (Warehouse / Yard / Shed)</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-group"></div>
@@ -516,7 +518,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-ranking">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-ranking')">
-            <div class="rpt-sec-hdr-l">🏆 Location Efficiency Ranking</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="trophy"></span> Location Efficiency Ranking</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-ranking"></div>
@@ -524,7 +526,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-daily-log">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-daily-log')">
-            <div class="rpt-sec-hdr-l">📋 Daily Operations Log</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="clipboard-list"></span> Daily Operations Log</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-daily-log"></div>
@@ -532,7 +534,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-peak">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-peak')">
-            <div class="rpt-sec-hdr-l">🔥 Peak Activity Days</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="flame"></span> Peak Activity Days</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-peak"></div>
@@ -540,7 +542,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-flow">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-flow')">
-            <div class="rpt-sec-hdr-l">💧 Monthly Balance Flow</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="droplet"></span> Monthly Balance Flow</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-flow"></div>
@@ -548,7 +550,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-dow">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-dow')">
-            <div class="rpt-sec-hdr-l">📆 Day-of-Week Activity Patterns</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="calendar-days"></span> Day-of-Week Activity Patterns</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-dow"></div>
@@ -556,7 +558,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-transfers">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-transfers')">
-            <div class="rpt-sec-hdr-l">🔄 Car Transfer History</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="refresh-cw"></span> Car Transfer History</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-transfers"></div>
@@ -564,7 +566,7 @@
 
         <div class="rpt-sec collapsed" id="rpt-sec-yoy">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-yoy')">
-            <div class="rpt-sec-hdr-l">📈 Year-over-Year Comparison</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="trending-up"></span> Year-over-Year Comparison</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body" id="rpt-yoy"></div>
@@ -573,7 +575,7 @@
         <!-- Auction Report -->
         <div class="rpt-sec collapsed" id="rpt-sec-auction">
           <div class="rpt-sec-hdr" onclick="toggleRptSection('rpt-sec-auction')">
-            <div class="rpt-sec-hdr-l">🚗 Auction Delivery Report</div>
+            <div class="rpt-sec-hdr-l"><span data-icon="car"></span> Auction Delivery Report</div>
             <div class="rpt-sec-hdr-r"><span class="rpt-sec-arrow">▾</span></div>
           </div>
           <div class="rpt-sec-body auc-outer" id="rpt-auction" style="padding:0"></div>
@@ -591,7 +593,7 @@
       <div style="max-width: 700px; margin: 0 auto">
         <!-- Calendar Settings -->
         <div class="rpt-sec">
-          <div class="rpt-hdr">📅 Calendar Settings</div>
+          <div class="rpt-hdr"><span data-icon="calendar"></span> Calendar Settings</div>
           <div style="padding: 15px">
             <div style="margin-bottom: 12px">
               <div
@@ -838,7 +840,7 @@
 
         <!-- Custom Red Dates -->
         <div class="rpt-sec">
-          <div class="rpt-hdr">🎯 Add Custom Red Date</div>
+          <div class="rpt-hdr"><span data-icon="target"></span> Add Custom Red Date</div>
           <div style="padding: 15px">
             <div
               style="
@@ -886,7 +888,7 @@
 
         <!-- Remove Red Dates -->
         <div class="rpt-sec">
-          <div class="rpt-hdr">❌ Remove Red from Date</div>
+          <div class="rpt-hdr"><span data-icon="x"></span> Remove Red from Date</div>
           <div style="padding: 15px">
             <div
               style="
@@ -940,7 +942,7 @@
 
         <!-- Admin Password -->
         <div class="rpt-sec">
-          <div class="rpt-hdr">🔐 Admin Password</div>
+          <div class="rpt-hdr"><span data-icon="lock"></span> Admin Password</div>
           <div style="padding: 15px">
             <input
               type="password"
@@ -972,7 +974,7 @@
 
         <!-- Cloud Sync -->
         <div class="rpt-sec">
-          <div class="rpt-hdr">☁️ Cloud Sync (GitHub)</div>
+          <div class="rpt-hdr"><span data-icon="cloud"></span> Cloud Sync (GitHub)</div>
           <div style="padding: 15px">
             <div style="font-size: 12px; color: #666; margin-bottom: 10px">
               Data syncs automatically to cloud. All devices will see the same
@@ -990,7 +992,7 @@
                 text-align: center;
               "
             >
-              ☁️ Connected
+              <span data-icon="cloud"></span> Connected
             </div>
             <div
               id="cloud-last-saved"
@@ -1008,7 +1010,7 @@
               onclick="showCloudHistory()"
               style="width: 100%; margin-top: 10px"
             >
-              📜 Version History
+              <span data-icon="history"></span> Version History
             </button>
             <div
               id="cloud-history-list"
@@ -1019,7 +1021,7 @@
 
         <!-- Fix Month Transitions -->
         <div class="rpt-sec">
-          <div class="rpt-hdr">🔄 Fix Month Transitions</div>
+          <div class="rpt-hdr"><span data-icon="refresh-cw"></span> Fix Month Transitions</div>
           <div style="padding: 15px">
             <div style="font-size: 12px; color: #666; margin-bottom: 10px">
               If opening balances don't match closing balances from previous
@@ -1060,7 +1062,7 @@
     <!-- EXPORT OVERLAY -->
     <div class="ov" id="ov-export">
       <div class="mbox">
-        <h2>&#8659; Export</h2>
+        <h2><span data-icon="download"></span> Export</h2>
         <div
           style="
             display: flex;
@@ -1100,12 +1102,13 @@
           >
             Cancel
           </button>
-          <button class="btn pri" onclick="doExport()">&#8659; Excel</button>
+          <button class="btn pri" onclick="doExport()"><span data-icon="download"></span> Excel</button>
         </div>
       </div>
     </div>
 
     <!-- App Script -->
+    <script src="src/icons.js"></script>
     <script src="src/app.js"></script>
   </body>
 </html>

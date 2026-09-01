@@ -3757,7 +3757,9 @@ function bBadge(p, goodUp = true) {
 function setDirty(v) {
   dirty = v;
   const el = document.getElementById("sv-badge");
-  el.textContent = v ? "● Unsaved" : "✓ Saved";
+  el.innerHTML = v
+    ? icon("alert-triangle", 12) + " Unsaved"
+    : icon("check-circle", 12) + " Saved";
   el.className = "sv " + (v ? "dirty" : "ok");
   const saveBtn = document.getElementById("save-button");
   if (saveBtn) {
@@ -4092,7 +4094,7 @@ async function restoreVersion(sha) {
     renderAll();
     const ok = await saveToFirebase();
     if (ok) {
-      showSuccess("✓ Restored to selected version!");
+      showSuccess("Restored to selected version!");
       saveLS();
       loadCloudHistory(true);
     } else {
@@ -4140,7 +4142,14 @@ function doSave() {
         }
         restoreButton();
         showSuccess(
-          fbSuccess ? "✓ Saved to cloud!" : "⚠ Saved to device only!",
+          fbSuccess
+            ? "Saved to cloud at " +
+                new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+            : "Saved to device only!",
+          fbSuccess ? "check-circle" : "alert-triangle",
         );
       })
       .catch((err) => {
@@ -4152,19 +4161,19 @@ function doSave() {
     setDirty(false);
     setTimeout(() => {
       restoreButton();
-      showSuccess("✓ Data saved successfully!");
+      showSuccess("Data saved successfully!");
     }, 500);
   }
 }
 
-function showSuccess(message) {
+function showSuccess(message, iconName) {
   const successDiv = document.createElement("div");
   successDiv.className = "success-notification";
   successDiv.innerHTML = `
                 <div class="success-content">
-                  <span class="success-icon">✅</span>
+                  <span class="success-icon">${icon(iconName || "check-circle", 16)}</span>
                   <span class="success-message"></span>
-                  <button class="success-close" onclick="this.parentElement.parentElement.remove()">✕</button>
+                  <button class="success-close" onclick="this.parentElement.parentElement.remove()">${icon("x", 12)}</button>
                 </div>
               `;
   successDiv.querySelector(".success-message").textContent = message;
@@ -4374,13 +4383,13 @@ function hideAutoSaveIndicator() {
 
   // Show the actual state based on dirty flag
   if (dirty) {
-    badge.innerHTML = "● Unsaved";
+    badge.innerHTML = icon("alert-triangle", 12) + " Unsaved";
     badge.className = "sv dirty";
     badge.style.background = "rgba(251, 146, 60, 0.2)";
     badge.style.color = "#fdba74";
     badge.style.borderColor = "rgba(251, 146, 60, 0.3)";
   } else {
-    badge.innerHTML = "✓ Saved";
+    badge.innerHTML = icon("check-circle", 12) + " Saved";
     badge.className = "sv ok";
     badge.style.background = "rgba(34, 197, 94, 0.2)";
     badge.style.color = "#86efac";
@@ -4597,7 +4606,7 @@ function addCarTransfer(date, fromIdx, toIdx, qty, note) {
     renderTransferPage();
     renderAll();
     showSuccess(
-      `✓ Transfer recorded: ${qty} cars — ${LOCS[fromIdx]} → ${LOCS[toIdx]}`,
+      `Transfer recorded: ${qty} cars — ${LOCS[fromIdx]} → ${LOCS[toIdx]}`,
     );
   });
 }
@@ -4618,7 +4627,7 @@ function removeCarTransfer(date, idx) {
     renderTransferPage();
     renderAll();
     showSuccess(
-      `✓ Transfer removed (${t.qty} cars — ${LOCS[t.from]} → ${LOCS[t.to]})`,
+      `Transfer removed (${t.qty} cars — ${LOCS[t.from]} → ${LOCS[t.to]})`,
     );
   });
 }
@@ -4643,7 +4652,7 @@ function renderTransferPage() {
   const form = `
     <div class="transfer-form-card">
       <div class="transfer-form-title">
-        <span style="font-size:20px">🚗</span> Add Car Transfer
+        <span style="font-size:20px">${icon("truck", 20)}</span> Add Car Transfer
         <span style="font-size:11px;font-weight:500;color:#64748b;margin-left:auto">
           Moves cars between locations — only Balance column is affected
         </span>
@@ -4651,7 +4660,7 @@ function renderTransferPage() {
 
       <div class="transfer-form-grid">
         <div class="transfer-field">
-          <label>📅 Transfer Date</label>
+          <label>${icon("calendar", 12)} Transfer Date</label>
           <span class="dmy-wrap">
             <input type="text" id="tr-date" class="dmy-text" placeholder="dd/mm/yyyy"
                    inputmode="numeric" maxlength="10" autocomplete="off"
@@ -4662,15 +4671,15 @@ function renderTransferPage() {
           </span>
         </div>
         <div class="transfer-field">
-          <label>🔢 Number of Cars</label>
+          <label>${icon("hash", 12)} Number of Cars</label>
           <input type="number" id="tr-qty" min="1" max="9999" placeholder="e.g. 10" />
         </div>
         <div class="transfer-field">
-          <label>🔴 From Location</label>
+          <label><span style="color:#dc2626">${icon("map-pin", 12)}</span> From Location</label>
           <select id="tr-from" onchange="renderTransferPreview()">${locOptions}</select>
         </div>
         <div class="transfer-field">
-          <label>🟢 To Location</label>
+          <label><span style="color:#16a34a">${icon("map-pin", 12)}</span> To Location</label>
           <select id="tr-to" onchange="renderTransferPreview()">${locOptions}</select>
         </div>
       </div>
@@ -4682,12 +4691,12 @@ function renderTransferPage() {
       </div>
 
       <div class="transfer-field" style="margin-bottom:14px">
-        <label>📝 Note (optional)</label>
+        <label>${icon("message-square", 12)} Note (optional)</label>
         <input type="text" id="tr-note" placeholder="e.g. Repositioning for auction" maxlength="80" />
       </div>
 
       <button class="transfer-submit-btn" onclick="submitTransferForm()">
-        <span>🚗</span> Record Transfer
+        <span>${icon("truck", 16)}</span> Record Transfer
       </button>
     </div>`;
 
@@ -4698,7 +4707,7 @@ function renderTransferPage() {
   let listHtml = "";
   if (!sortedDates.length) {
     listHtml = `<div class="transfer-empty-state">
-      <div class="transfer-empty-icon">🚗</div>
+      <div class="transfer-empty-icon">${icon("truck", 44)}</div>
       <p>No transfers recorded yet.<br>Use the form above to add one.</p>
     </div>`;
   } else {
@@ -4718,21 +4727,21 @@ function renderTransferPage() {
           const fromCfg = LOC_CFG[LOCS[t.from]] || {};
           const toCfg = LOC_CFG[LOCS[t.to]] || {};
           const noteHtml = t.note
-            ? `<span class="transfer-item-note" title="${esc(t.note)}">💬 ${esc(t.note)}</span>`
+            ? `<span class="transfer-item-note" title="${esc(t.note)}">${icon("message-square", 11)} ${esc(t.note)}</span>`
             : `<span class="transfer-item-note"></span>`;
           return `<div class="transfer-item">
-          <span class="transfer-item-qty">🚗 ${t.qty}</span>
+          <span class="transfer-item-qty">${icon("truck", 12)} ${t.qty}</span>
           <span class="transfer-item-from" style="background:${fromCfg.lt || "#fee2e2"};color:${fromCfg.bg || "#b91c1c"};border-color:${fromCfg.bg || "#fca5a5"}">${LOCS[t.from] || "Loc " + esc(t.from)}</span>
           <span class="transfer-item-arrow">→</span>
           <span class="transfer-item-to" style="background:${toCfg.lt || "#dcfce7"};color:${toCfg.bg || "#166534"};border-color:${toCfg.bg || "#86efac"}">${LOCS[t.to] || "Loc " + esc(t.to)}</span>
           ${noteHtml}
-          <button class="transfer-item-del" data-date="${esc(date)}" onclick="removeCarTransfer(this.dataset.date, ${idx})" title="Remove this transfer">✕</button>
+          <button class="transfer-item-del" data-date="${esc(date)}" onclick="removeCarTransfer(this.dataset.date, ${idx})" title="Remove this transfer">${icon("x", 12)}</button>
         </div>`;
         })
         .join("");
 
       listHtml += `<div class="transfer-date-group">
-        <div class="transfer-date-label">📅 ${esc(displayDate)}</div>
+        <div class="transfer-date-label">${icon("calendar", 12)} ${esc(displayDate)}</div>
         ${items}
       </div>`;
     });
@@ -4741,7 +4750,7 @@ function renderTransferPage() {
   const list = `
     <div class="transfer-list-card">
       <div class="transfer-list-title">
-        <span style="font-size:20px">📋</span> Transfer History
+        <span style="font-size:20px">${icon("clipboard-list", 20)}</span> Transfer History
         <span style="font-size:11px;font-weight:500;color:#64748b;margin-left:auto">
           ${sortedDates.length ? sortedDates.length + " date(s) with transfers" : "No transfers yet"}
         </span>
@@ -4923,7 +4932,7 @@ function showLoginForm() {
 
   modal.innerHTML = `
           <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); min-width: 400px;">
-            <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px;">🔐 Login Required</h3>
+            <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; display:flex; align-items:center; gap:8px;">${icon("lock", 18)} Login Required</h3>
             <div style="margin-bottom: 15px;">
               <label style="display: block; margin-bottom: 5px; color: #374151; font-size: 14px; font-weight: 500;">Username:</label>
               <input type="text" id="login-username" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;" placeholder="Enter username">
@@ -5315,9 +5324,9 @@ function showError(message, type = "error") {
   errorDiv.className = `error-notification ${type}`;
   errorDiv.innerHTML = `
                 <div class="error-content">
-                  <span class="error-icon">${type === "error" ? "⚠️" : "ℹ️"}</span>
+                  <span class="error-icon">${type === "error" ? icon("alert-triangle", 16) : icon("info", 16)}</span>
                   <span class="error-message"></span>
-                  <button class="error-close" onclick="this.parentElement.parentElement.remove()">✕</button>
+                  <button class="error-close" onclick="this.parentElement.parentElement.remove()">${icon("x", 12)}</button>
                 </div>
               `;
   errorDiv.querySelector(".error-message").textContent = message;
@@ -5578,7 +5587,7 @@ function renderSettings() {
         .sort()
         .map(
           (d) =>
-            `<span class="htag">${esc(d)} <span style="cursor:pointer;color:#b91c1c" data-d="${esc(d)}" onclick="sett.hols=sett.hols.filter(x=>x!==this.dataset.d);setDirty(true);renderSettings();renderTable();">✕</span></span>`,
+            `<span class="htag">${esc(d)} <span style="cursor:pointer;color:#b91c1c;display:inline-flex;vertical-align:middle" data-d="${esc(d)}" onclick="sett.hols=sett.hols.filter(x=>x!==this.dataset.d);setDirty(true);renderSettings();renderTable();">${icon("x", 11)}</span></span>`,
         )
         .join("")
     : '<span style="color:#aaa;font-size:10px">None</span>';
@@ -5588,7 +5597,7 @@ function renderSettings() {
         .sort()
         .map(
           (d) =>
-            `<span class="htag htag-g">${esc(d)} <span style="cursor:pointer;color:#166534" data-d="${esc(d)}" onclick="sett.excs=sett.excs.filter(x=>x!==this.dataset.d);setDirty(true);renderSettings();renderTable();">✕</span></span>`,
+            `<span class="htag htag-g">${esc(d)} <span style="cursor:pointer;color:#166534;display:inline-flex;vertical-align:middle" data-d="${esc(d)}" onclick="sett.excs=sett.excs.filter(x=>x!==this.dataset.d);setDirty(true);renderSettings();renderTable();">${icon("x", 11)}</span></span>`,
         )
         .join("")
     : '<span style="color:#aaa;font-size:10px">None</span>';
@@ -5879,7 +5888,9 @@ function renderTable() {
   // Empty state check
   if (!rows || rows.length === 0) {
     document.getElementById("tbl-scroll").innerHTML =
-      '<div style="text-align:center;padding:60px 20px;color:#64748b;background:#f8fafc;border-radius:12px;margin:20px;"><div style="font-size:48px;margin-bottom:16px;">📋</div><p style="font-size:16px;font-weight:600;margin-bottom:8px;">No data for this month</p><p style="font-size:13px;">Click "Generate Next Month" button or switch to another month</p></div>';
+      '<div style="text-align:center;padding:60px 20px;color:#64748b;background:#f8fafc;border-radius:12px;margin:20px;"><div style="margin-bottom:16px;display:flex;justify-content:center;color:#94a3b8">' +
+      icon("clipboard-list", 48) +
+      '</div><p style="font-size:16px;font-weight:600;margin-bottom:8px;">No data for this month</p><p style="font-size:13px;">Click "Generate Next Month" button or switch to another month</p></div>';
     return;
   }
 
@@ -5888,18 +5899,18 @@ function renderTable() {
   // Row 2:              [Bal | Del | Imp] × 8
   // NO gap between loc header and sub-headers — same background, borderless join
 
-  let h1 = `<tr><th class="hdate" rowspan="2">Date</th><th class="hday col-sep" rowspan="2">Day</th>`;
+  let h1 = `<tr><th class="hdate" rowspan="2" scope="col">Date</th><th class="hday col-sep" rowspan="2" scope="col">Day</th>`;
   LOCS.forEach((loc, li) => {
     const cfg = LOC_CFG[loc];
     // Left border only at group start (WH-A, Yard-1, Shed-5)
     const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
-    h1 += `<th class="${cfg.cls} ${gsp} no-gap" colspan="3" style="border-bottom:none">${loc}</th>`;
+    h1 += `<th class="${cfg.cls} ${gsp} no-gap" colspan="3" scope="colgroup" style="border-bottom:none">${loc}</th>`;
   });
-  h1 += `<th class="thd gsp" rowspan="2">Total<br>Delivery</th>
-              <th class="tha"     rowspan="2">Auction<br>Delivery</th>
-              <th class="thcb gsp" rowspan="2">Closing<br>Balance</th>
-              <th class="thi gsp" rowspan="2">Total<br>Import</th>
-              <th class="thrn gsp" rowspan="2">Rot<br>No</th></tr>`;
+  h1 += `<th class="thd gsp" rowspan="2" scope="col">Total<br>Delivery</th>
+              <th class="tha"     rowspan="2" scope="col">Auction<br>Delivery</th>
+              <th class="thcb gsp" rowspan="2" scope="col">Closing<br>Balance</th>
+              <th class="thi gsp" rowspan="2" scope="col">Total<br>Import</th>
+              <th class="thrn gsp" rowspan="2" scope="col">Rot<br>No</th></tr>`;
 
   // Row 2 sub-headers — SAME color as parent, NO top border gap
   let h2 = "<tr>";
@@ -5907,9 +5918,9 @@ function renderTable() {
     const cfg = LOC_CFG[loc];
     const gsp = li === 0 || li === 2 || li === 4 ? "gsp" : "";
     // Balance col: same bg, no-gap (connects seamlessly to row 1)
-    h2 += `<th class="hsub ${cfg.cls} ${gsp} no-gap" style="border-top:1px solid transparent">Balance</th>`;
-    h2 += `<th class="hsub ${cfg.cls}" style="border-top:1px solid transparent">Delivery</th>`;
-    h2 += `<th class="hsub ${cfg.cls} col-sep" style="border-top:1px solid transparent">Import</th>`;
+    h2 += `<th class="hsub ${cfg.cls} ${gsp} no-gap" scope="col" style="border-top:1px solid transparent">Balance</th>`;
+    h2 += `<th class="hsub ${cfg.cls}" scope="col" style="border-top:1px solid transparent">Delivery</th>`;
+    h2 += `<th class="hsub ${cfg.cls} col-sep" scope="col" style="border-top:1px solid transparent">Import</th>`;
   });
   h2 += "</tr>";
 
@@ -6060,7 +6071,7 @@ function updateForecastView() {
   if (summaryDiv) {
     summaryDiv.innerHTML = `
             <div style="grid-column:1/-1;padding:24px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-radius:12px;">
-              <h3 style="font-size:18px;font-weight:700;color:#1f2937;margin:0 0 20px 0;">🔮 6-Month Stock Forecast</h3>
+              <h3 style="font-size:18px;font-weight:700;color:#1f2937;margin:0 0 20px 0;display:flex;align-items:center;gap:8px;">${icon("trending-up", 18)} 6-Month Stock Forecast</h3>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
                 <div style="padding:16px;background:#fff;border-radius:8px;">
                   <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">Projected Balance</div>
@@ -6096,14 +6107,14 @@ function updateSummaryView() {
 function refreshReport(e) {
   const button = (e && e.target) || (typeof event !== "undefined" && event.target);
   if (button) {
-    button.textContent = "🔄 Refreshing...";
+    button.innerHTML = icon("refresh-cw", 14) + " Refreshing...";
     button.disabled = true;
   }
 
   setTimeout(() => {
     renderReport();
     if (button) {
-      button.innerHTML = "<span>🔄</span> Refresh";
+      button.innerHTML = "<span>" + icon("refresh-cw", 14) + "</span> Refresh";
       button.disabled = false;
     }
     showSuccess("Report refreshed successfully");
@@ -6498,21 +6509,21 @@ function renderChartQuickStats(ms, cs) {
   const ps = prevMs ? summ(prevMs) : null;
   const ratio = cs.imp ? Math.round((cs.del / cs.imp) * 100) : 0;
 
-  const card = (label, value, color, change, icon) => `
+  const card = (label, value, color, change, iconName) => `
     <div class="card" style="text-align:center;padding:14px 10px;border-left:4px solid ${color};background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.06)">
-      <div style="font-size:18px;margin-bottom:2px">${icon}</div>
+      <div style="color:${color};margin-bottom:2px;display:flex;justify-content:center">${icon(iconName, 18)}</div>
       <div class="c-lbl" style="font-size:9px;text-transform:uppercase;color:#6b7280;font-weight:600">${label}</div>
       <div class="c-val" style="font-size:20px;color:${color};font-weight:700">${typeof value === "number" ? value.toLocaleString() : value}</div>
       <div class="c-sub" style="font-size:9px;color:#9ca3af">${change}</div>
     </div>`;
 
   let h = "";
-  h += card("Balance", cs.bal, "#166534", ps ? pBadge(cs.bal, ps.bal) : "—", "💰");
-  h += card("Delivery", cs.del, "#1d4ed8", ps ? pBadge(cs.del, ps.del, false) : "—", "📤");
-  h += card("Receive", cs.imp, "#92400e", ps ? pBadge(cs.imp, ps.imp, true) : "—", "📥");
-  h += card("D/R Ratio", ratio + "%", ratio <= 75 ? "#16a34a" : "#dc2626", ratio <= 75 ? "✅ Good" : "⚠️ High", "📊");
-  h += card("Net Change", cs.imp - cs.del >= 0 ? "+" + (cs.imp - cs.del) : cs.imp - cs.del, cs.imp - cs.del >= 0 ? "#16a34a" : "#dc2626", cs.imp - cs.del >= 0 ? "↗ Positive" : "↘ Negative", cs.imp - cs.del >= 0 ? "📈" : "📉");
-  h += card("Work Days", DB[cur] ? DB[cur].filter((r) => !isRed(r.date)).length : 0, "#6366f1", ms.length + " months", "📅");
+  h += card("Balance", cs.bal, "#166534", ps ? pBadge(cs.bal, ps.bal) : "—", "wallet");
+  h += card("Delivery", cs.del, "#1d4ed8", ps ? pBadge(cs.del, ps.del, false) : "—", "arrow-up");
+  h += card("Receive", cs.imp, "#92400e", ps ? pBadge(cs.imp, ps.imp, true) : "—", "arrow-down");
+  h += card("D/R Ratio", ratio + "%", ratio <= 75 ? "#16a34a" : "#dc2626", ratio <= 75 ? "Good" : "High", "bar-chart-3");
+  h += card("Net Change", cs.imp - cs.del >= 0 ? "+" + (cs.imp - cs.del) : cs.imp - cs.del, cs.imp - cs.del >= 0 ? "#16a34a" : "#dc2626", cs.imp - cs.del >= 0 ? "↗ Positive" : "↘ Negative", cs.imp - cs.del >= 0 ? "trending-up" : "trending-down");
+  h += card("Work Days", DB[cur] ? DB[cur].filter((r) => !isRed(r.date)).length : 0, "#6366f1", ms.length + " months", "calendar");
 
   document.getElementById("chart-quick-stats").innerHTML = h;
 }
@@ -6748,7 +6759,7 @@ function renderReport() {
     // --- Location vs Compare Period (locH) ---
     let locH = `<div class="simple-table-container"><table class="simple-table">
               <thead><tr>
-                <th style="text-align:left">📍 Location</th>
+                <th style="text-align:left">${icon("map-pin", 12)} Location</th>
                 <th>${currLbl}<br>Receive</th><th>${prevLbl}<br>Receive</th><th>Recv Change</th>
                 <th>${currLbl}<br>Delivery</th><th>${prevLbl}<br>Delivery</th><th>Del Change</th>
               </tr></thead><tbody>`;
@@ -6790,7 +6801,7 @@ function renderReport() {
     const tiPct = tPI > 0 ? Math.round((tiD / tPI) * 100) : 0;
     const tdPct = tPD > 0 ? Math.round((tdD / tPD) * 100) : 0;
     locH += `<tr style="background:#f1f5f9;font-weight:700">
-      <td class="month" style="text-align:left">📊 TOTAL</td>
+      <td class="month" style="text-align:left">${icon("bar-chart-3", 11)} TOTAL</td>
       <td style="color:#92400e;font-size:14px">${fmt(tCI)}</td>
       <td style="color:#64748b">${compareKey ? fmt(tPI) : "—"}</td>
       <td style="color:${tiD >= 0 ? "#16a34a" : "#dc2626"}">${tiD >= 0 ? "+" : ""}${fmt(tiD)} (${tiPct >= 0 ? "↑" : "↓"}${Math.abs(tiPct)}%)</td>
@@ -6885,7 +6896,7 @@ function generateSimpleSummaryCards(months) {
 
   return `
           <div class="simple-card">
-            <div class="card-icon">📦</div>
+            <div class="card-icon">${icon("package", 24)}</div>
             <div class="card-content">
               <div class="card-title">Total Delivery</div>
               <div class="card-value">${fmt(totalDel)}</div>
@@ -6893,7 +6904,7 @@ function generateSimpleSummaryCards(months) {
             </div>
           </div>
           <div class="simple-card">
-            <div class="card-icon">📥</div>
+            <div class="card-icon">${icon("arrow-down", 24)}</div>
             <div class="card-content">
               <div class="card-title">Total Receive</div>
               <div class="card-value">${fmt(totalRec)}</div>
@@ -6901,7 +6912,7 @@ function generateSimpleSummaryCards(months) {
             </div>
           </div>
           <div class="simple-card">
-            <div class="card-icon">📊</div>
+            <div class="card-icon">${icon("bar-chart-3", 24)}</div>
             <div class="card-content">
               <div class="card-title">Current Balance</div>
               <div class="card-value">${fmt(currentBal)}</div>
@@ -6909,7 +6920,7 @@ function generateSimpleSummaryCards(months) {
             </div>
           </div>
           <div class="simple-card">
-            <div class="card-icon">⚡</div>
+            <div class="card-icon">${icon("zap", 24)}</div>
             <div class="card-content">
               <div class="card-title">Efficiency</div>
               <div class="card-value">${overallEfficiency}%</div>
@@ -7036,12 +7047,12 @@ function generateTrendAnalysis(months) {
   const recentMonths = months.slice(-6);
   const trend = recentMonths.map((k) => summ(k).del);
   const isIncreasing = trend[trend.length - 1] > trend[0];
-  const trendIcon = isIncreasing ? "📈" : "📉";
+  const trendIcon = icon(isIncreasing ? "trending-up" : "trending-down", 15);
   const trendColor = isIncreasing ? "#16a34a" : "#dc2626";
 
   return `
                 <div class="analytics-card">
-                  <h4>${trendIcon} Delivery Trend</h4>
+                  <h4 style="display:flex;align-items:center;gap:6px">${trendIcon} Delivery Trend</h4>
                   <div class="trend-chart">
                     <div class="trend-bars">
                       ${trend
@@ -7084,7 +7095,7 @@ function generateSeasonalPatterns(months) {
 
   return `
                 <div class="analytics-card">
-                  <h4>📅 Seasonal Patterns</h4>
+                  <h4 style="display:flex;align-items:center;gap:6px">${icon("calendar", 15)} Seasonal Patterns</h4>
                   <div class="seasonal-list">
                     ${avgSeasonal
                       .slice(0, 3)
@@ -7122,7 +7133,7 @@ function generateEfficiencyMetrics(months) {
 
   return `
                 <div class="analytics-card">
-                  <h4>⚡ Efficiency Metrics</h4>
+                  <h4 style="display:flex;align-items:center;gap:6px">${icon("zap", 15)} Efficiency Metrics</h4>
                   <div class="efficiency-stats">
                     <div class="eff-stat">
                       <div class="eff-label">Overall Efficiency</div>
@@ -7168,9 +7179,9 @@ function rptExecutive() {
   const effColor = eff >= 100 ? "#16a34a" : eff >= 75 ? "#d97706" : "#dc2626";
   const ps = getCompareSumm();
 
-  const kpi = (icon, val, lbl, color, sub) =>
+  const kpi = (iconName, val, lbl, color, sub) =>
     `<div class="rpt-kpi-card" style="border-top:3px solid ${color}">
-      <div class="rpt-kpi-icon">${icon}</div>
+      <div class="rpt-kpi-icon" style="color:${color}">${icon(iconName, 20)}</div>
       <div class="rpt-kpi-val" style="color:${color}">${val}</div>
       <div class="rpt-kpi-lbl">${lbl}</div>
       ${sub ? `<div class="rpt-kpi-sub">${sub}</div>` : ""}
@@ -7178,15 +7189,15 @@ function rptExecutive() {
 
   document.getElementById("rpt-executive").innerHTML = `
     <div class="rpt-kpi-grid">
-      ${kpi("📥", fmt(totImp), "Total Receive", "#dc2626", ps ? "Compare: " + fmt(ps.imp) : "")}
-      ${kpi("📤", fmt(totDel), "Total Delivery", "#2563eb", ps ? "Compare: " + fmt(ps.del) : "")}
-      ${kpi("🚗", fmt(totAuc), "Auction Deliveries", "#ea580c", aucShare + "% of total · " + aucDays + " active days")}
-      ${kpi("📦", fmt(totBal), "Closing Balance", "#059669", "End-of-period stock")}
-      ${kpi("⚡", eff + "%", "Delivery Efficiency", effColor, "Delivery ÷ Receive")}
-      ${kpi(net >= 0 ? "📈" : "📉", (net >= 0 ? "+" : "") + fmt(net), "Net Stock Change", net >= 0 ? "#16a34a" : "#dc2626", "Receive − Delivery")}
-      ${kpi("📅", workDays, "Working Days", "#0891b2", holDays + " holiday / off days")}
-      ${kpi("🚛", fmt(avgDelWD), "Avg Delivery / Day", "#d97706", "Per working day")}
-      ${kpi("📦", fmt(avgRecWD), "Avg Receive / Day", "#7c3aed", "Per working day")}
+      ${kpi("arrow-down", fmt(totImp), "Total Receive", "#dc2626", ps ? "Compare: " + fmt(ps.imp) : "")}
+      ${kpi("arrow-up", fmt(totDel), "Total Delivery", "#2563eb", ps ? "Compare: " + fmt(ps.del) : "")}
+      ${kpi("car", fmt(totAuc), "Auction Deliveries", "#ea580c", aucShare + "% of total · " + aucDays + " active days")}
+      ${kpi("package", fmt(totBal), "Closing Balance", "#059669", "End-of-period stock")}
+      ${kpi("zap", eff + "%", "Delivery Efficiency", effColor, "Delivery ÷ Receive")}
+      ${kpi(net >= 0 ? "trending-up" : "trending-down", (net >= 0 ? "+" : "") + fmt(net), "Net Stock Change", net >= 0 ? "#16a34a" : "#dc2626", "Receive − Delivery")}
+      ${kpi("calendar", workDays, "Working Days", "#0891b2", holDays + " holiday / off days")}
+      ${kpi("truck", fmt(avgDelWD), "Avg Delivery / Day", "#d97706", "Per working day")}
+      ${kpi("package", fmt(avgRecWD), "Avg Receive / Day", "#7c3aed", "Per working day")}
     </div>`;
 }
 
@@ -7228,7 +7239,7 @@ function rptDailyLog() {
   });
 
   html += `<tr style="background:#f1f5f9;font-weight:700;border-top:2px solid #d1d5db">
-    <td colspan="2" style="text-align:left;padding-left:10px">📊 TOTAL</td>
+    <td colspan="2" style="text-align:left;padding-left:10px">${icon("bar-chart-3", 11)} TOTAL</td>
     ${LOCS.map(() => "<td>—</td>").join("")}
     <td style="color:#2563eb;font-size:13px">${fmt(totalDel)}</td>
     <td style="color:#dc2626;font-size:13px">${fmt(totalRec)}</td>
@@ -7244,9 +7255,9 @@ function rptGroup() {
   const prevRows = compareKey ? (DB[compareKey] || []) : [];
 
   const groups = [
-    { lbl: "Warehouse", lis: [0, 1], bg: "#1e4d7b", icon: "🏢" },
-    { lbl: "Yard",      lis: [2, 3], bg: "#1a5c3a", icon: "🚜" },
-    { lbl: "Shed",      lis: [4, 5, 6, 7], bg: "#7c3c1a", icon: "🏭" },
+    { lbl: "Warehouse", lis: [0, 1], bg: "#1e4d7b", iconName: "building-2" },
+    { lbl: "Yard",      lis: [2, 3], bg: "#1a5c3a", iconName: "truck" },
+    { lbl: "Shed",      lis: [4, 5, 6, 7], bg: "#7c3c1a", iconName: "factory" },
   ];
 
   let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">';
@@ -7264,7 +7275,7 @@ function rptGroup() {
 
     html += `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
       <div style="background:${g.bg};color:#fff;padding:14px 16px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">
-        ${g.icon} ${g.lbl}
+        ${icon(g.iconName, 16)} ${g.lbl}
         <span style="margin-left:auto;font-size:11px;opacity:0.75">${g.lis.map((i) => LOCS[i]).join(" · ")}</span>
       </div>
       <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -7304,7 +7315,7 @@ function rptRanking() {
     return { loc, i, totDel, totRec, curBal, eff };
   }).sort((a, b) => b.eff - a.eff);
 
-  const medals = ["🥇", "🥈", "🥉", "4th", "5th", "6th", "7th", "8th"];
+  const rankTiers = ["gold", "silver", "bronze"];
 
   const rangeLbl = rptMs.length === 1
     ? `${MO[parseInt(rptMs[0].split("-")[1]) - 1]} ${rptMs[0].split("-")[0]}`
@@ -7326,7 +7337,7 @@ function rptRanking() {
     const grade = d.eff >= 100 ? "A+" : d.eff >= 90 ? "A" : d.eff >= 75 ? "B" : d.eff >= 60 ? "C" : "D";
     const gradeColor = d.eff >= 90 ? "#16a34a" : d.eff >= 75 ? "#d97706" : "#dc2626";
     html += `<tr>
-      <td style="font-size:${idx < 3 ? 18 : 13}px;font-weight:700">${medals[idx]}</td>
+      <td><span class="rank-badge${idx < 3 ? " rank-" + rankTiers[idx] : ""}">${idx + 1}</span></td>
       <td style="text-align:left;font-weight:700">
         <span style="display:inline-block;width:10px;height:10px;background:${LOC_CFG[d.loc].bg};border-radius:2px;margin-right:6px;vertical-align:middle"></span>${d.loc}
       </td>
@@ -7374,8 +7385,8 @@ function rptPeak() {
     </div>`;
 
   return `<div style="display:flex;gap:24px;flex-wrap:wrap">
-    ${half(topDel, "tDel", "🔝 Top 5 Delivery Days", "#2563eb")}
-    ${half(topRec, "tRec", "🔝 Top 5 Receive Days", "#dc2626")}
+    ${half(topDel, "tDel", icon("trophy", 14) + " Top 5 Delivery Days", "#2563eb")}
+    ${half(topRec, "tRec", icon("trophy", 14) + " Top 5 Receive Days", "#dc2626")}
   </div>`;
 }
 
@@ -7442,7 +7453,7 @@ function rptDow() {
     const bar = Math.round((avgDel / maxAvg) * 100);
     const isOff = (d === 5 && sett.fri) || (d === 6 && sett.sat) || (d === 0 && sett.sun);
     html += `<tr style="${isOff ? "background:#fef2f2" : ""}">
-      <td style="font-weight:700;color:${isOff ? "#991b1b" : "#1f2937"}">${s.lbl}${isOff ? " 🔴" : ""}</td>
+      <td style="font-weight:700;color:${isOff ? "#991b1b" : "#1f2937"}">${s.lbl}${isOff ? ' <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#dc2626;vertical-align:middle"></span>' : ""}</td>
       <td style="color:#2563eb;font-weight:700">${fmt(avgDel)}</td>
       <td style="color:#dc2626;font-weight:700">${fmt(avgRec)}</td>
       <td style="color:#6b7280">${s.cnt}</td>
@@ -7568,7 +7579,7 @@ function rptYoY() {
     </tr>`;
   });
 
-  html += `<tr style="background:#f8fafc"><td colspan="5" style="text-align:left;font-weight:700;color:#374151;padding:10px">📍 Per-Location Delivery Comparison</td></tr>`;
+  html += `<tr style="background:#f8fafc"><td colspan="5" style="text-align:left;font-weight:700;color:#374151;padding:10px">${icon("map-pin", 12)} Per-Location Delivery Comparison</td></tr>`;
 
   LOCS.forEach((loc, i) => {
     let cDel = 0, pDel = 0;
@@ -7739,7 +7750,7 @@ function renderAuctionReport() {
   if (!rows.length) {
     return `
       <div class="auc-empty">
-        <div class="auc-empty-icon">🚗</div>
+        <div class="auc-empty-icon">${icon("car", 44)}</div>
         <div class="auc-empty-title">No auction data found</div>
         <div class="auc-empty-sub">No records match the selected date range. Try a different filter.</div>
       </div>`;
@@ -7773,7 +7784,7 @@ function renderAuctionReport() {
     <div class="auc-kpi-grid">
       <div class="auc-kpi-card">
         <div class="auc-kpi-top">
-          <div class="auc-kpi-icon-wrap">🚗</div>
+          <div class="auc-kpi-icon-wrap">${icon("car", 20)}</div>
           <span class="auc-kpi-tag">Total</span>
         </div>
         <div class="auc-kpi-val">${fmt(totalAuc)}</div>
@@ -7781,7 +7792,7 @@ function renderAuctionReport() {
       </div>
       <div class="auc-kpi-card">
         <div class="auc-kpi-top">
-          <div class="auc-kpi-icon-wrap">📊</div>
+          <div class="auc-kpi-icon-wrap">${icon("bar-chart-3", 20)}</div>
           <span class="auc-kpi-tag">Share</span>
         </div>
         <div class="auc-kpi-val">${aucShare}%</div>
@@ -7790,7 +7801,7 @@ function renderAuctionReport() {
       </div>
       <div class="auc-kpi-card">
         <div class="auc-kpi-top">
-          <div class="auc-kpi-icon-wrap">📅</div>
+          <div class="auc-kpi-icon-wrap">${icon("calendar", 20)}</div>
           <span class="auc-kpi-tag">Activity</span>
         </div>
         <div class="auc-kpi-val">${activeDays}</div>
@@ -7799,7 +7810,7 @@ function renderAuctionReport() {
       </div>
       <div class="auc-kpi-card">
         <div class="auc-kpi-top">
-          <div class="auc-kpi-icon-wrap">🏆</div>
+          <div class="auc-kpi-icon-wrap">${icon("trophy", 20)}</div>
           <span class="auc-kpi-tag">Peak</span>
         </div>
         <div class="auc-kpi-val">${fmt(peakVal)}</div>
@@ -7807,22 +7818,22 @@ function renderAuctionReport() {
         <div class="auc-kpi-sub">${peakDate}</div>
       </div>
       <div class="auc-kpi-card secondary">
-        <div class="auc-kpi-top"><div class="auc-kpi-icon-wrap">📍</div></div>
+        <div class="auc-kpi-top"><div class="auc-kpi-icon-wrap">${icon("map-pin", 18)}</div></div>
         <div class="auc-kpi-val">${uniqueLocs}</div>
         <div class="auc-kpi-lbl">Unique Locations</div>
       </div>
       <div class="auc-kpi-card secondary">
-        <div class="auc-kpi-top"><div class="auc-kpi-icon-wrap">📈</div></div>
+        <div class="auc-kpi-top"><div class="auc-kpi-icon-wrap">${icon("trending-up", 18)}</div></div>
         <div class="auc-kpi-val">${avgPerDay}</div>
         <div class="auc-kpi-lbl">Avg / All Days</div>
       </div>
       <div class="auc-kpi-card secondary">
-        <div class="auc-kpi-top"><div class="auc-kpi-icon-wrap">⚡</div></div>
+        <div class="auc-kpi-top"><div class="auc-kpi-icon-wrap">${icon("zap", 18)}</div></div>
         <div class="auc-kpi-val">${avgActiveDay}</div>
         <div class="auc-kpi-lbl">Avg / Active Day</div>
       </div>
       <div class="auc-kpi-card secondary">
-        <div class="auc-kpi-top"><div class="auc-kpi-icon-wrap">🗓️</div></div>
+        <div class="auc-kpi-top"><div class="auc-kpi-icon-wrap">${icon("calendar-days", 18)}</div></div>
         <div class="auc-kpi-val">${rows.length}</div>
         <div class="auc-kpi-lbl">Days in Range</div>
       </div>
@@ -7943,7 +7954,7 @@ function renderAuctionReport() {
     ${kpiHtml}
     <div class="auc-section-card">
       <div class="auc-section-hdr">
-        <div class="auc-section-icon">📍</div>
+        <div class="auc-section-icon">${icon("map-pin", 18)}</div>
         <h3 class="auc-section-title">By Auction Location</h3>
         <span class="auc-section-count">${sortedLocs.length} location${sortedLocs.length !== 1 ? "s" : ""}</span>
       </div>
@@ -7952,7 +7963,7 @@ function renderAuctionReport() {
     ${sortedMonths.length > 1 ? `
     <div class="auc-section-card">
       <div class="auc-section-hdr">
-        <div class="auc-section-icon">📅</div>
+        <div class="auc-section-icon">${icon("calendar", 18)}</div>
         <h3 class="auc-section-title">Monthly Trend</h3>
         <span class="auc-section-count">${sortedMonths.length} months</span>
       </div>
@@ -7960,7 +7971,7 @@ function renderAuctionReport() {
     </div>` : ""}
     <div class="auc-section-card">
       <div class="auc-section-hdr">
-        <div class="auc-section-icon">📋</div>
+        <div class="auc-section-icon">${icon("clipboard-list", 18)}</div>
         <h3 class="auc-section-title">Daily Breakdown</h3>
         <span class="auc-section-count">${rows.length} day${rows.length !== 1 ? "s" : ""}</span>
       </div>
@@ -8122,7 +8133,8 @@ const SHORTCUTS = {
   1: () => showPage("daily", document.querySelector(".ntab")),
   2: () => showPage("chart", document.querySelectorAll(".ntab")[1]),
   3: () => showPage("report", document.querySelectorAll(".ntab")[2]),
-  4: () => showPage("settings", document.querySelectorAll(".ntab")[3]),
+  4: () => showPage("transfer", document.querySelectorAll(".ntab")[3]),
+  5: () => showPage("settings", document.querySelectorAll(".ntab")[4]),
   Escape: () => {
     document.querySelectorAll(".ov.on").forEach((overlay) => {
       overlay.classList.remove("on");
@@ -8162,10 +8174,6 @@ function showShortcutsHelp() {
           <kbd style="background:#e2e8f0;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:13px;border:1px solid #cbd5e1;">Ctrl+E</kbd>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8fafc;border-radius:8px;">
-          <span style="color:#475569;">Open Settings</span>
-          <kbd style="background:#e2e8f0;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:13px;border:1px solid #cbd5e1;">Ctrl+,</kbd>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8fafc;border-radius:8px;">
           <span style="color:#475569;">Logout</span>
           <kbd style="background:#e2e8f0;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:13px;border:1px solid #cbd5e1;">Ctrl+L</kbd>
         </div>
@@ -8177,8 +8185,8 @@ function showShortcutsHelp() {
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8fafc;border-radius:8px;">
-          <span style="color:#475569;">Switch tabs (1-4)</span>
-          <kbd style="background:#e2e8f0;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:13px;border:1px solid #cbd5e1;">1-4</kbd>
+          <span style="color:#475569;">Switch tabs (1-5)</span>
+          <kbd style="background:#e2e8f0;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:13px;border:1px solid #cbd5e1;">1-5</kbd>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8fafc;border-radius:8px;">
           <span style="color:#475569;">Close modals</span>
@@ -8252,7 +8260,7 @@ function showErrorOverlay(msg) {
     el = document.createElement("div");
     el.id = "error-overlay";
     el.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:99999;opacity:0;transition:opacity 0.3s ease;";
-    el.innerHTML = '<div style="background:#fff;border-radius:12px;padding:24px 32px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center"><div style="font-size:32px;margin-bottom:8px">⚠️</div><div id="error-msg" style="font-size:14px;color:#374151;margin-bottom:16px;word-break:break-word"></div><button onclick="document.getElementById(\'error-overlay\').style.display=\'none\'" style="background:#ef4444;color:#fff;border:none;padding:8px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Dismiss</button></div>';
+    el.innerHTML = '<div style="background:#fff;border-radius:12px;padding:24px 32px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center"><div style="color:#ef4444;margin-bottom:8px;display:flex;justify-content:center">' + icon("alert-triangle", 32) + '</div><div id="error-msg" style="font-size:14px;color:#374151;margin-bottom:16px;word-break:break-word"></div><button onclick="document.getElementById(\'error-overlay\').style.display=\'none\'" style="background:#ef4444;color:#fff;border:none;padding:8px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Dismiss</button></div>';
     document.body.appendChild(el);
     requestAnimationFrame(() => { el.style.opacity = "1"; });
   }
@@ -8435,7 +8443,9 @@ function init() {
       // Show connected status
       if (firebaseDb) {
         document.getElementById("gs-status").innerHTML =
-          '<span style="color:#059669">✅ Connected to cloud (GitHub)</span>';
+          '<span style="color:#059669;display:inline-flex;align-items:center;gap:6px">' +
+          icon("check-circle", 14) +
+          " Connected to cloud (GitHub)</span>";
         loadCloudHistory(false); // populate "Last saved" label
         const el = document.getElementById("conn-status");
         const setConn = (online) => {
