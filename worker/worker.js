@@ -125,17 +125,29 @@ export default {
         return json({ error: "unauthorized" }, 401);
       }
 
-      // Reject oversized bodies before parsing (the app's data.json is a
-      // few KB to a few hundred KB; 5MB is a generous ceiling).
+      // Reject oversized bodies (the app's data.json is a few KB to a few
+      // hundred KB; 5MB is a generous ceiling). Content-Length is a
+      // client-supplied header, not proof of the actual body size — a
+      // request that omits it would default to 0 and skip this check
+      // entirely, so read the body as text and check its real length
+      // before parsing, rather than trusting the header alone.
       const MAX_BODY_BYTES = 5 * 1024 * 1024;
       const contentLength = Number(request.headers.get("content-length") || 0);
       if (contentLength > MAX_BODY_BYTES) {
         return json({ error: "payload too large" }, 413);
       }
 
+      const rawBody = await request.text();
+      // .length is UTF-16 code units, not bytes -- re-check with the actual
+      // UTF-8 byte length so multi-byte (e.g. Bengali) content can't slip
+      // past the cap.
+      if (new TextEncoder().encode(rawBody).length > MAX_BODY_BYTES) {
+        return json({ error: "payload too large" }, 413);
+      }
+
       let body;
       try {
-        body = await request.json();
+        body = JSON.parse(rawBody);
       } catch {
         return json({ error: "bad json" }, 400);
       }
