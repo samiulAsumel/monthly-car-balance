@@ -685,69 +685,73 @@ function showInfo(message, iconName) {
   toast(message, "info", { icon: iconName });
 }
 
-function addClickFeedback(element) {
-  element.addEventListener("click", function () {
-    this.style.transform = "scale(0.95)";
-    setTimeout(() => {
-      this.style.transform = "";
-    }, 150);
-  });
+// Elements that get scale + ripple tap feedback. Kept as one list shared
+// between the delegated click handler below and the injected ripple CSS,
+// so a new element type only needs adding in one place.
+const TAP_FEEDBACK_SELECTOR =
+  ".tbtn, .btn, .ntab, .bnav-tab, .day-card-hdr, .mnav-btn, .rpt-sec-hdr";
+
+function ensureRippleStyles() {
+  if (document.getElementById("ripple-styles")) return;
+  const style = document.createElement("style");
+  style.id = "ripple-styles";
+  style.textContent = `
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: ripple 0.6s linear;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    ${TAP_FEEDBACK_SELECTOR} {
+      position: relative;
+      overflow: hidden;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
-function addHoverFeedback(elements) {
-  elements.forEach((element) => {
+// Delegated on `document` (rather than wiring each button individually)
+// so tap feedback also reaches content that doesn't exist yet at init --
+// every day-card, the month bar, and report-section headers are all
+// rebuilt from scratch on re-render, which a one-time querySelectorAll()
+// would silently miss.
+function initializeVisualFeedback() {
+  ensureRippleStyles();
+
+  document.addEventListener("click", (e) => {
+    const target = e.target.closest(TAP_FEEDBACK_SELECTOR);
+    if (!target) return;
+
+    target.style.transform = "scale(0.95)";
+    setTimeout(() => {
+      target.style.transform = "";
+    }, 150);
+
+    // A keyboard-triggered click (Enter/Space) reports clientX/Y as 0,0 --
+    // skip the ripple rather than let it fire from the top-left corner.
+    if (e.clientX === 0 && e.clientY === 0) return;
+    const rect = target.getBoundingClientRect();
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+    ripple.style.left = e.clientX - rect.left + "px";
+    ripple.style.top = e.clientY - rect.top + "px";
+    target.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
+
+  // Hover has no meaning on touch, and these elements aren't rebuilt the
+  // way day-cards are, so a one-time static wiring is fine here.
+  document.querySelectorAll(".card, .gc, .loc-blk").forEach((element) => {
     element.addEventListener("mouseenter", function () {
       this.style.transition = "all 0.2s ease";
-    });
-  });
-}
-
-function initializeVisualFeedback() {
-  // Add click feedback to buttons
-  const buttons = document.querySelectorAll(".tbtn, .btn, .mtab, .ntab");
-  buttons.forEach(addClickFeedback);
-
-  // Add hover feedback to interactive elements
-  const interactiveElements = document.querySelectorAll(".card, .gc, .loc-blk");
-  addHoverFeedback(interactiveElements);
-
-  // Add ripple effect to buttons
-  buttons.forEach((button) => {
-    button.addEventListener("click", function (e) {
-      const ripple = document.createElement("span");
-      ripple.className = "ripple";
-      ripple.style.left = e.clientX - this.offsetLeft + "px";
-      ripple.style.top = e.clientY - this.offsetTop + "px";
-
-      // Add ripple styles if not exists
-      if (!document.querySelector("#ripple-styles")) {
-        const style = document.createElement("style");
-        style.id = "ripple-styles";
-        style.textContent = `
-                      .ripple {
-                        position: absolute;
-                        border-radius: 50%;
-                        background: rgba(255, 255, 255, 0.6);
-                        transform: scale(0);
-                        animation: ripple 0.6s linear;
-                        pointer-events: none;
-                      }
-                      @keyframes ripple {
-                        to {
-                          transform: scale(4);
-                          opacity: 0;
-                        }
-                      }
-                      .tbtn, .btn, .mtab, .ntab {
-                        position: relative;
-                        overflow: hidden;
-                      }
-                    `;
-        document.head.appendChild(style);
-      }
-
-      this.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 600);
     });
   });
 }
@@ -1353,7 +1357,7 @@ function showLoginForm() {
         `;
 
   modal.innerHTML = `
-          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); min-width: 400px;">
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 400px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-sizing: border-box;">
             <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; display:flex; align-items:center; gap:8px;">${icon("lock", 18)} Login Required</h3>
             <div style="margin-bottom: 15px;">
               <label style="display: block; margin-bottom: 5px; color: #374151; font-size: 14px; font-weight: 500;">Username:</label>
@@ -2204,6 +2208,23 @@ function updateStickyTableOffsets() {
   document.documentElement.style.setProperty("--tbl-row2-top", row1H + "px");
 }
 
+// Same reasoning as updateStickyTableOffsets(), one level up: .nav and .mbar
+// are sticky under .topbar, whose height varies (the 3-line brand block
+// wraps differently per breakpoint) and .nav is display:none on mobile
+// (replaced by the bottom nav bar) -- so its own height, and therefore how
+// far below it .mbar needs to sit, isn't a fixed number either. Measuring
+// both and feeding them through CSS vars means .mbar's offset is correct
+// whether .nav is showing or not, with no breakpoint-specific branching.
+function updateStickyHeaderOffsets() {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return;
+  const nav = document.querySelector(".nav");
+  const topbarH = topbar.getBoundingClientRect().height;
+  const navH = nav ? nav.getBoundingClientRect().height : 0;
+  document.documentElement.style.setProperty("--topbar-h", topbarH + "px");
+  document.documentElement.style.setProperty("--nav-h", navH + "px");
+}
+
 function renderTable() {
   const rows = DB[cur] || [];
   renderLocFilterChips();
@@ -2362,17 +2383,51 @@ function renderTable() {
   }
 
   updateStickyTableOffsets();
+  updateStickyHeaderOffsets();
   renderDayCards();
 }
 
 // Mobile stacked-card view of the same rows renderTable() draws — shown
-// instead of the 31-column table below the .day-cards-bp breakpoint (see
-// CSS). Reuses onDel/onImp/onAuc directly, so there is one write path for
-// both views, not two.
+// instead of the 31-column table below the max-width:700px breakpoint (see
+// CSS, ".day-cards"). Reuses onDel/onImp/onAuc directly, so there is one
+// write path for both views, not two.
+// Toggles one card's expanded state and keeps aria-expanded in sync --
+// called from the card header's onclick instead of an inline class-toggle
+// string, so the ARIA state can never drift from the visual one.
+function toggleDayCard(btn) {
+  const card = btn.closest(".day-card");
+  if (!card) return;
+  const open = card.classList.toggle("open");
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
 function renderDayCards() {
   const container = document.getElementById("day-cards");
   if (!container) return;
   const rows = DB[cur] || [];
+
+  // Preserve which cards are expanded and any focused input across the
+  // full rebuild below -- every edit re-renders every card, which
+  // otherwise collapses whatever the user had open and drops their
+  // focus/caret (renderTable() already does the equivalent for the
+  // desktop table; see the focus-restore block near its top).
+  const openDates = new Set(
+    Array.from(container.querySelectorAll(".day-card.open")).map((el) => el.dataset.date),
+  );
+  const active = document.activeElement;
+  let focusRestore = null;
+  if (active && active.matches && active.matches("#day-cards input.ci")) {
+    const card = active.closest(".day-card");
+    if (card) {
+      focusRestore = {
+        date: card.dataset.date,
+        field: active.classList.contains("del") ? "del" : active.classList.contains("imp") ? "imp" : "auc",
+        li: active.dataset.li,
+        selStart: active.selectionStart,
+        selEnd: active.selectionEnd,
+      };
+    }
+  }
 
   if (!rows.length) {
     container.innerHTML =
@@ -2390,14 +2445,17 @@ function renderDayCards() {
     const closing = getClosing(row);
     const tDel = row.del.reduce((a, b) => a + b, 0);
     const tImp = row.imp.reduce((a, b) => a + b, 0);
+    const open = openDates.has(row.date);
+    const hdrId = "day-card-hdr-" + ri;
+    const bodyId = "day-card-body-" + ri;
 
-    h += `<div class="day-card${red ? " red" : ""}${it ? " tod" : ""}">
-      <button type="button" class="day-card-hdr" onclick="this.closest('.day-card').classList.toggle('open')">
+    h += `<div class="day-card${red ? " red" : ""}${it ? " tod" : ""}${open ? " open" : ""}" data-date="${row.date}">
+      <button type="button" class="day-card-hdr" id="${hdrId}" aria-expanded="${open}" aria-controls="${bodyId}" onclick="toggleDayCard(this)">
         <span class="day-card-date">${fmtDMY(row.date)} <span class="day-card-dow">${dw}</span></span>
         <span class="day-card-bal">${closing}</span>
         ${icon("chevron-down", 16, "day-card-chevron")}
       </button>
-      <div class="day-card-body">
+      <div class="day-card-body" id="${bodyId}" role="region" aria-labelledby="${hdrId}">
         <div class="day-card-summary">
           <div><span>Total Delivery</span><b>${tDel || "—"}</b></div>
           <div><span>Total Import</span><b>${tImp || "—"}</b></div>
@@ -2410,8 +2468,8 @@ function renderDayCards() {
             <div class="day-card-loc-name" style="color:${cfg.bg}">${loc}</div>
             <div class="day-card-loc-row">
               <label>Balance<span class="day-card-static">${row.bal[li]}</span></label>
-              <label>Delivery<input class="ci del" type="number" min="0" value="${row.del[li]}" onchange="onDel('${cur}',${ri},${li},this.value)"></label>
-              <label>Import<input class="ci imp" type="number" min="0" value="${row.imp[li]}" onchange="onImp('${cur}',${ri},${li},this.value)"></label>
+              <label>Delivery<input class="ci del" type="number" min="0" value="${row.del[li]}" data-li="${li}" onchange="onDel('${cur}',${ri},${li},this.value)"></label>
+              <label>Import<input class="ci imp" type="number" min="0" value="${row.imp[li]}" data-li="${li}" onchange="onImp('${cur}',${ri},${li},this.value)"></label>
             </div>
           </div>`;
         }).join("")}
@@ -2425,6 +2483,21 @@ function renderDayCards() {
     </div>`;
   });
   container.innerHTML = h;
+
+  if (focusRestore) {
+    const card = container.querySelector(`.day-card[data-date="${focusRestore.date}"]`);
+    const input =
+      card &&
+      (focusRestore.field === "auc"
+        ? card.querySelector("input.ci.auc")
+        : card.querySelector(`input.ci.${focusRestore.field}[data-li="${focusRestore.li}"]`));
+    if (input) {
+      input.focus();
+      try {
+        input.setSelectionRange(focusRestore.selStart, focusRestore.selEnd);
+      } catch {}
+    }
+  }
 }
 
 // Arrow-key navigation between editable cells in the daily table (Enter
@@ -2472,6 +2545,7 @@ function tableKeyNav(e) {
 }
 document.getElementById("main-tbl").addEventListener("keydown", tableKeyNav);
 window.addEventListener("resize", updateStickyTableOffsets);
+window.addEventListener("resize", updateStickyHeaderOffsets);
 
 // ════════════════════════════════════════════════════
 //  CHARTS
@@ -4380,6 +4454,9 @@ function init() {
 
     // Initialize visual feedback
     initializeVisualFeedback();
+    // Also run directly (not just via renderTable(), which skips this on
+    // an empty month) so sticky offsets are correct from first paint.
+    updateStickyHeaderOffsets();
 
     // Performance: Add keyboard shortcuts
     initializeKeyboardShortcuts();

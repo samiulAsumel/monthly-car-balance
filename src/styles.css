@@ -68,6 +68,13 @@
   --fs-md: 14px;
   --fs-lg: 16px;
   --fs-xl: 18px;
+
+  /* Measured chrome heights, kept in sync with the real DOM by
+     updateStickyHeaderOffsets() in app.js -- these fallbacks only apply
+     for the brief instant before that first runs. */
+  --topbar-h: 64px;
+  --nav-h: 36px;
+  --bnav-h: 60px;
 }
 
 * {
@@ -264,6 +271,15 @@ body {
 /* Smooth transitions for all interactive elements */
 * {
   transition: all 0.2s ease-in-out;
+  /* Replace the browser's default tap-flash rectangle (WebKit/Blink on
+     touch) with nothing -- :focus-visible below supplies a deliberate
+     replacement so keyboard/AT users don't lose their indicator too. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--navy-500, #1a3a5c);
+  outline-offset: 2px;
 }
 
 /* Disable transitions on specific elements that shouldn't animate */
@@ -548,6 +564,7 @@ select {
   top: 0;
   z-index: 1000;
   backdrop-filter: blur(10px);
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
 }
 
 .t-brand {
@@ -627,7 +644,7 @@ select {
   border-bottom: 2px solid #d1d5db;
   padding: 0 14px;
   position: sticky;
-  top: 46px;
+  top: var(--topbar-h);
   z-index: 400;
 }
 
@@ -681,10 +698,11 @@ select {
   border-bottom: 1px solid #dde3eb;
   align-items: center;
   position: sticky;
-  top: 82px;
+  /* .nav is display:none on mobile (replaced by the bottom nav bar), and
+     its measured height (--nav-h) is then 0 -- so this stays correct
+     across breakpoints without a separate mobile override. */
+  top: calc(var(--topbar-h) + var(--nav-h));
   z-index: 300;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .mtab {
@@ -1040,13 +1058,19 @@ select {
   .tbtn,
   .ntab,
   .mtab,
-  .btn {
+  .btn,
+  .bnav-tab,
+  .day-card-hdr,
+  .mnav-btn,
+  .mnav-select,
+  .loc-chip,
+  .cmdk-item {
     min-height: 44px;
     min-width: 44px;
   }
 
   .ci {
-    min-height: 40px;
+    min-height: 44px;
     font-size: 16px;
     /* Prevent zoom on iOS */
     color: #000000 !important;
@@ -1056,7 +1080,11 @@ select {
   .card:hover,
   .tbtn:hover,
   .ntab:hover,
-  .mtab:hover {
+  .mtab:hover,
+  .simple-card:hover,
+  .ch-card:hover,
+  .day-card:hover,
+  input.ci:hover {
     transform: none;
   }
 }
@@ -3021,12 +3049,12 @@ input.ci.auc {
   gap: 7px;
   padding: 10px;
 }
-
-@media (max-width: 700px) {
-  .hl-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+/* Mobile column count for .hl-grid is set once, at max-width:768px above
+   (search ".hl-grid" for the other rule) -- a second max-width:700px
+   override used to live here and silently put it back to 2 columns at
+   <=700px because it came later in source order. Removed; don't
+   reintroduce a narrower breakpoint for this selector without checking
+   the 768px rule first. */
 
 .hl-card {
   border-radius: 5px;
@@ -3130,6 +3158,9 @@ input.ci.auc {
   padding: 20px 24px;
   width: 360px;
   max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .mbox h2 {
