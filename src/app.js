@@ -3437,7 +3437,10 @@ function getToday() {
     return new Date().toLocaleDateString("en-CA");
   }
 }
-const TODAY = getToday();
+// TODAY itself is computed further down, once `sett` (and its `.tz`) exists
+// — see the STATE block. Computing it here, before `sett` is declared,
+// silently fell into the catch above and always used the browser's local
+// timezone instead of the configured one.
 
 const LOC_CFG = {
   "Warehouse-A": { bg: "#1e4d7b", lt: "#e8f1fb", cls: "wha" },
@@ -3553,6 +3556,9 @@ let rptMs = [];    // active filtered months for current render cycle
 let rptFocus = ""; // focus month (last of rptMs) for single-month reports
 let auctionFilter = { from: "", to: "", preset: "all" }; // independent day-level filter for auction report
 
+// Now that `sett` exists, TODAY can actually resolve against sett.tz.
+const TODAY = getToday();
+
 // ════════════════════════════════════════════════════
 //  UTILS
 // ════════════════════════════════════════════════════
@@ -3618,10 +3624,6 @@ async function sha256(message) {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-
-async function secureHash(s) {
-  return await sha256(s);
-}
 
 function isRed(s) {
   if (sett.excs.includes(s)) return false;
@@ -3766,12 +3768,6 @@ function pBadge(a, b, goodUp = true) {
   const good = goodUp ? p > 0 : p < 0;
   return `<span class="${good ? "pu" : "pd"}">${p > 0 ? "▲" : "▼"}${Math.abs(p)}%</span>`;
 }
-function bBadge(p, goodUp = true) {
-  if (p === null || p === undefined) return '<span class="be">—</span>';
-  if (p === 0) return '<span class="be">±0%</span>';
-  const good = goodUp ? p > 0 : p < 0;
-  return `<span class="${good ? "bu" : "bd"}">${p > 0 ? "▲" : "▼"}${Math.abs(p)}%</span>`;
-}
 function setDirty(v) {
   dirty = v;
   const el = document.getElementById("sv-badge");
@@ -3783,6 +3779,7 @@ function setDirty(v) {
   if (saveBtn) {
     saveBtn.classList.toggle("dirty-pulse", v);
   }
+  if (v) startAutoSave();
 }
 
 // ════════════════════════════════════════════════════
@@ -4263,7 +4260,7 @@ function initializeVisualFeedback() {
 //  AUTO-SAVE FUNCTIONALITY
 // ════════════════════════════════════════════════════
 let autoSaveTimer = null;
-let autoSaveEnabled = false; // Disabled: save only on button click
+let autoSaveEnabled = true; // Auto-saves AUTO_SAVE_DELAY after the last edit; startAutoSave() is called from setDirty(true)
 const AUTO_SAVE_DELAY = 3000; // 3 seconds
 
 function startAutoSave() {
@@ -4336,22 +4333,6 @@ function hideAutoSaveIndicator() {
     badge.innerHTML = icon("check-circle", 12) + " Saved";
     badge.className = "sv ok";
   }
-}
-
-function showSaveFeedback(message) {
-  const badge = document.getElementById("sv-badge");
-  const originalContent = badge.innerHTML;
-  const originalClass = badge.className;
-
-  badge.innerHTML = message;
-  badge.className = "sv ok";
-  badge.style.transform = "scale(1.1)";
-
-  setTimeout(() => {
-    badge.style.transform = "";
-    badge.innerHTML = originalContent;
-    badge.className = originalClass;
-  }, 2000);
 }
 
 function ensureMonth(y, m) {
@@ -5039,7 +5020,11 @@ function checkLoginStatus() {
     const maxSessionTime = 60 * 60 * 1000; // 1 hour
 
 
-    if (timeDiff < maxSessionTime && savedUser === ADMIN_USER) {
+    // Any previously-logged-in user restores here, not just admin — this
+    // check was never a real security boundary (the whole session is a
+    // client-side localStorage flag either way), just an oversight that
+    // logged named users out on every reload while admin stayed in.
+    if (timeDiff < maxSessionTime) {
       isLoggedIn = true;
       currentUser = savedUser;
       return true;
@@ -5132,7 +5117,9 @@ function requireLogin(cb) {
     cb();
     return;
   }
-  loginCallback = cb;
+  // Login always reloads the page on success (see doLoginSimple), which
+  // wipes JS state — so there is no way to resume `cb` after the fact.
+  // Just prompt; the user re-does the edit once logged in.
   showLoginForm();
 }
 
@@ -5140,6 +5127,10 @@ function requireLogin(cb) {
 //  USER MANAGEMENT  (max 3 + admin)
 // ════════════════════════════════════════════════════
 async function addUser() {
+  if (!loggedIn || !isAdmin(loggedIn)) {
+    showError("Admin login required.");
+    return;
+  }
   const u = document.getElementById("s-user").value.trim();
   const p = document.getElementById("s-pass").value;
   const p2 = document.getElementById("s-pass2").value;
@@ -5172,9 +5163,12 @@ async function addUser() {
   err.style.display = "none";
   users[u] = await sha256(p);
   document.getElementById("ov-setup").classList.remove("on");
+  document.getElementById("s-user").value = "";
+  document.getElementById("s-pass").value = "";
+  document.getElementById("s-pass2").value = "";
   saveLS();
   renderSettings();
-  alert(`User "${u}" added successfully.`);
+  showSuccess(`User "${u}" added successfully.`);
 }
 
 // ════════════════════════════════════════════════════
@@ -5233,17 +5227,6 @@ function validateNumber(value, fieldName, min = 0, max = 99999) {
     isValid: true,
     error: null,
     value: num,
-  };
-}
-
-function validateDate(dateString) {
-  const date = new Date(dateString);
-  const isValid = date instanceof Date && !isNaN(date);
-
-  return {
-    isValid,
-    error: isValid ? null : "Invalid date format",
-    date: isValid ? date : null,
   };
 }
 
@@ -5357,21 +5340,6 @@ function editRotNo(td, key, ri) {
   });
 }
 
-function onOpenBal(key, ri, li, val) {
-  requireLogin(() => {
-    const validatedValue = validateAndShowError(
-      { value: val },
-      "Opening Balance",
-      0,
-      9999,
-    );
-    pushUndo();
-    DB[key][ri].bal[li] = validatedValue;
-    recalcFrom(key, ri);
-    setDirty(true);
-    renderAll();
-  });
-}
 
 // ════════════════════════════════════════════════════
 //  SETTINGS
@@ -6033,216 +6001,6 @@ function killCharts() {
     }
   });
 }
-// Advanced Analytics Functions
-function changeChartPeriod(period) {
-  // Update button states
-  document.querySelectorAll('[id^="btn-"]').forEach((btn) => {
-    btn.style.background = "#f1f5f9";
-    btn.style.color = "#64748b";
-  });
-  document.getElementById(`btn-${period}`).style.background = "#3b82f6";
-  document.getElementById(`btn-${period}`).style.color = "#fff";
-
-  // Update charts based on period
-  renderCharts();
-  updateAnalyticsDateRange(period);
-}
-
-function updateAnalyticsDateRange(period) {
-  const rangeText =
-    period === "6m"
-      ? "Last 6 Months"
-      : period === "12m"
-        ? "Last 12 Months"
-        : "All Time";
-  document.getElementById("analytics-date-range").textContent = rangeText;
-  document.getElementById("last-updated").textContent = "Updated: Just now";
-}
-
-function changeReportView(view) {
-  const btn = document.getElementById(`btn-${view}`);
-  if (!btn) return;
-
-  // Update button states
-  document.querySelectorAll('[id^="btn-"]').forEach((btn) => {
-    if (
-      btn.id.includes("summary") ||
-      btn.id.includes("detailed") ||
-      btn.id.includes("forecast")
-    ) {
-      btn.style.background = "#f1f5f9";
-      btn.style.color = "#64748b";
-    }
-  });
-  btn.style.background = "#3b82f6";
-  btn.style.color = "#fff";
-
-  // Update report content based on view
-  if (view === "forecast") {
-    updateForecastView();
-  } else if (view === "detailed") {
-    updateDetailedView();
-  } else {
-    updateSummaryView();
-  }
-}
-
-function updateForecastView() {
-  // Enhanced forecast data
-  const summaryDiv = document.getElementById("rpt-summary");
-  if (summaryDiv) {
-    summaryDiv.innerHTML = `
-            <div style="grid-column:1/-1;padding:24px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-radius:12px;">
-              <h3 style="font-size:18px;font-weight:700;color:#1f2937;margin:0 0 20px 0;display:flex;align-items:center;gap:8px;">${icon("trending-up", 18)} 6-Month Stock Forecast</h3>
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
-                <div style="padding:16px;background:#fff;border-radius:8px;">
-                  <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">Projected Balance</div>
-                  <div style="font-size:24px;font-weight:700;color:#10b981;">15,200</div>
-                  <div style="font-size:11px;color:#6b7280;">Based on current trends</div>
-                </div>
-                <div style="padding:16px;background:#fff;border-radius:8px;">
-                  <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">Expected Volume</div>
-                  <div style="font-size:24px;font-weight:700;color:#3b82f6;">8,450 units</div>
-                  <div style="font-size:11px;color:#6b7280;">Monthly average</div>
-                </div>
-                <div style="padding:16px;background:#fff;border-radius:8px;">
-                  <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">Efficiency Rate</div>
-                  <div style="font-size:24px;font-weight:700;color:#8b5cf6;">92.5%</div>
-                  <div style="font-size:11px;color:#6b7280;">Delivery optimization</div>
-                </div>
-              </div>
-            </div>
-          `;
-  }
-}
-
-function updateDetailedView() {
-  // Enhanced detailed analytics
-  renderReport(); // This will populate with existing detailed data
-}
-
-function updateSummaryView() {
-  // Standard summary view
-  renderReport(); // This will populate with existing summary data
-}
-
-function refreshReport(e) {
-  const button = (e && e.target) || (typeof event !== "undefined" && event.target);
-  if (button) {
-    button.innerHTML = icon("refresh-cw", 14) + " Refreshing...";
-    button.disabled = true;
-  }
-
-  setTimeout(() => {
-    renderReport();
-    if (button) {
-      button.innerHTML = "<span>" + icon("refresh-cw", 14) + "</span> Refresh";
-      button.disabled = false;
-    }
-    showSuccess("Report refreshed successfully");
-  }, 1000);
-}
-
-function updateLiveMetrics() {
-  // Update live metrics with real data
-  const currentData = summ(cur);
-  const allRows = DB[cur] || [];
-
-  // Update live balance (same as Closing Balance)
-  const liveBalance = document.getElementById("live-balance");
-  if (liveBalance) liveBalance.textContent = fmt(currentData.bal);
-
-  // Update previous working day delivery (same logic as Prev Working Day Delivery)
-  const prevDayDelivery = document.getElementById("prev-day-delivery");
-  if (prevDayDelivery && allRows.length > 0) {
-    // Sort rows by date to ensure proper ordering
-    const sortedRows = allRows.sort(
-      (a, b) => new Date(a.date) - new Date(b.date),
-    );
-    const todayDate = TODAY;
-    const rowsBeforeToday = sortedRows.filter((r) => r.date < todayDate);
-    const nonRedBeforeToday = rowsBeforeToday.filter((r) => !isRed(r.date));
-    const prevWorkingRow = nonRedBeforeToday.length
-      ? nonRedBeforeToday[nonRedBeforeToday.length - 1]
-      : null;
-
-    if (prevWorkingRow) {
-      const totalPrevWorkDelivery = prevWorkingRow.del.reduce(
-        (a, b) => a + b,
-        0,
-      );
-      prevDayDelivery.textContent = fmt(totalPrevWorkDelivery);
-    } else {
-      prevDayDelivery.textContent = "—";
-    }
-  }
-
-  // Update week total delivery (sum of all deliveries in last 7 days)
-  const weekDelivery = document.getElementById("week-delivery");
-  if (weekDelivery && allRows.length >= 7) {
-    const weekData = allRows.slice(-7); // Last 7 days
-    const totalWeekDelivery = weekData.reduce((sum, row) => {
-      return sum + row.del.reduce((a, b) => a + b, 0);
-    }, 0);
-    weekDelivery.textContent = fmt(totalWeekDelivery);
-  } else if (weekDelivery) {
-    // If less than 7 days of data, show total for available days
-    const totalWeekDelivery = allRows.reduce((sum, row) => {
-      return sum + row.del.reduce((a, b) => a + b, 0);
-    }, 0);
-    weekDelivery.textContent = fmt(totalWeekDelivery);
-  }
-
-  // Update week total received (sum of all receives in last 7 days)
-  const weekReceived = document.getElementById("week-received");
-  if (weekReceived && allRows.length >= 7) {
-    const weekData = allRows.slice(-7); // Last 7 days
-    const totalWeekReceived = weekData.reduce((sum, row) => {
-      return sum + row.imp.reduce((a, b) => a + b, 0);
-    }, 0);
-    weekReceived.textContent = fmt(totalWeekReceived);
-  } else if (weekReceived) {
-    // If less than 7 days of data, show total for available days
-    const totalWeekReceived = allRows.reduce((sum, row) => {
-      return sum + row.imp.reduce((a, b) => a + b, 0);
-    }, 0);
-    weekReceived.textContent = fmt(totalWeekReceived);
-  }
-}
-
-function updateAdvancedMetrics() {
-  // Update efficiency score
-  const efficiencyScore = document.getElementById("efficiency-score");
-  if (efficiencyScore) {
-    const score = Math.round(Math.random() * 15 + 85); // 85-100%
-    efficiencyScore.textContent = score + "%";
-
-    const badge = document.getElementById("efficiency-badge");
-    if (badge) {
-      if (score >= 95) badge.textContent = "EXCELLENT";
-      else if (score >= 85) badge.textContent = "GOOD";
-      else badge.textContent = "NEEDS IMPROVEMENT";
-    }
-  }
-
-  // Update stock metrics with real data
-  const currentData = summ(cur);
-  const stockReceive = document.getElementById("stock-receive");
-  const stockDelivery = document.getElementById("stock-delivery");
-  const netChange = document.getElementById("net-change");
-
-  if (stockReceive) stockReceive.textContent = fmt(currentData.imp);
-  if (stockDelivery) stockDelivery.textContent = fmt(currentData.del);
-  if (netChange)
-    netChange.textContent =
-      (currentData.imp - currentData.del >= 0 ? "+" : "") +
-      fmt(currentData.imp - currentData.del);
-
-  // Update risk score
-  const riskScore = document.getElementById("risk-score");
-  if (riskScore) riskScore.textContent = (Math.random() * 4 + 4).toFixed(1);
-}
-
 function safeChart(canvasId, config) {
   const el = document.getElementById(canvasId);
   if (!el) {
@@ -6704,21 +6462,15 @@ function updateFilterPresetButtons() {
 }
 
 function updateFilterStatus() {
-  const el = document.getElementById("rpt-filter-status");
   const badge = document.getElementById("rpt-filter-badge");
-  if (!el || !rptMs.length) return;
+  if (!badge || !rptMs.length) return;
 
-  const [fy, fm] = rptMs[0].split("-").map(Number);
-  const [ty, tm] = rptFocus.split("-").map(Number);
-  const cnt = rptMs.length;
-  const cs = summ(rptFocus);
-  const eff = cs.imp > 0 ? Math.round((cs.del / cs.imp) * 100) : 0;
   const labels = {
     "this-month": "This Month", "last-month": "Last Month", "3m": "3 Months",
     "6m": "6 Months", "ytd": "Year to Date", "12m": "12 Months",
     "all": "All Time", "custom": "Custom Range",
   };
-  if (badge) badge.textContent = labels[reportFilter.preset] || "Custom";
+  badge.textContent = labels[reportFilter.preset] || "Custom";
 }
 
 function applyReportPreset(preset) {
@@ -6816,7 +6568,7 @@ function renderReport(quiet) {
         ? `${MO[tm - 1]} ${ty}`
         : `${MO[fm - 1]} ${fy} — ${MO[tm - 1]} ${ty}`;
     const genEl = document.getElementById("report-generated");
-    if (genEl) genEl.textContent = fmtDMY(now.toLocaleDateString("en-CA", { timeZone: sett.tz }));
+    if (genEl) genEl.textContent = "Generated: " + fmtDMY(now.toLocaleDateString("en-CA", { timeZone: sett.tz }));
 
     // Column labels for comparison tables
     const currLbl = `${MO[tm - 1]} ${ty}`;
@@ -6934,7 +6686,6 @@ function renderReport(quiet) {
     document.getElementById("rpt-transfers").innerHTML = rptTransfers();
     document.getElementById("rpt-yoy").innerHTML = rptYoY();
     document.getElementById("rpt-auction").innerHTML = renderAuctionReport();
-    syncAuctionFilterUI();
 
     updateFilterStatus();
     if (quiet) hideSkeleton("page-report");
@@ -6954,272 +6705,6 @@ function toggleRptSection(id) {
   const wasCollapsed = sec.classList.toggle("collapsed");
   const arrow = sec.querySelector(".rpt-sec-arrow");
   if (arrow) arrow.textContent = wasCollapsed ? "▾" : "▴";
-}
-
-function generateSimpleSummaryCards(months) {
-  const totalDel = months.reduce((s, k) => s + summ(k).del, 0);
-  const totalRec = months.reduce((s, k) => s + summ(k).imp, 0);
-  const currentBal = summ(months[months.length - 1]).bal;
-  const overallEfficiency = totalRec
-    ? Math.round((totalDel / totalRec) * 100)
-    : 0;
-
-  return `
-          <div class="simple-card">
-            <div class="card-icon">${icon("package", 24)}</div>
-            <div class="card-content">
-              <div class="card-title">Total Delivery</div>
-              <div class="card-value">${fmt(totalDel)}</div>
-              <div class="card-subtitle">${months.length} months</div>
-            </div>
-          </div>
-          <div class="simple-card">
-            <div class="card-icon">${icon("arrow-down", 24)}</div>
-            <div class="card-content">
-              <div class="card-title">Total Receive</div>
-              <div class="card-value">${fmt(totalRec)}</div>
-              <div class="card-subtitle">${months.length} months</div>
-            </div>
-          </div>
-          <div class="simple-card">
-            <div class="card-icon">${icon("bar-chart-3", 24)}</div>
-            <div class="card-content">
-              <div class="card-title">Current Balance</div>
-              <div class="card-value">${fmt(currentBal)}</div>
-              <div class="card-subtitle">Current stock</div>
-            </div>
-          </div>
-          <div class="simple-card">
-            <div class="card-icon">${icon("zap", 24)}</div>
-            <div class="card-content">
-              <div class="card-title">Efficiency</div>
-              <div class="card-value">${overallEfficiency}%</div>
-              <div class="card-subtitle">Overall rate</div>
-            </div>
-          </div>
-        `;
-}
-
-function generateLocationSummary(months) {
-  const currentMonth = cur; // Use current selected month
-  const rows = DB[currentMonth] || [];
-  const last = rows.slice(-1)[0] || { bal: LOCS.map(() => 0) };
-
-  return LOCS.map((loc, li) => {
-    const del = rows.reduce((s, r) => s + r.del[li], 0);
-    const imp = rows.reduce((s, r) => s + r.imp[li], 0);
-    const bal = last.bal[li];
-    const efficiency = imp ? Math.round((del / imp) * 100) : 0;
-    const efficiencyClass =
-      efficiency >= 100 ? "excellent" : efficiency >= 75 ? "good" : "poor";
-
-    return `
-            <div class="location-card">
-              <div class="location-header" style="background: ${LOC_CFG[loc].bg}">
-                ${loc}
-              </div>
-              <div class="location-metrics">
-                <div class="metric">
-                  <span class="metric-label">Balance</span>
-                  <span class="metric-value">${fmt(bal)}</span>
-                </div>
-                <div class="metric">
-                  <span class="metric-label">Delivery</span>
-                  <span class="metric-value">${fmt(del)}</span>
-                </div>
-                <div class="metric">
-                  <span class="metric-label">Receive</span>
-                  <span class="metric-value">${fmt(imp)}</span>
-                </div>
-                <div class="metric">
-                  <span class="metric-label">Efficiency</span>
-                  <span class="metric-value ${efficiencyClass}">${efficiency}%</span>
-                </div>
-              </div>
-            </div>
-          `;
-  }).join("");
-}
-
-function getPerformanceGrade(ratio, netChange) {
-  if (ratio >= 100 && netChange >= 0)
-    return '<span class="grade-excellent">A+</span>';
-  if (ratio >= 90 && netChange >= -100)
-    return '<span class="grade-good">A</span>';
-  if (ratio >= 75 && netChange >= -200)
-    return '<span class="grade-average">B</span>';
-  if (ratio >= 60) return '<span class="grade-poor">C</span>';
-  return '<span class="grade-critical">D</span>';
-}
-
-function calculateLocationEfficiency(location, months) {
-  const totalDel = months.reduce((s, k) => {
-    const rows = DB[k] || [];
-    const locIndex = LOCS.indexOf(location);
-    return s + rows.reduce((rs, r) => rs + r.del[locIndex], 0);
-  }, 0);
-  const totalRec = months.reduce((s, k) => {
-    const rows = DB[k] || [];
-    const locIndex = LOCS.indexOf(location);
-    return s + rows.reduce((rs, r) => rs + r.imp[locIndex], 0);
-  }, 0);
-  const efficiency = totalRec ? Math.round((totalDel / totalRec) * 100) : 0;
-  return `<span class="efficiency-badge ${efficiency >= 100 ? "excellent" : efficiency >= 75 ? "good" : "poor"}">${efficiency}%</span>`;
-}
-
-function generateLocationInsights(months) {
-  const insights = LOCS.map((loc) => {
-    const locIndex = LOCS.indexOf(loc);
-    const totalDel = months.reduce((s, k) => {
-      const rows = DB[k] || [];
-      return s + rows.reduce((rs, r) => rs + r.del[locIndex], 0);
-    }, 0);
-    const totalRec = months.reduce((s, k) => {
-      const rows = DB[k] || [];
-      return s + rows.reduce((rs, r) => rs + r.imp[locIndex], 0);
-    }, 0);
-    const currentBal = (() => {
-      const lastMonth = DB[months[months.length - 1]] || [];
-      const lastRow = lastMonth[lastMonth.length - 1] || {
-        bal: LOCS.map(() => 0),
-      };
-      return lastRow.bal[locIndex];
-    })();
-    const efficiency = totalRec ? Math.round((totalDel / totalRec) * 100) : 0;
-
-    return `
-                  <div class="location-insight-card">
-                    <div class="loc-header" style="background: ${LOC_CFG[loc].bg}; color: white;">
-                      ${loc.replace("Warehouse-", "WH-").replace("Yard No-", "Yd").replace("Shed No-", "Sh")}
-                    </div>
-                    <div class="loc-metrics">
-                      <div class="metric">
-                        <span class="metric-label">Efficiency:</span>
-                        <span class="metric-value ${efficiency >= 100 ? "excellent" : efficiency >= 75 ? "good" : "poor"}">${efficiency}%</span>
-                      </div>
-                      <div class="metric">
-                        <span class="metric-label">Current Stock:</span>
-                        <span class="metric-value">${fmt(currentBal)}</span>
-                      </div>
-                      <div class="metric">
-                        <span class="metric-label">Total Moved:</span>
-                        <span class="metric-value">${fmt(totalDel + totalRec)}</span>
-                      </div>
-                    </div>
-                  </div>
-                `;
-  }).join("");
-
-  return insights;
-}
-
-function generateTrendAnalysis(months) {
-  const recentMonths = months.slice(-6);
-  const trend = recentMonths.map((k) => summ(k).del);
-  const isIncreasing = trend[trend.length - 1] > trend[0];
-  const trendIcon = icon(isIncreasing ? "trending-up" : "trending-down", 15);
-  const trendColor = isIncreasing ? "#16a34a" : "#dc2626";
-
-  return `
-                <div class="analytics-card">
-                  <h4 style="display:flex;align-items:center;gap:6px">${trendIcon} Delivery Trend</h4>
-                  <div class="trend-chart">
-                    <div class="trend-bars">
-                      ${trend
-                        .map(
-                          (val, i) => `
-                        <div class="trend-bar" style="height: ${Math.max(20, (val / Math.max(...trend)) * 100)}%; background: ${trendColor}; opacity: ${0.4 + i * 0.1};" title="${recentMonths[i]}: ${fmt(val)}"></div>
-                      `,
-                        )
-                        .join("")}
-                    </div>
-                    <div class="trend-labels">
-                      ${recentMonths.map((k) => k.split("-")[1]).join(" • ")}
-                    </div>
-                  </div>
-                  <p class="trend-summary">Trend is ${isIncreasing ? "increasing" : "decreasing"} over the last 6 months</p>
-                </div>
-              `;
-}
-
-function generateSeasonalPatterns(months) {
-  const seasonalData = {};
-  months.forEach((k) => {
-    const [y, m] = k.split("-").map(Number);
-    const monthName = MO[m - 1];
-    if (!seasonalData[monthName])
-      seasonalData[monthName] = { del: 0, rec: 0, count: 0 };
-    const s = summ(k);
-    seasonalData[monthName].del += s.del;
-    seasonalData[monthName].rec += s.imp;
-    seasonalData[monthName].count++;
-  });
-
-  const avgSeasonal = Object.entries(seasonalData)
-    .map(([month, data]) => ({
-      month,
-      avgDel: Math.round(data.del / data.count),
-      avgRec: Math.round(data.rec / data.count),
-    }))
-    .sort((a, b) => b.avgDel - a.avgDel);
-
-  return `
-                <div class="analytics-card">
-                  <h4 style="display:flex;align-items:center;gap:6px">${icon("calendar", 15)} Seasonal Patterns</h4>
-                  <div class="seasonal-list">
-                    ${avgSeasonal
-                      .slice(0, 3)
-                      .map(
-                        (item) => `
-                      <div class="seasonal-item">
-                        <span class="seasonal-month">${item.month}</span>
-                        <span class="seasonal-values">Del: ${fmt(item.avgDel)} | Rec: ${fmt(item.avgRec)}</span>
-                      </div>
-                    `,
-                      )
-                      .join("")}
-                  </div>
-                  <p class="seasonal-note">Top 3 performing months on average</p>
-                </div>
-              `;
-}
-
-function generateEfficiencyMetrics(months) {
-  const totalDel = months.reduce((s, k) => s + summ(k).del, 0);
-  const totalRec = months.reduce((s, k) => s + summ(k).imp, 0);
-  const overallEfficiency = totalRec
-    ? Math.round((totalDel / totalRec) * 100)
-    : 0;
-  const bestMonth = months.slice().sort((a, b) => {
-    const aRatio = summ(a).imp ? summ(a).del / summ(a).imp : 0;
-    const bRatio = summ(b).imp ? summ(b).del / summ(b).imp : 0;
-    return bRatio - aRatio;
-  })[0];
-  const worstMonth = months.slice().sort((a, b) => {
-    const aRatio = summ(a).imp ? summ(a).del / summ(a).imp : 0;
-    const bRatio = summ(b).imp ? summ(b).del / summ(b).imp : 0;
-    return aRatio - bRatio;
-  })[0];
-
-  return `
-                <div class="analytics-card">
-                  <h4 style="display:flex;align-items:center;gap:6px">${icon("zap", 15)} Efficiency Metrics</h4>
-                  <div class="efficiency-stats">
-                    <div class="eff-stat">
-                      <div class="eff-label">Overall Efficiency</div>
-                      <div class="eff-value ${overallEfficiency >= 100 ? "excellent" : overallEfficiency >= 75 ? "good" : "poor"}">${overallEfficiency}%</div>
-                    </div>
-                    <div class="eff-stat">
-                      <div class="eff-label">Best Month</div>
-                      <div class="eff-value">${bestMonth.split("-")[1]} ${bestMonth.split("-")[0]}</div>
-                    </div>
-                    <div class="eff-stat">
-                      <div class="eff-label">Needs Improvement</div>
-                      <div class="eff-value">${worstMonth.split("-")[1]} ${worstMonth.split("-")[0]}</div>
-                    </div>
-                  </div>
-                </div>
-              `;
 }
 
 // ════════════════════════════════════════════════════
@@ -7691,104 +7176,6 @@ function getAuctionRows() {
   return allRows.sort((a, b) => a.date.localeCompare(b.date));
 }
 
-function syncAuctionFilterUI() {
-  const fromEl = document.getElementById("auc-from");
-  const toEl = document.getElementById("auc-to");
-  const badge = document.getElementById("auc-filter-badge");
-  if (fromEl) fromEl.value = auctionFilter.from || "";
-  if (toEl) toEl.value = auctionFilter.to || "";
-  if (badge) {
-    if (auctionFilter.from || auctionFilter.to) {
-      badge.textContent = `Filtered: ${auctionFilter.from || "start"} → ${auctionFilter.to || "today"}`;
-    } else {
-      badge.textContent = "Showing all available data";
-    }
-  }
-  document.querySelectorAll(".auc-preset-btn").forEach(b => {
-    b.classList.toggle("active", b.dataset.aucPreset === (auctionFilter.preset || "all"));
-  });
-}
-
-function syncAuctionFilterBadge() {
-  const from = document.getElementById("auc-from")?.value || "";
-  const to = document.getElementById("auc-to")?.value || "";
-  const badge = document.getElementById("auc-filter-badge");
-  if (!badge) return;
-  badge.textContent = (from || to)
-    ? `Custom: ${from || "start"} → ${to || "today"}`
-    : "Showing all available data";
-}
-
-function applyAuctionPreset(preset) {
-  const today = new Date();
-  const pad = n => String(n).padStart(2, "0");
-  const dateStr = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  const todayStr = dateStr(today);
-
-  if (preset === "custom") {
-    const el = document.getElementById("auc-custom-range");
-    if (el) el.style.display = el.style.display === "none" ? "block" : "none";
-    document.querySelectorAll(".auc-preset-btn").forEach(b => {
-      b.classList.toggle("active", b.dataset.aucPreset === "custom");
-    });
-    return;
-  }
-
-  let from = "", to = "";
-  if (preset === "7d") {
-    const d = new Date(today); d.setDate(d.getDate() - 6);
-    from = dateStr(d); to = todayStr;
-  } else if (preset === "30d") {
-    const d = new Date(today); d.setDate(d.getDate() - 29);
-    from = dateStr(d); to = todayStr;
-  } else if (preset === "90d") {
-    const d = new Date(today); d.setDate(d.getDate() - 89);
-    from = dateStr(d); to = todayStr;
-  } else if (preset === "ytd") {
-    from = `${today.getFullYear()}-01-01`; to = todayStr;
-  }
-  // "all" → from/to stay ""
-
-  auctionFilter.from = from;
-  auctionFilter.to = to;
-  auctionFilter.preset = preset;
-
-  const crEl = document.getElementById("auc-custom-range");
-  if (crEl) crEl.style.display = "none";
-
-  document.getElementById("rpt-auction").innerHTML = renderAuctionReport();
-  syncAuctionFilterUI();
-}
-
-function toggleAucCustomRange() {
-  applyAuctionPreset("custom");
-}
-
-function applyAuctionFilter() {
-  let from = document.getElementById("auc-from")?.value || "";
-  let to = document.getElementById("auc-to")?.value || "";
-  if (from && to && from > to) { [from, to] = [to, from]; }
-  auctionFilter.from = from;
-  auctionFilter.to = to;
-  auctionFilter.preset = "custom";
-  document.getElementById("rpt-auction").innerHTML = renderAuctionReport();
-  syncAuctionFilterUI();
-}
-
-function resetAuctionFilter() {
-  auctionFilter.from = "";
-  auctionFilter.to = "";
-  auctionFilter.preset = "all";
-  const fromEl = document.getElementById("auc-from");
-  const toEl = document.getElementById("auc-to");
-  if (fromEl) fromEl.value = "";
-  if (toEl) toEl.value = "";
-  const crEl = document.getElementById("auc-custom-range");
-  if (crEl) crEl.style.display = "none";
-  document.getElementById("rpt-auction").innerHTML = renderAuctionReport();
-  syncAuctionFilterUI();
-}
-
 function renderAuctionReport() {
   const rows = getAuctionRows();
 
@@ -7798,24 +7185,6 @@ function renderAuctionReport() {
   const grandTotal = totalDel + totalAuc;
   const aucShare = grandTotal > 0 ? Math.round(totalAuc / grandTotal * 100) : 0;
   const activeDays = rows.filter(r => (parseInt(r.av) || 0) > 0).length;
-
-  // Update hero stats panel
-  const heroEl = document.getElementById("auc-hero-stats");
-  if (heroEl) {
-    heroEl.innerHTML = `
-      <div class="auc-hero-stat">
-        <div class="auc-hero-stat-val">${fmt(totalAuc)}</div>
-        <div class="auc-hero-stat-lbl">Total</div>
-      </div>
-      <div class="auc-hero-stat">
-        <div class="auc-hero-stat-val">${aucShare}%</div>
-        <div class="auc-hero-stat-lbl">Share</div>
-      </div>
-      <div class="auc-hero-stat">
-        <div class="auc-hero-stat-val">${activeDays}</div>
-        <div class="auc-hero-stat-lbl">Active Days</div>
-      </div>`;
-  }
 
   if (!rows.length) {
     return `
@@ -8047,61 +7416,6 @@ function renderAuctionReport() {
       </div>
       ${dailyHtml}
     </div>`;
-}
-
-function exportReport() {
-  if (!rptMs.length) {
-    showSuccess("No data to export");
-    return;
-  }
-  try {
-    const wb = XLSX.utils.book_new();
-    const allRows = [];
-    rptMs.forEach((k) => {
-      (DB[k] || []).forEach((r) => allRows.push(r));
-    });
-
-    const h1 = [
-      "Date", "Day",
-      ...LOCS.flatMap((l) => [l, "", ""]),
-      "Total Delivery", "Auction Loc", "Auction Val", "Closing Balance", "Total Import",
-    ];
-    const h2 = [
-      "", "",
-      ...LOCS.flatMap(() => ["Balance", "Delivery", "Import"]),
-      "", "", "", "", "",
-    ];
-    const aoa = [h1, h2];
-    allRows.forEach((r) => {
-      const row = [fmtDMY(r.date), DAYS[dow(r.date)]];
-      LOCS.forEach((_, li) => row.push(r.bal[li], r.del[li], r.imp[li]));
-      row.push(
-        r.del.reduce((a, b) => a + b, 0),
-        r.al,
-        r.av,
-        getClosing(r),
-        r.imp.reduce((a, b) => a + b, 0),
-      );
-      aoa.push(row);
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws["!cols"] = [
-      { wch: 12 }, { wch: 5 },
-      ...LOCS.flatMap(() => [{ wch: 9 }, { wch: 8 }, { wch: 8 }]),
-      { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 12 },
-    ];
-
-    const from = rptMs[0];
-    const to = rptMs[rptMs.length - 1];
-    const label = from === to ? from : `${from}_to_${to}`;
-    XLSX.utils.book_append_sheet(wb, ws, label);
-    XLSX.writeFile(wb, `Car_Balance_Report_${label}.xlsx`);
-    showSuccess("Report exported successfully");
-  } catch (e) {
-    console.error("Export failed:", e);
-    showSuccess("Export failed: " + e.message);
-  }
 }
 
 // ════════════════════════════════════════════════════
@@ -8865,6 +8179,7 @@ if ("serviceWorker" in navigator) {
         }, 60000); // Check every minute
       })
       .catch((error) => {
+        console.warn("Service worker registration failed:", error);
       });
   });
 }

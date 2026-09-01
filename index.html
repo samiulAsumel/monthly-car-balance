@@ -442,6 +442,10 @@
         <!-- Header -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap">
           <h2 style="font-size:18px;font-weight:700;color:#1a3a5c;margin:0">Analytics Report</h2>
+          <div style="display:flex;align-items:center;gap:10px;font-size:11px;color:#64748b">
+            <span id="report-period-display"></span>
+            <span id="report-generated" title="Report generated at"></span>
+          </div>
         </div>
 
         <!-- Filter Panel -->
@@ -977,6 +981,17 @@
           </div>
         </div>
 
+        <!-- User Management -->
+        <div class="rpt-sec">
+          <div class="rpt-hdr"><span data-icon="users"></span> User Management (max 3 + admin)</div>
+          <div style="padding: 15px">
+            <div id="user-list" style="margin-bottom: 12px"></div>
+            <button class="btn pri" onclick="document.getElementById('ov-setup').classList.add('on')" style="width: 100%">
+              <span data-icon="user-plus" data-icon-size="14"></span> Add User
+            </button>
+          </div>
+        </div>
+
         <!-- Cloud Sync -->
         <div class="rpt-sec">
           <div class="rpt-hdr"><span data-icon="cloud"></span> Cloud Sync (GitHub)</div>
@@ -1108,6 +1123,32 @@
             Cancel
           </button>
           <button class="btn pri" onclick="doExport()"><span data-icon="download"></span> Excel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD USER OVERLAY -->
+    <div class="ov" id="ov-setup">
+      <div class="mbox">
+        <h2><span data-icon="user-plus"></span> Add User</h2>
+        <input type="text" class="mf" id="s-user" placeholder="Username" style="margin-bottom: 8px" />
+        <input type="password" class="mf" id="s-pass" placeholder="Password (min 8 characters)" style="margin-bottom: 8px" />
+        <input type="password" class="mf" id="s-pass2" placeholder="Confirm password" style="margin-bottom: 4px" />
+        <div class="merr" id="s-err"></div>
+        <div class="mbtns">
+          <button
+            class="btn"
+            onclick="
+              document.getElementById('ov-setup').classList.remove('on');
+              document.getElementById('s-user').value='';
+              document.getElementById('s-pass').value='';
+              document.getElementById('s-pass2').value='';
+              document.getElementById('s-err').style.display='none';
+            "
+          >
+            Cancel
+          </button>
+          <button class="btn pri" onclick="addUser()"><span data-icon="user-plus"></span> Add</button>
         </div>
       </div>
     </div>
