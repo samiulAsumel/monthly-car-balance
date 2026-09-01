@@ -2219,10 +2219,17 @@ function updateStickyHeaderOffsets() {
   const topbar = document.querySelector(".topbar");
   if (!topbar) return;
   const nav = document.querySelector(".nav");
+  const bnav = document.querySelector(".bnav");
   const topbarH = topbar.getBoundingClientRect().height;
   const navH = nav ? nav.getBoundingClientRect().height : 0;
+  const bnavH = bnav ? bnav.getBoundingClientRect().height : 0;
   document.documentElement.style.setProperty("--topbar-h", topbarH + "px");
   document.documentElement.style.setProperty("--nav-h", navH + "px");
+  // Only overwrite --bnav-h with a real measurement once the bar is
+  // actually visible (display:none reports 0, which would otherwise
+  // undercut the page's bottom padding right after a resize crosses the
+  // breakpoint but before layout has settled).
+  if (bnavH > 0) document.documentElement.style.setProperty("--bnav-h", bnavH + "px");
 }
 
 function renderTable() {
@@ -4071,12 +4078,21 @@ function hideSkeleton(pageId) {
   if (el) el.remove();
 }
 
+// `el` is unused for state now (kept for backward compatibility with
+// existing callers) -- both the desktop .ntab strip and the mobile .bnav
+// bar are kept in sync by matching data-page against `p` instead, since
+// only one of the two is ever visible/present in the DOM at a given
+// breakpoint and callers (SHORTCUTS, the command palette) only ever have
+// a .ntab element handy regardless of which is currently showing.
 function showPage(p, el) {
   curPage = p;
   document.querySelectorAll(".page").forEach((x) => x.classList.remove("on"));
-  document.querySelectorAll(".ntab").forEach((x) => x.classList.remove("on"));
+  document.querySelectorAll(".ntab, .bnav-tab").forEach((x) => {
+    const active = x.dataset.page === p;
+    x.classList.toggle("on", active);
+    x.setAttribute("aria-selected", active ? "true" : "false");
+  });
   document.getElementById("page-" + p).classList.add("on");
-  el.classList.add("on");
   if (p === "chart") {
     killCharts();
     showSkeleton("page-chart");

@@ -219,21 +219,40 @@
       </div>
     </div>
 
-    <!-- NAV -->
+    <!-- NAV (desktop/tablet; replaced by the fixed bottom nav below 700px) -->
     <div class="nav" role="tablist" aria-label="Main navigation">
-      <div class="ntab on" onclick="showPage('daily', this)" role="tab" aria-selected="true" aria-controls="page-daily" id="tab-daily" tabindex="0">
+      <div class="ntab on" data-page="daily" onclick="showPage('daily', this)" role="tab" aria-selected="true" aria-controls="page-daily" id="tab-daily" tabindex="0">
         <span data-icon="calendar"></span> Daily Entry
       </div>
-      <div class="ntab" onclick="showPage('chart', this)" role="tab" aria-selected="false" aria-controls="page-chart" id="tab-chart" tabindex="0"><span data-icon="bar-chart-3"></span> Charts</div>
-      <div class="ntab" onclick="showPage('report', this)" role="tab" aria-selected="false" aria-controls="page-report" id="tab-report" tabindex="0">
+      <div class="ntab" data-page="chart" onclick="showPage('chart', this)" role="tab" aria-selected="false" aria-controls="page-chart" id="tab-chart" tabindex="0"><span data-icon="bar-chart-3"></span> Charts</div>
+      <div class="ntab" data-page="report" onclick="showPage('report', this)" role="tab" aria-selected="false" aria-controls="page-report" id="tab-report" tabindex="0">
         <span data-icon="clipboard-list"></span> Reports
       </div>
-      <div class="ntab" onclick="showPage('transfer', this)" role="tab" aria-selected="false" aria-controls="page-transfer" id="tab-transfer" tabindex="0">
+      <div class="ntab" data-page="transfer" onclick="showPage('transfer', this)" role="tab" aria-selected="false" aria-controls="page-transfer" id="tab-transfer" tabindex="0">
         <span data-icon="arrow-left-right"></span> Car Transfer
       </div>
-      <div class="ntab" onclick="showPage('settings', this)" role="tab" aria-selected="false" aria-controls="page-settings" id="tab-settings" tabindex="0">
+      <div class="ntab" data-page="settings" onclick="showPage('settings', this)" role="tab" aria-selected="false" aria-controls="page-settings" id="tab-settings" tabindex="0">
         <span data-icon="settings"></span> Settings
       </div>
+    </div>
+
+    <!-- BOTTOM NAV (mobile only, below 700px; .nav above is hidden there) -->
+    <div class="bnav" role="tablist" aria-label="Main navigation">
+      <button type="button" class="bnav-tab on" data-page="daily" onclick="showPage('daily', this)" role="tab" aria-selected="true" aria-controls="page-daily" id="btab-daily">
+        <span data-icon="calendar"></span><span class="bnav-label">Daily</span>
+      </button>
+      <button type="button" class="bnav-tab" data-page="chart" onclick="showPage('chart', this)" role="tab" aria-selected="false" aria-controls="page-chart" id="btab-chart">
+        <span data-icon="bar-chart-3"></span><span class="bnav-label">Charts</span>
+      </button>
+      <button type="button" class="bnav-tab" data-page="report" onclick="showPage('report', this)" role="tab" aria-selected="false" aria-controls="page-report" id="btab-report">
+        <span data-icon="clipboard-list"></span><span class="bnav-label">Reports</span>
+      </button>
+      <button type="button" class="bnav-tab" data-page="transfer" onclick="showPage('transfer', this)" role="tab" aria-selected="false" aria-controls="page-transfer" id="btab-transfer">
+        <span data-icon="arrow-left-right"></span><span class="bnav-label">Transfer</span>
+      </button>
+      <button type="button" class="bnav-tab" data-page="settings" onclick="showPage('settings', this)" role="tab" aria-selected="false" aria-controls="page-settings" id="btab-settings">
+        <span data-icon="settings"></span><span class="bnav-label">Settings</span>
+      </button>
     </div>
 
     <!-- MONTH BAR -->
