@@ -16,7 +16,7 @@ A zero-dependency, offline-first vehicle tracking system for managing daily car 
 6. Track inter-location movements on the **Car Transfer** tab
 7. Export data as Excel via the top bar (current month or all months)
 
-**No server required.** The app runs entirely from local files and syncs to the cloud (Cloudflare Worker → private GitHub repo) when online. All dates are shown as `dd-mm-yyyy`. Press **Ctrl+K** anywhere to jump to a tab, month, location, or report section without the mouse — the palette traps focus and exposes full listbox ARIA semantics for screen-reader and keyboard-only use; below 700px width the daily table becomes one expandable card per date.
+**No server required.** The app runs entirely from local files and syncs to the cloud (Cloudflare Worker → private GitHub repo) when online. All dates are shown as `dd-mm-yyyy`. Press **Ctrl+K** anywhere to jump to a tab, month, location, or report section without the mouse — the palette traps focus and exposes full listbox ARIA semantics for screen-reader and keyboard-only use; below 700px width the daily table becomes one expandable card per date, navigation moves to a fixed bottom tab bar, and a floating button opens the same Ctrl+K palette by tap (with a swipe left/right on the card list as a shortcut for next/previous month).
 
 ---
 
@@ -215,7 +215,12 @@ Edit the `LOCS` array and `LOC_CFG` object in `src/formula.js` to customize loca
 - [x] Minimum 8-character passwords
 - [x] Print-optimized CSS
 - [x] Responsive design (mobile-first breakpoints), incl. a mobile
-      stacked-card view for the daily table below 700px
+      stacked-card view for the daily table below 700px, a fixed bottom
+      navigation bar, swipe-left/right between months, a floating
+      command-palette button, safe-area-inset support for notched
+      devices, and 44px-minimum touch targets throughout
+- [x] Working "Install app" prompt (Chromium browsers) with a
+      dismissible banner, plus a corrected home-screen/splash-screen icon
 - [x] Service worker for offline caching
 - [x] Salted PBKDF2 password hashing (150k iterations, no plaintext) —
       lazily upgrades two older stored formats on login
@@ -279,6 +284,23 @@ The Cloudflare Worker (`worker/worker.js`) is deployed separately from the app �
 ---
 
 ## Version
+
+**1.6.0** — Mobile UX pass: fixed a real overlap bug where the sticky
+nav/month-bar assumed a hardcoded topbar height (now measured live via
+CSS custom properties); fixed a login-dialog viewport overflow and
+added scroll-safety to the Export/Add-User dialogs; extended touch
+targets and tap-highlight/focus-visible handling; made tap feedback
+(scale + ripple, with a corrected origin calculation) reach dynamically
+rendered content instead of only what existed at page load; day cards
+now preserve their open/expanded state and input focus across edits,
+with proper `aria-expanded`. Added, with user approval of the approach:
+a fixed bottom navigation bar replacing the horizontal-scroll top tabs
+below 700px, a floating button opening the command palette as a
+full-height mobile search sheet, swipe-left/right between months, a
+working "Install app" banner (the previous handler suppressed the
+browser's native prompt and replaced it with nothing), and a fixed
+manifest icon that previously rendered as a tiny dot instead of filling
+the frame (September 2026)
 
 **1.5.1** — Post-hardening audit pass: `validateDB()` now self-heals
 malformed synced rows instead of crashing on them, the save badge
