@@ -336,15 +336,13 @@ function validateDB() {
       issues.push("Month " + k + " is not an array");
       return;
     }
+    const healed = [];
     DB[k].forEach((r, idx) => {
-      if (!r.date) issues.push(k + " row " + idx + " missing date");
-      if (!Array.isArray(r.del) || r.del.length !== LOCS.length) issues.push(k + " row " + idx + " invalid del[]");
-      if (!Array.isArray(r.imp) || r.imp.length !== LOCS.length) issues.push(k + " row " + idx + " invalid imp[]");
-      if (!Array.isArray(r.bal) || r.bal.length !== LOCS.length) issues.push(k + " row " + idx + " invalid bal[]");
-      r.del = r.del.map((v) => isNaN(v) ? 0 : v);
-      r.imp = r.imp.map((v) => isNaN(v) ? 0 : v);
-      r.bal = r.bal.map((v) => isNaN(v) ? 0 : v);
+      const { row, issues: rowIssues } = normalizeRow(r, k + " row " + idx);
+      issues.push(...rowIssues);
+      if (row) healed.push(row);
     });
+    DB[k] = healed;
   });
   if (issues.length) {
     console.warn("DB validation issues:", issues);

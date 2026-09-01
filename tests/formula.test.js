@@ -119,6 +119,48 @@ test("validateNumber — clamps to [min, max] and flags invalid input", () => {
   assert.equal(f.validateNumber("abc", "Delivery", 0, 100).value, 0);
 });
 
+test("normalizeRow — drops unsalvageable rows, self-heals corrupted ones", () => {
+  // Not an object, or no date: unsalvageable.
+  assert.equal(f.normalizeRow(null, "row").row, null);
+  assert.equal(f.normalizeRow(undefined, "row").row, null);
+  assert.equal(f.normalizeRow({ del: [1] }, "row").row, null); // no date
+  assert.ok(f.normalizeRow(null, "row").issues.length > 0);
+
+  // Missing del/imp/bal entirely -> padded to LOCS.length zeros, flagged.
+  const missing = f.normalizeRow({ date: "2026-09-02" }, "row");
+  assert.equal(missing.row.del.length, f.LOCS.length);
+  assert.deepEqual(missing.row.del, f.LOCS.map(() => 0));
+  assert.deepEqual(missing.row.imp, f.LOCS.map(() => 0));
+  assert.deepEqual(missing.row.bal, f.LOCS.map(() => 0));
+  assert.equal(missing.issues.length, 3); // del, imp, bal all flagged
+
+  // Short array padded, over-long array trimmed, NaN/non-numeric -> 0.
+  const bad = f.normalizeRow(
+    { date: "2026-09-02", del: [1, "x"], imp: [1, 2, 3, 4, 5, 6, 7, 8, 9], bal: [NaN, undefined, 3, 4, 5, 6, 7, 8] },
+    "row",
+  );
+  assert.equal(bad.row.del.length, f.LOCS.length);
+  assert.equal(bad.row.del[0], 1);
+  assert.equal(bad.row.del[1], 0); // "x" -> 0
+  assert.equal(bad.row.imp.length, f.LOCS.length); // trimmed from 9
+  assert.equal(bad.row.bal[0], 0); // NaN -> 0
+  assert.equal(bad.row.bal[1], 0); // undefined -> 0
+
+  // ob present but malformed -> cleared to null (a valid "no opening balance" state).
+  const badOb = f.normalizeRow(
+    { date: "2026-09-02", del: [0,0,0,0,0,0,0,0], imp: [0,0,0,0,0,0,0,0], bal: [0,0,0,0,0,0,0,0], ob: [1, 2] },
+    "row",
+  );
+  assert.equal(badOb.row.ob, null);
+  assert.ok(badOb.issues.some((s) => s.includes("ob[]")));
+
+  // Clean row passes through with matching values, no issues.
+  const clean = { date: "2026-09-02", del: [0,0,0,0,0,0,0,0], imp: [0,0,0,0,0,0,0,0], bal: [0,0,0,0,0,0,0,0] };
+  const okResult = f.normalizeRow(clean, "row");
+  assert.deepEqual(okResult.row.del, clean.del);
+  assert.equal(okResult.issues.length, 0);
+});
+
 test("isRed — precedence: exception overrides weekly holiday overrides custom holiday", () => {
   // 2026-09-04 is a Friday, and Friday is a weekly holiday per the fixture,
   // but it's also listed in sett.excs — exceptions always win.

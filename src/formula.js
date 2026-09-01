@@ -226,6 +226,47 @@ function getClosing(row) {
   return calcClosing(bal, del, imp);
 }
 
+// Self-heals one DB row against corruption that can arrive from a cloud
+// sync (another device, a partial write, an old data format): pads/trims
+// del/imp/bal to LOCS.length and maps NaN entries to 0, clears a malformed
+// `ob`, and returns { row, issues } — issues is a list of human-readable
+// strings for validateDB()'s corruption-count escalation. Returns
+// { row: null, issues } for a row that isn't salvageable (not an object,
+// or no date) so the caller can drop it instead of crashing on it.
+function normalizeRow(row, rowLabel) {
+  const issues = [];
+  if (!row || typeof row !== "object" || !row.date) {
+    issues.push(rowLabel + " missing date");
+    return { row: null, issues };
+  }
+  const fixArr = (name) => {
+    const arr = Array.isArray(row[name]) ? row[name] : [];
+    if (!Array.isArray(row[name]) || row[name].length !== LOCS.length) {
+      issues.push(rowLabel + " invalid " + name + "[]");
+    }
+    return LOCS.map((_, i) => {
+      const n = Number(arr[i]);
+      return Number.isFinite(n) ? n : 0;
+    });
+  };
+  const out = Object.assign({}, row, {
+    del: fixArr("del"),
+    imp: fixArr("imp"),
+    bal: fixArr("bal"),
+  });
+  if (out.ob != null) {
+    const validOb =
+      Array.isArray(out.ob) &&
+      out.ob.length === LOCS.length &&
+      out.ob.every((n) => Number.isFinite(Number(n)));
+    if (!validOb) {
+      issues.push(rowLabel + " invalid ob[], cleared");
+      out.ob = null;
+    }
+  }
+  return { row: out, issues };
+}
+
 function validateNumber(value, fieldName, min = 0, max = 99999) {
   const num = parseInt(value);
 
@@ -292,6 +333,7 @@ if (typeof module !== "undefined") {
     calcLocBals,
     calcClosing,
     getClosing,
+    normalizeRow,
     validateNumber,
   };
 }
